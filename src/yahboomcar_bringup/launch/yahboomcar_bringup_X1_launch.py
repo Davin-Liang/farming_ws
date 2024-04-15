@@ -86,7 +86,7 @@ def generate_launch_description():
     ekf_node = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
             get_package_share_directory('robot_localization'), 'launch'),
-            '/ekf_x1_x3_launch.py'])
+            '/ekf_own.py'])
     )
 
     yahboom_joy_node = Node(

@@ -89,7 +89,7 @@ class OdomPublisher:public rclcpp ::Node
 
             tf2::Quaternion myQuaternion;
 			geometry_msgs::msg::Quaternion odom_quat ; 
-			myQuaternion.setRPY(0.00,0.00,heading_ );
+			myQuaternion.setRPY(0.00,0.00,heading_ ); // 将欧拉角（0 0 0）转换为四元数
 
             odom_quat.x = myQuaternion.x();
             odom_quat.y = myQuaternion.y();
@@ -100,7 +100,7 @@ class OdomPublisher:public rclcpp ::Node
 			odom.header.stamp = current_time;
 			odom.header.frame_id = "odom";
 			odom.child_frame_id = "base_footprint";
-			// robot's position in x,y and z
+			// robot's position in x, y and z
 			odom.pose.pose.position.x = x_pos_;
 			odom.pose.pose.position.y = y_pos_;
 			odom.pose.pose.position.z = 0.0;

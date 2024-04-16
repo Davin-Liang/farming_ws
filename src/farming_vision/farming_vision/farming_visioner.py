@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from ai_msgs.msg import PerceptionTargets
-from std_msgs.msg import String, Bool, Int16MultiArray
+# from std_msgs.msg import String, Bool, Int16MultiArray
 
 class Farming_visioner(Node):
     def __init__(self, name):

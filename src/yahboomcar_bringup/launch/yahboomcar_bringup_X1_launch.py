@@ -16,8 +16,8 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 print("---------------------robot_type = x1---------------------")
 def generate_launch_description():
-    urdf_tutorial_path = get_package_share_path('yahboomcar_description_x1')
-    default_model_path = urdf_tutorial_path / 'urdf/yahboomcar_X1.urdf'
+    urdf_tutorial_path = get_package_share_path('yahboomcar_description')
+    default_model_path = urdf_tutorial_path / 'urdf/yahboomcar_X3.urdf'
     default_rviz_config_path = urdf_tutorial_path / 'rviz/yahboomcar.rviz'
 
     gui_arg = DeclareLaunchArgument(name='gui', default_value='false', choices=['true', 'false'],
@@ -73,7 +73,7 @@ def generate_launch_description():
     base_node = Node(
         package='yahboomcar_base_node',
         executable='base_node_x1',
-        # 当使用ekf融合时，该tf有ekf发布
+        # 当使用ekf融合时，该 tf 由 ekf 来发布
         parameters=[{'pub_odom_tf': LaunchConfiguration('pub_odom_tf')}]
     )
 
@@ -86,7 +86,7 @@ def generate_launch_description():
     ekf_node = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
             get_package_share_directory('robot_localization'), 'launch'),
-            '/ekf_own.py'])
+            '/ekf_x1_x3_launch.py'])
     )
 
     yahboom_joy_node = Node(

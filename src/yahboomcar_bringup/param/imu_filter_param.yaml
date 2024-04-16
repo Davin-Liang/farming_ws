@@ -3,5 +3,5 @@ imu_filter_madgwick:
         fixed_frame: "base_link"
         use_mag: false
         publish_tf: false
-        world_frame: "enu"
+        world_frame: "enu" # TODO:
         orientation_stddev: 0.05

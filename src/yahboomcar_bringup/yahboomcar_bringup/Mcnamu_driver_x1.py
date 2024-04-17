@@ -103,8 +103,8 @@ class yahboomcar_driver(Node):
 		else:
 			for i in range(3): self.car.set_beep(0)
 
-	#pub data
 	def pub_data(self):
+		""" publish the data of each topic. """
 		time_stamp = Clock().now()
 		imu = Imu()
 		twist = Twist()
@@ -132,27 +132,26 @@ class yahboomcar_driver(Node):
 		mz = mz * 1.0
 		vx, vy, angular = self.car.get_motion_data()
 		
-		# 发布陀螺仪的数据
 		# Publish gyroscope data
 		imu.header.stamp = time_stamp.to_msg()
 		imu.header.frame_id = self.imu_link
-		imu.linear_acceleration.x = ax
-		imu.linear_acceleration.y = ay
-		imu.linear_acceleration.z = az
-		imu.angular_velocity.x = gx
-		imu.angular_velocity.y = gy
-		imu.angular_velocity.z = gz
+		imu.linear_acceleration.x = ax * 1.0
+		imu.linear_acceleration.y = ay * 1.0
+		imu.linear_acceleration.z = az * 1.0
+		imu.angular_velocity.x = gx * 1.0
+		imu.angular_velocity.y = gy * 1.0
+		imu.angular_velocity.z = gz * 1.0
 
 		mag.header.stamp = time_stamp.to_msg()
 		mag.header.frame_id = self.imu_link
-		mag.magnetic_field.x = mx
-		mag.magnetic_field.y = my
-		mag.magnetic_field.z = mz
+		mag.magnetic_field.x = mx * 1.0
+		mag.magnetic_field.y = my * 1.0
+		mag.magnetic_field.z = mz * 1.0
 		
 		# 将小车当前的线速度和角速度发布出去
 		# Publish the current linear vel and angular vel of the car
 		twist.linear.x = vx    #velocity in axis 
-		twist.linear.y = vy*1000   #steer angle
+		twist.linear.y = vy * 1000   #steer angle
 		#twist.linear.y = vy   #steer angle
 		#twist.angular.z = angular
 		twist.angular.z = angular    #this is invalued

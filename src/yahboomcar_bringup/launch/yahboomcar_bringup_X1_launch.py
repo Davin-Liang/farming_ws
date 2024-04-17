@@ -80,7 +80,7 @@ def generate_launch_description():
     imu_filter_node = Node(
         package='imu_filter_madgwick',
         executable='imu_filter_madgwick_node',
-        parameters=[imu_filter_config]
+        parameters=['~/farming_robot/farming_ws/src/yahboomcar_bringup/param/imu_filter_param.yaml']
     )
 
     ekf_node = IncludeLaunchDescription(

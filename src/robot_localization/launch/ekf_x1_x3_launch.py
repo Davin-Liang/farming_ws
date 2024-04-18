@@ -32,7 +32,7 @@ def generate_launch_description():
             name='ekf_filter_node',
             output='screen',
             parameters=[os.path.join(get_package_share_directory(
-                "robot_localization"), 'params', 'ekf_x1_x3.yaml')],
-            remappings=[('/odometry/filtered', '/odom')]  # ekf融合后发布的里程计topic
+                "robot_localization"), 'params', 'ekf_x1_x3.yaml')]
+            # remappings=[('/odometry/filtered', '/odom')]  # ekf融合后发布的里程计topic
         ),
     ])

@@ -63,7 +63,7 @@ class OdomPublisher:public rclcpp ::Node
         tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
 	  	subscription_ = this->create_subscription<geometry_msgs::msg::Twist>("/vel_raw",50,std::bind(&OdomPublisher::handle_vel,this,_1));
-	  	odom_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("/odom_raw", 50);
+	  	odom_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("/odom", 50);
 	  	}
 	  	private:
 	  	  void handle_vel(const std::shared_ptr<geometry_msgs::msg::Twist > msg)

@@ -77,7 +77,7 @@ class yahboomcar_driver(Node):
 		self.edition.data = 1.0
 		self.car.create_receive_threading()
 	#callback function
-	def cmd_vel_callback(self,msg):
+	def cmd_vel_callback(self, msg):
         # 小车运动控制，订阅者回调函数
         # Car motion control, subscriber callback function
 		if not isinstance(msg, Twist): return

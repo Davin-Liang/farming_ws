@@ -26,7 +26,7 @@ def generate_launch_description():
                                       description='Absolute path to robot urdf file')
     rviz_arg = DeclareLaunchArgument(name='rvizconfig', default_value=str(default_rviz_config_path),
                                      description='Absolute path to rviz config file')
-    pub_odom_tf_arg = DeclareLaunchArgument('pub_odom_tf', default_value='false',
+    pub_odom_tf_arg = DeclareLaunchArgument('pub_odom_tf', default_value='true',
                                             description='Whether to publish the tf from the original odom to the base_footprint')
 
     robot_description = ParameterValue(Command(['xacro ', LaunchConfiguration('model')]),
@@ -106,6 +106,6 @@ def generate_launch_description():
         driver_node,
         base_node,
         # imu_filter_node,
-        ekf_node,
+        # ekf_node,
         yahboom_joy_node
     ])

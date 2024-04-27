@@ -94,18 +94,33 @@ def generate_launch_description():
         executable='yahboom_joy_X3',
     )
 
+    base_footprint_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher', 
+        emulate_tty=True,
+        arguments="0.0 0.0 0.05325 0.0 0.0 0.0 /base_footprint /base_link".split(' '))
+
+    imu_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher', 
+        emulate_tty=True,
+        arguments="0.0 0.0 0.0 0.0 0.0 0.0 /base_link /imu_link".split(' '))
+
     return LaunchDescription([
         gui_arg,
         model_arg,
         rviz_arg,
         pub_odom_tf_arg,
-        joint_state_publisher_node,
-        joint_state_publisher_gui_node,
-        robot_state_publisher_node,
+        # joint_state_publisher_node,
+        # joint_state_publisher_gui_node,
+        # robot_state_publisher_node,
         # rviz_node
+        
         driver_node,
         base_node,
         # imu_filter_node,
         # ekf_node,
-        yahboom_joy_node
+        yahboom_joy_node,
+        base_footprint_tf,
+        imu_tf
     ])

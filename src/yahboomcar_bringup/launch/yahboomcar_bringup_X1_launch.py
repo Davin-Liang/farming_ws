@@ -89,6 +89,12 @@ def generate_launch_description():
             '/ekf_x1_x3_launch.py'])
     )
 
+    imu_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory('imu_complementary_filter'), 'launch'),
+            '/imu_filter.launch.py'])
+    )
+
     yahboom_joy_node = Node(
         package='yahboomcar_ctrl',
         executable='yahboom_joy_X3',
@@ -118,6 +124,7 @@ def generate_launch_description():
         
         driver_node,
         base_node,
+        imu_node,
         imu_filter_node,
         ekf_node,
         yahboom_joy_node,

@@ -66,7 +66,7 @@ class yahboomcar_driver(Node):
 		self.staPublisher = self.create_publisher(JointState,"joint_states",100)
 		self.velPublisher = self.create_publisher(Twist,"/vel_raw",50)
 		# 这里直接发布imu_filter_madgwick功能包订阅的imu topic，之后直接输入到imu_filter_madgwick中进行imu的数据滤波
-		self.imuPublisher = self.create_publisher(Imu,"/imu/data_raw",100)
+		self.imuPublisher = self.create_publisher(Imu,"/imu/data_raw/raw",100)
 		self.magPublisher = self.create_publisher(MagneticField,"/imu/mag",100)
 
 		#create timer

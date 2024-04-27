@@ -1,7 +1,7 @@
 imu_filter_madgwick:
     ros__parameters:
         fixed_frame: "base_link" # 固定框的名称。发布的TF将会将IMU数据转换到此固定框下
-        use_mag: true # 是否使用磁力计数据进行姿态估计
+        use_mag: false # 是否使用磁力计数据进行姿态估计
         publish_tf: true # 是否发布 tf
         world_frame: "enu" # TODO:
         orientation_stddev: 0.05

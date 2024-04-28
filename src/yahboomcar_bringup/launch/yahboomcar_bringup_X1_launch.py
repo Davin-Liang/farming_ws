@@ -125,7 +125,7 @@ def generate_launch_description():
         driver_node,
         base_node,
         imu_node,
-        imu_filter_node,
+        # imu_filter_node,
         ekf_node,
         yahboom_joy_node,
         base_footprint_tf,

@@ -13,7 +13,7 @@ def generate_launch_description():
                 parameters=[
                     {'do_bias_estimation': True},
                     {'do_adaptive_gain': True},
-                    {'use_mag': True},
+                    {'use_mag': False},
                     {'gain_acc': 0.01},
                     {'gain_mag': 0.01},
                 ],

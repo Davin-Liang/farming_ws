@@ -105,7 +105,7 @@ class Motion_Controller(Node):
             self.distance_error = o_distance - self.distance # 负值控制车向前，正值控制车向后
             print("误差当前值为: ", self.distance_error)
 
-            if abs(self.distance_error) < self.tolerance: # 达到目标的情况
+            if abs(self.distance_error) < self.distance_tolerance: # 达到目标的情况
                 # 创建了一个名为 start_test 的参数，并将其类型设置为布尔型（BOOL），初始值为 False 。这似乎是为了确保 start_test 参数存在且初始化为 False
                 self.start_action_for_distance = rclpy.parameter.Parameter('start_action_for_distance', rclpy.Parameter.Type.BOOL, False)
                 all_new_parameters = [self.start_test]

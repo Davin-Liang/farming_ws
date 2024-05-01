@@ -9,6 +9,7 @@ import PyKDL
 from math import pi # 3.14
 import yaml
 import time
+import os
 
 # 1. 必须安装上 PyKDL
 
@@ -82,6 +83,7 @@ class Motion_Controller(Node):
         # 创建定时器
         self.timer = self.create_timer(0.05, self.timer_work_)
 
+        self.file_path = os.path.expanduser('~/farming_ws/src/motion_controller/config/position_point.yaml')
         self.load_config_file_()
         print ("Finish init work.")
 
@@ -239,7 +241,7 @@ class Motion_Controller(Node):
 
     def load_config_file_(self):
         """ 读取 YAML 文件 """
-        with open('~/farming_ws/src/motion_controller/config/position_point.yaml', 'r') as file:
+        with open(self.file_path, 'r') as file:
             self.points = yaml.safe_load(file)       
 
 

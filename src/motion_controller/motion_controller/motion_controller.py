@@ -76,7 +76,7 @@ class Motion_Controller(Node):
         self.last_angle     = self.odom_angle # 记录上一次角度
         self.angle          *= self.reverse
 
-        self.note_start_turning = False
+        self.note_start_turning = True
         self.move_direction = "x"
         self.status_of_finishing_goal = True
 
@@ -210,6 +210,7 @@ class Motion_Controller(Node):
 
     def set_angle(self, angle, speed=1.0):
         self.start_action_for_angle = True
+        self.note_start_turning = True
         if angle > 0:
             self.angle = angle
         else:

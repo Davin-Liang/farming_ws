@@ -113,7 +113,7 @@ class Motion_Controller(Node):
                 print("任务已完成")
             else: # 未达到目标的情况
                 self.move_cmd.linear.x = copysign(self.liear_speed, -1*self.distance_error)
-                self.move_cmd.angular.z = 0
+                self.move_cmd.angular.z = 0.0
             self.cmd_vel.publish(self.move_cmd)
         else: # 未设定目标的情况
             self.status_of_finishing_goal = False
@@ -127,7 +127,7 @@ class Motion_Controller(Node):
         if self.start_action_for_angle:
             self.angle_error = self.angle - self.turn_angle
             if self.start_action_for_angle and (abs(self.angle_error) > self.angle_tolerance):
-                self.move_cmd.linear.x = 0
+                self.move_cmd.linear.x = 0.0
                 self.move_cmd.angular.z = copysign(self.angular_speed, self.error)
                 self.cmd_vel.publish(self.move_cmd)
 

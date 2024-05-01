@@ -10,12 +10,16 @@ from math import pi # 3.14
 import yaml
 import time
 import os
+from .pid import PID
 
 # 1. 必须安装上 PyKDL
 
 class Motion_Controller(Node):
     def __init__(self, name):
         super().__init__(name)
+
+        self.angle_pid = PID(0.9, 0.0, 0.0, 2.0, 0.0)
+
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.move_cmd = Twist()
 
@@ -81,13 +85,19 @@ class Motion_Controller(Node):
         self.status_of_finishing_goal = True
 
         # 创建定时器
-        self.timer = self.create_timer(0.05, self.timer_work_)
+        self.distance_timer = self.create_timer(0.05, self.distance_timer_work_)
+        self.angle_timer = self.create_timer(0.01, self.angle_timer_work_)
 
         self.file_path = os.path.expanduser('~/farming_ws/src/motion_controller/config/position_point.yaml')
         self.load_config_file_()
         print ("Finish init work.")
 
-    def timer_work_(self):
+    def angle_timer_work_(self):
+        self.angle_pid.pid_calculate(ref=self.get_odom_angle_, goal=radians(self.angle))
+        self.move_cmd.angular.z = self.angle_pid.out
+        self.cmd_vel.publish(self.move_cmd)
+        
+    def distance_timer_work_(self):
         # 更新参数
         self.get_param_()
 
@@ -113,7 +123,6 @@ class Motion_Controller(Node):
                 print("任务已完成")
             else: # 未达到目标的情况
                 self.move_cmd.linear.x = copysign(self.liear_speed, -1*self.distance_error)
-                self.move_cmd.angular.z = 0.0
             self.cmd_vel.publish(self.move_cmd)
         else: # 未设定目标的情况
             self.status_of_finishing_goal = False
@@ -123,33 +132,33 @@ class Motion_Controller(Node):
             print("停车状态下的 Y 坐标值: ", self.y_start)
             self.cmd_vel.publish(Twist())   
         
-        # 角度控制
-        if self.start_action_for_angle:
-            self.angle_error = self.angle - self.turn_angle
-            if self.start_action_for_angle and (abs(self.angle_error) > self.angle_tolerance):
-                self.move_cmd.linear.x = 0.0
-                self.move_cmd.angular.z = copysign(self.angular_speed, self.angle_error)
-                self.cmd_vel.publish(self.move_cmd)
+        # # 角度控制
+        # if self.start_action_for_angle:
+        #     self.angle_error = self.angle - self.turn_angle
+        #     if self.start_action_for_angle and (abs(self.angle_error) > self.angle_tolerance):
+        #         self.move_cmd.linear.x = 0.0
+        #         self.move_cmd.angular.z = copysign(self.angular_speed, self.angle_error)
+        #         self.cmd_vel.publish(self.move_cmd)
 
-                if self.note_start_turning:
-                    self.note_start_turning = False
-                    self.last_angle = self.get_odom_angle_()
-                self.odom_angle = self.get_odom_angle_()
-                self.delta_angle = self.odom_angular_scale_correction * self.normalize_angle(self.odom_angle - self.last_angle)
-                self.turn_angle += self.delta_angle
-                print("目前转动的角度为: ",self.turn_angle)
-                self.angle_error = self.angle - self.turn_angle
-                print("角度误差为: ",self.angle_error)
-                self.last_angle = self.odom_angle
-            else: # 未设定目标的情况
-                self.status_of_finishing_goal = False
-                self.turn_angle = 0.0 # 将转动角度归零
-                self.cmd_vel.publish(Twist()) # 把车暂停
-                self.start_action_for_angle = rclpy.parameter.Parameter('start_action_for_angle', rclpy.Parameter.Type.BOOL, False)
-                all_new_parameters = [self.start_action_for_angle]
-                self.set_parameters(all_new_parameters)
-                self.reverse = -self.reverse # 换方向转动
-                self.last_angle = 0
+        #         if self.note_start_turning:
+        #             self.note_start_turning = False
+        #             self.last_angle = self.get_odom_angle_()
+        #         self.odom_angle = self.get_odom_angle_()
+        #         self.delta_angle = self.odom_angular_scale_correction * self.normalize_angle(self.odom_angle - self.last_angle)
+        #         self.turn_angle += self.delta_angle
+        #         print("目前转动的角度为: ",self.turn_angle)
+        #         self.angle_error = self.angle - self.turn_angle
+        #         print("角度误差为: ",self.angle_error)
+        #         self.last_angle = self.odom_angle
+        #     else: # 未设定目标的情况
+        #         self.status_of_finishing_goal = False
+        #         self.turn_angle = 0.0 # 将转动角度归零
+        #         self.cmd_vel.publish(Twist()) # 把车暂停
+        #         self.start_action_for_angle = rclpy.parameter.Parameter('start_action_for_angle', rclpy.Parameter.Type.BOOL, False)
+        #         all_new_parameters = [self.start_action_for_angle]
+        #         self.set_parameters(all_new_parameters)
+        #         self.reverse = -self.reverse # 换方向转动
+        #         self.last_angle = 0
 
     def get_coordinate_value_(self):
         position = Point()

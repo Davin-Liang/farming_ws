@@ -128,7 +128,7 @@ class Motion_Controller(Node):
             self.angle_error = self.angle - self.turn_angle
             if self.start_action_for_angle and (abs(self.angle_error) > self.angle_tolerance):
                 self.move_cmd.linear.x = 0.0
-                self.move_cmd.angular.z = copysign(self.angular_speed, self.error)
+                self.move_cmd.angular.z = copysign(self.angular_speed, self.angle_error)
                 self.cmd_vel.publish(self.move_cmd)
 
                 if self.note_start_turning:

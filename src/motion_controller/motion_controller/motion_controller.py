@@ -108,7 +108,7 @@ class Motion_Controller(Node):
             if abs(self.distance_error) < self.distance_tolerance: # 达到目标的情况
                 # 创建了一个名为 start_test 的参数，并将其类型设置为布尔型（BOOL），初始值为 False 。这似乎是为了确保 start_test 参数存在且初始化为 False
                 self.start_action_for_distance = rclpy.parameter.Parameter('start_action_for_distance', rclpy.Parameter.Type.BOOL, False)
-                all_new_parameters = [self.start_test]
+                all_new_parameters = [self.start_action_for_distance]
                 self.set_parameters(all_new_parameters)
                 print("任务已完成")
             else: # 未达到目标的情况

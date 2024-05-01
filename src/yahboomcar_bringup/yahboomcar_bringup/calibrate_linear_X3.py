@@ -16,30 +16,30 @@ class CalibrateLinear(Node):
     def __init__(self,name):
         super().__init__(name)
         #create a spublisher
-        self.cmd_vel = self.create_publisher(Twist,"/cmd_vel",5)
+        self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         #declare_parameter
-        self.declare_parameter('rate',20.0)
+        self.declare_parameter('rate', 20.0)
         self.rate = self.get_parameter('rate').get_parameter_value().double_value
         
-        self.declare_parameter('test_distance',1.0)
+        self.declare_parameter('test_distance', 1.0)
         self.test_distance = self.get_parameter('test_distance').get_parameter_value().double_value
         
-        self.declare_parameter('speed',0.5)
+        self.declare_parameter('speed', 0.5)
         self.speed = self.get_parameter('speed').get_parameter_value().double_value
         
-        self.declare_parameter('tolerance',0.03)
+        self.declare_parameter('tolerance', 0.03)
         self.tolerance = self.get_parameter('tolerance').get_parameter_value().double_value
         
-        self.declare_parameter('odom_linear_scale_correction',1.0)
+        self.declare_parameter('odom_linear_scale_correction', 1.0)
         self.odom_linear_scale_correction = self.get_parameter('odom_linear_scale_correction').get_parameter_value().double_value
         
-        self.declare_parameter('start_test',False)
+        self.declare_parameter('start_test', False)
         
         
-        self.declare_parameter('direction',True)
+        self.declare_parameter('direction', True)
         self.direction = self.get_parameter('direction').get_parameter_value().bool_value
         
-        self.declare_parameter('base_frame','base_footprint')
+        self.declare_parameter('base_frame', 'base_footprint')
         self.base_frame = self.get_parameter('base_frame').get_parameter_value().string_value
         
         self.declare_parameter('odom_frame','odom')
@@ -82,18 +82,20 @@ class CalibrateLinear(Node):
             #self.position.y = trans.transform.translation.y
             self.position.x = self.get_position().transform.translation.x
             self.position.y = self.get_position().transform.translation.y
-            print("self.position.x: ",self.position.x)
-            print("self.position.y: ",self.position.y)
+            print("self.position.x: ", self.position.x)
+            print("self.position.y: ", self.position.y)
             distance = sqrt(pow((self.position.x - self.x_start), 2) +
                                 pow((self.position.y - self.y_start), 2))
             distance *= self.odom_linear_scale_correction
-            print("distance: ",distance)
+            print("distance: ", distance)
             error = distance - self.test_distance
-            print("error: ",error)
+            print("error: ", error)
             #start = time()
             if not self.start_test or abs(error) < self.tolerance:
-                self.start_test  = rclpy.parameter.Parameter('start_test',rclpy.Parameter.Type.BOOL,False)
+                # 创建了一个名为start_test的参数，并将其类型设置为布尔型（BOOL），初始值为False。这似乎是为了确保start_test参数存在且初始化为False
+                self.start_test  = rclpy.parameter.Parameter('start_test', rclpy.Parameter.Type.BOOL, False)
                 all_new_parameters = [self.start_test]
+                # 将这些新的参数设置到某个参数服务器或者节点中
                 self.set_parameters(all_new_parameters)
                     
                 print("done")
@@ -128,10 +130,11 @@ class CalibrateLinear(Node):
     def get_position(self):
          try:
             now = rclpy.time.Time()
-            trans = self.tf_buffer.lookup_transform(self.odom_frame,self.base_frame,now)   
+            # 从self.tf_buffer中查询从self.odom_frame到self.base_frame之间的坐标变换信息，并且在当前时间now进行查询
+            trans = self.tf_buffer.lookup_transform(self.odom_frame, self.base_frame, now)   
             return trans       
          except (LookupException, ConnectivityException, ExtrapolationException):
-            self.get_logger().info('transform not ready')
+            self.get_logger().info('transform not ready.')
             raise
             return
          

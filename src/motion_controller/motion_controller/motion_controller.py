@@ -95,6 +95,8 @@ class Motion_Controller(Node):
     def angle_timer_work_(self):
         ref = self.get_odom_angle_()
         ref = self.get_odom_angle_()
+        print(ref)
+        print(radians(self.angle))
         self.angle_pid.pid_calculate(ref=ref, goal=radians(self.angle))
         self.move_cmd.angular.z = self.angle_pid.out
         self.cmd_vel.publish(self.move_cmd)

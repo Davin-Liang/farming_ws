@@ -213,10 +213,10 @@ class Motion_Controller(Node):
             """ 获取旋转矩阵的欧拉角。GetRPY()返回的是一个长度为3的列表, 包含了旋转矩阵的roll、pitch和yaw角度。
                     在这里, [2]索引表示取得yaw角度, 也就是绕z轴的旋转角度 """
             angle_rot = cacl_rot.GetRPY()[2]
+            return angle_rot
         except (LookupException, ConnectivityException, ExtrapolationException):
             self.get_logger().info('transform not ready')
             return       
-        return angle_rot
 
     def set_distance(self, distance, speed=0.5):
         """ 设置车轮方向的行驶距离及以什么样的速度行驶 """

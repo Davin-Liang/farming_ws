@@ -192,7 +192,7 @@ class Motion_Controller(Node):
         try:
             now = rclpy.time.Time()
             # 从 self.tf_buffer 中查询从 self.odom_frame 到 self.base_frame 之间的坐标变换信息，并且在当前时间 now 进行查询
-            trans = self.tf_buffer.lookup_transform(self.odom_frame, self.base_frame, now, Duration(sec=5.0))   
+            trans = self.tf_buffer.lookup_transform(self.odom_frame, self.base_frame, now, Duration(sec=5))   
             return trans       
         except (LookupException, ConnectivityException, ExtrapolationException):
             self.get_logger().info('transform not ready.')
@@ -206,7 +206,7 @@ class Motion_Controller(Node):
         """ 得到目前的子坐标系相对夫坐标系转动的角度(弧度制)，父坐标系是不动的 """
         try:
             now = rclpy.time.Time()
-            rot = self.tf_buffer.lookup_transform(self.odom_frame, self.base_frame, now, Duration(sec=5.0))
+            rot = self.tf_buffer.lookup_transform(self.odom_frame, self.base_frame, now, Duration(sec=5))
             # 创建了一个四元数对象   
             cacl_rot = PyKDL.Rotation.Quaternion(rot.transform.rotation.x, rot.transform.rotation.y, rot.transform.rotation.z, rot.transform.rotation.w)
             """ 获取旋转矩阵的欧拉角。GetRPY()返回的是一个长度为3的列表, 包含了旋转矩阵的roll、pitch和yaw角度。

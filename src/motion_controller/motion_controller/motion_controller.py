@@ -137,14 +137,16 @@ class Motion_Controller(Node):
                 print("任务已完成")
             else: # 未达到目标的情况
                 self.move_cmd.linear.x = copysign(self.liear_speed, -1*self.distance_error)
-            self.cmd_vel.publish(self.move_cmd)
+            
         else: # 未设定目标的情况
             self.status_of_finishing_goal = False
+            self.move_cmd.linear.x = 0.0
             self.x_start = self.get_position_().transform.translation.x
             self.y_start = self.get_position_().transform.translation.y
             print("停车状态下的 X 坐标值: ", self.x_start)
             print("停车状态下的 Y 坐标值: ", self.y_start)
-            self.cmd_vel.publish(Twist())   
+            # self.cmd_vel.publish(Twist())   
+        self.cmd_vel.publish(self.move_cmd)
         
         # # 角度控制
         # if self.start_action_for_angle:

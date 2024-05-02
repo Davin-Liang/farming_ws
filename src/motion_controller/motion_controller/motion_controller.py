@@ -20,11 +20,21 @@ class Motion_Controller(Node):
     def __init__(self, name):
         super().__init__(name)
 
-        self.angle_pid = PID(1.5, 0.0, 0.0, 2.0, 0.0)
+        self.angle_pid = PID(1.5, 0.2, 0.0, 2.0, 1.0)
 
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.move_cmd = Twist()
 
+        self.declare_parameter('Kp', 1.5)
+        self.angle_pid.Kp = self.get_parameter('Kp').get_parameter_value().double_value
+        self.declare_parameter('Ki', 0.2)
+        self.angle_pid.Ki = self.get_parameter('Ki').get_parameter_value().double_value
+        self.declare_parameter('max_out', 2.0)
+        self.angle_pid.max_out = self.get_parameter('max_out').get_parameter_value().double_value
+        self.declare_parameter('max_iout', 1.0)
+        self.angle_pid.max_iout = self.get_parameter('max_iout').get_parameter_value().double_value
+
+        
         #declare_parameter
         self.declare_parameter('rate', 20.0)
         self.rate = self.get_parameter('rate').get_parameter_value().double_value
@@ -198,6 +208,11 @@ class Motion_Controller(Node):
 
         self.liear_speed = self.get_parameter('liear_speed').get_parameter_value().double_value
         self.angular_speed = self.get_parameter('angular_speed').get_parameter_value().double_value
+
+        self.angle_pid.Kp = self.get_parameter('Kp').get_parameter_value().double_value
+        self.angle_pid.Ki = self.get_parameter('Ki').get_parameter_value().double_value
+        self.angle_pid.max_out = self.get_parameter('max_out').get_parameter_value().double_value
+        self.angle_pid.max_iout = self.get_parameter('max_iout').get_parameter_value().double_value
      
     def get_position_(self):
         try:

@@ -20,7 +20,7 @@ class Motion_Controller(Node):
     def __init__(self, name):
         super().__init__(name)
 
-        self.angle_pid = PID(1.5, 0.2, 0.0, 2.0, 1.0)
+        self.angle_pid = PID(1.5, 0.05, 0.0, 2.0, 0.25)
 
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.move_cmd = Twist()

@@ -121,11 +121,11 @@ class Motion_Controller(Node):
     def distance_timer_work_(self):
         # 更新参数
         self.get_param_()
-        ref = self.get_odom_angle_()
-        print(ref)
-        # print(radians(self.angle))
-        self.angle_pid.pid_calculate(ref=ref, goal=self.angle)
-        self.move_cmd.angular.z = self.angle_pid.out
+        # ref = self.get_odom_angle_()
+        # print(ref)
+        # # print(radians(self.angle))
+        # self.angle_pid.pid_calculate(ref=ref, goal=self.angle)
+        # self.move_cmd.angular.z = self.angle_pid.out
 
         # 距离控制
         if self.start_action_for_distance:

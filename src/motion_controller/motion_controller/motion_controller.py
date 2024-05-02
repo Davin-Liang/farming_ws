@@ -32,7 +32,7 @@ class Motion_Controller(Node):
         # 目标值
         self.declare_parameter('distance', 1.0)
         self.distance = self.get_parameter('distance').get_parameter_value().double_value
-        self.declare_parameter('angle', 180.0)
+        self.declare_parameter('angle', 90.0)
         self.angle = self.get_parameter('angle').get_parameter_value().double_value
         self.angle = radians(self.angle)
         
@@ -147,7 +147,7 @@ class Motion_Controller(Node):
             print("停车状态下的 Y 坐标值: ", self.y_start)
             # self.cmd_vel.publish(Twist())   
         self.cmd_vel.publish(self.move_cmd)
-        
+
         # # 角度控制
         # if self.start_action_for_angle:
         #     self.angle_error = self.angle - self.turn_angle

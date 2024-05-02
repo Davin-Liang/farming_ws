@@ -94,6 +94,8 @@ class Motion_Controller(Node):
         self.load_config_file_()
         print ("Finish init work.")
 
+        time.sleep(10.0)
+
     def angle_timer_work_(self):
         ref = self.get_odom_angle_()
         ref = self.get_odom_angle_()

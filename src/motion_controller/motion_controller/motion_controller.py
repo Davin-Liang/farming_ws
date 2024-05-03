@@ -20,21 +20,26 @@ class Motion_Controller(Node):
     def __init__(self, name):
         super().__init__(name)
 
-        self.angle_pid = PID(1.5, 0.05, 0.0, 2.0, 0.25)
+        self.ori_angle_pid = PID(1.5, 0.05, 0.0, 2.0, 0.25)
+        # self.ori_speed_pid = PID(1.5, 0.05, 0.0, 2.0, 0.25)
+        
+        self.distance_pid = PID(0.6, 0.02, 0.0, 0.5, 0.15)
+        # self.distance_speed_pid = PID()
+
 
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.move_cmd = Twist()
 
         self.declare_parameter('Kp', 1.5)
-        self.angle_pid.Kp = self.get_parameter('Kp').get_parameter_value().double_value
+        self.ori_angle_pid.Kp = self.get_parameter('Kp').get_parameter_value().double_value
         self.declare_parameter('Ki', 0.005)
-        self.angle_pid.Ki = self.get_parameter('Ki').get_parameter_value().double_value
+        self.ori_angle_pid.Ki = self.get_parameter('Ki').get_parameter_value().double_value
         self.declare_parameter('max_out', 2.0)
-        self.angle_pid.max_out = self.get_parameter('max_out').get_parameter_value().double_value
+        self.ori_angle_pid.max_out = self.get_parameter('max_out').get_parameter_value().double_value
         self.declare_parameter('max_iout', 0.02)
-        self.angle_pid.max_iout = self.get_parameter('max_iout').get_parameter_value().double_value
+        self.ori_angle_pid.max_iout = self.get_parameter('max_iout').get_parameter_value().double_value
         self.declare_parameter('Kd', 0.0)
-        self.angle_pid.Kd = self.get_parameter('Kd').get_parameter_value().double_value
+        self.ori_angle_pid.Kd = self.get_parameter('Kd').get_parameter_value().double_value
 
         
         #declare_parameter
@@ -101,7 +106,7 @@ class Motion_Controller(Node):
         time.sleep(10.0)
 
         # 创建定时器
-        self.distance_timer = self.create_timer(0.05, self.distance_timer_work_)
+        self.distance_timer = self.create_timer(0.04, self.distance_timer_work_)
         # self.angle_timer = self.create_timer(0.01, self.angle_timer_work_)
 
         self.file_path = os.path.expanduser('~/farming_ws/src/motion_controller/config/position_point.yaml')
@@ -114,8 +119,8 @@ class Motion_Controller(Node):
         ref = self.get_odom_angle_()
         print(ref)
         # print(radians(self.angle))
-        self.angle_pid.pid_calculate(ref=ref, goal=self.angle)
-        self.move_cmd.angular.z = self.angle_pid.out
+        self.ori_angle_pid.pid_calculate(ref=ref, goal=self.angle)
+        self.move_cmd.angular.z = self.ori_angle_pid.out
         self.cmd_vel.publish(self.move_cmd)
         
     def distance_timer_work_(self):
@@ -124,8 +129,8 @@ class Motion_Controller(Node):
         ref = self.get_odom_angle_()
         print(ref)
         # print(radians(self.angle))
-        self.angle_pid.pid_calculate(ref=ref, goal=self.angle)
-        self.move_cmd.angular.z = self.angle_pid.out
+        self.ori_angle_pid.pid_calculate(ref=ref, goal=self.angle)
+        self.move_cmd.angular.z = self.ori_angle_pid.out
 
         # 距离控制
         if self.start_action_for_distance:
@@ -148,7 +153,8 @@ class Motion_Controller(Node):
                 self.set_parameters(all_new_parameters)
                 print("任务已完成")
             else: # 未达到目标的情况
-                self.move_cmd.linear.x = copysign(self.liear_speed, -1*self.distance_error)
+                self.distance_pid.pid_calculate(o_distance, self.distance)
+                self.move_cmd.linear.x = self.distance_pid.out
         else: # 未设定目标的情况
             self.status_of_finishing_goal = False
             self.move_cmd.linear.x = 0.0
@@ -210,11 +216,11 @@ class Motion_Controller(Node):
         self.liear_speed = self.get_parameter('liear_speed').get_parameter_value().double_value
         self.angular_speed = self.get_parameter('angular_speed').get_parameter_value().double_value
 
-        self.angle_pid.Kp = self.get_parameter('Kp').get_parameter_value().double_value
-        self.angle_pid.Ki = self.get_parameter('Ki').get_parameter_value().double_value
-        self.angle_pid.max_out = self.get_parameter('max_out').get_parameter_value().double_value
-        self.angle_pid.max_iout = self.get_parameter('max_iout').get_parameter_value().double_value
-        self.angle_pid.Kd = self.get_parameter('Kd').get_parameter_value().double_value
+        self.ori_angle_pid.Kp = self.get_parameter('Kp').get_parameter_value().double_value
+        self.ori_angle_pid.Ki = self.get_parameter('Ki').get_parameter_value().double_value
+        self.ori_angle_pid.max_out = self.get_parameter('max_out').get_parameter_value().double_value
+        self.ori_angle_pid.max_iout = self.get_parameter('max_iout').get_parameter_value().double_value
+        self.ori_angle_pid.Kd = self.get_parameter('Kd').get_parameter_value().double_value
      
     def get_position_(self):
         try:

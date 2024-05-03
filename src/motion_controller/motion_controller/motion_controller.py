@@ -44,7 +44,7 @@ class Motion_Controller(Node):
         # 目标值
         self.declare_parameter('distance', 1.0)
         self.distance = self.get_parameter('distance').get_parameter_value().double_value
-        self.declare_parameter('angle', 90.0)
+        self.declare_parameter('angle', 0.0)
         self.angle = self.get_parameter('angle').get_parameter_value().double_value
         self.angle = radians(self.angle)
         
@@ -121,11 +121,11 @@ class Motion_Controller(Node):
     def distance_timer_work_(self):
         # 更新参数
         self.get_param_()
-        # ref = self.get_odom_angle_()
-        # print(ref)
-        # # print(radians(self.angle))
-        # self.angle_pid.pid_calculate(ref=ref, goal=self.angle)
-        # self.move_cmd.angular.z = self.angle_pid.out
+        ref = self.get_odom_angle_()
+        print(ref)
+        # print(radians(self.angle))
+        self.angle_pid.pid_calculate(ref=ref, goal=self.angle)
+        self.move_cmd.angular.z = self.angle_pid.out
 
         # 距离控制
         if self.start_action_for_distance:
@@ -149,7 +149,6 @@ class Motion_Controller(Node):
                 print("任务已完成")
             else: # 未达到目标的情况
                 self.move_cmd.linear.x = copysign(self.liear_speed, -1*self.distance_error)
-            
         else: # 未设定目标的情况
             self.status_of_finishing_goal = False
             self.move_cmd.linear.x = 0.0

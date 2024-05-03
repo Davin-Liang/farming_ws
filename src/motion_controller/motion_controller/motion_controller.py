@@ -117,7 +117,7 @@ class Motion_Controller(Node):
         time.sleep(10.0)
 
         # 创建定时器
-        self.distance_timer = self.create_timer(0.01, self.distance_timer_work_)
+        self.distance_timer = self.create_timer(0.005, self.distance_timer_work_)
         # self.angle_timer = self.create_timer(0.01, self.angle_timer_work_)
 
         self.file_path = os.path.expanduser('~/farming_ws/src/motion_controller/config/position_point.yaml')

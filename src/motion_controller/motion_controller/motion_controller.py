@@ -146,15 +146,19 @@ class Motion_Controller(Node):
             self.distance_error = o_distance - self.distance # 负值控制车向前，正值控制车向后
             print("误差当前值为: ", self.distance_error)
 
-            if abs(self.distance_error) < self.distance_tolerance: # 达到目标的情况
-                # 创建了一个名为 start_test 的参数，并将其类型设置为布尔型（BOOL），初始值为 False 。这似乎是为了确保 start_test 参数存在且初始化为 False
-                self.start_action_for_distance = rclpy.parameter.Parameter('start_action_for_distance', rclpy.Parameter.Type.BOOL, False)
-                all_new_parameters = [self.start_action_for_distance]
-                self.set_parameters(all_new_parameters)
-                print("任务已完成")
-            else: # 未达到目标的情况
-                self.distance_pid.pid_calculate(o_distance, self.distance)
-                self.move_cmd.linear.x = self.distance_pid.out
+            self.distance_pid.pid_calculate(o_distance, self.distance)
+            self.move_cmd.linear.x = self.distance_pid.out
+
+            # if abs(self.distance_error) < self.distance_tolerance: # 达到目标的情况
+            #     pass
+            #     # 创建了一个名为 start_test 的参数，并将其类型设置为布尔型（BOOL），初始值为 False 。这似乎是为了确保 start_test 参数存在且初始化为 False
+            #     # self.start_action_for_distance = rclpy.parameter.Parameter('start_action_for_distance', rclpy.Parameter.Type.BOOL, False)
+            #     # all_new_parameters = [self.start_action_for_distance]
+            #     # self.set_parameters(all_new_parameters)
+            #     # print("任务已完成")
+            # else: # 未达到目标的情况
+            #     self.distance_pid.pid_calculate(o_distance, self.distance)
+            #     self.move_cmd.linear.x = self.distance_pid.out
         else: # 未设定目标的情况
             self.status_of_finishing_goal = False
             self.move_cmd.linear.x = 0.0

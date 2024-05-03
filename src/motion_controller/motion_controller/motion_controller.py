@@ -30,16 +30,27 @@ class Motion_Controller(Node):
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.move_cmd = Twist()
 
-        self.declare_parameter('Kp', 1.5)
-        self.ori_angle_pid.Kp = self.get_parameter('Kp').get_parameter_value().double_value
-        self.declare_parameter('Ki', 0.005)
-        self.ori_angle_pid.Ki = self.get_parameter('Ki').get_parameter_value().double_value
-        self.declare_parameter('max_out', 2.0)
-        self.ori_angle_pid.max_out = self.get_parameter('max_out').get_parameter_value().double_value
-        self.declare_parameter('max_iout', 0.02)
-        self.ori_angle_pid.max_iout = self.get_parameter('max_iout').get_parameter_value().double_value
-        self.declare_parameter('Kd', 0.0)
-        self.ori_angle_pid.Kd = self.get_parameter('Kd').get_parameter_value().double_value
+        self.declare_parameter('Kp_ori', 1.5)
+        self.ori_angle_pid.Kp = self.get_parameter('Kp_ori').get_parameter_value().double_value
+        self.declare_parameter('Ki_ori', 0.005)
+        self.ori_angle_pid.Ki = self.get_parameter('Ki_ori').get_parameter_value().double_value
+        self.declare_parameter('max_out_ori', 2.0)
+        self.ori_angle_pid.max_out = self.get_parameter('max_out_ori').get_parameter_value().double_value
+        self.declare_parameter('max_iout_ori', 0.02)
+        self.ori_angle_pid.max_iout = self.get_parameter('max_iout_ori').get_parameter_value().double_value
+        self.declare_parameter('Kd_ori', 0.0)
+        self.ori_angle_pid.Kd = self.get_parameter('Kd_ori').get_parameter_value().double_value
+
+        self.declare_parameter('Kp_distance', 1.5)
+        self.distance_pid.Kp = self.get_parameter('Kp_distance').get_parameter_value().double_value
+        self.declare_parameter('Ki_distance', 0.005)
+        self.distance_pid.Ki = self.get_parameter('Ki_distance').get_parameter_value().double_value
+        self.declare_parameter('max_out_distance', 2.0)
+        self.distance_pid.max_out = self.get_parameter('max_out_distance').get_parameter_value().double_value
+        self.declare_parameter('max_iout_distance', 0.02)
+        self.distance_pid.max_iout = self.get_parameter('max_iout_distance').get_parameter_value().double_value
+        self.declare_parameter('Kd_distance', 0.0)
+        self.distance_pid.Kd = self.get_parameter('Kd_distance').get_parameter_value().double_value
 
         
         #declare_parameter
@@ -220,11 +231,17 @@ class Motion_Controller(Node):
         self.liear_speed = self.get_parameter('liear_speed').get_parameter_value().double_value
         self.angular_speed = self.get_parameter('angular_speed').get_parameter_value().double_value
 
-        self.ori_angle_pid.Kp = self.get_parameter('Kp').get_parameter_value().double_value
-        self.ori_angle_pid.Ki = self.get_parameter('Ki').get_parameter_value().double_value
-        self.ori_angle_pid.max_out = self.get_parameter('max_out').get_parameter_value().double_value
-        self.ori_angle_pid.max_iout = self.get_parameter('max_iout').get_parameter_value().double_value
-        self.ori_angle_pid.Kd = self.get_parameter('Kd').get_parameter_value().double_value
+        self.ori_angle_pid.Kp = self.get_parameter('Kp_ori').get_parameter_value().double_value
+        self.ori_angle_pid.Ki = self.get_parameter('Ki_ori').get_parameter_value().double_value
+        self.ori_angle_pid.max_out = self.get_parameter('max_out_ori').get_parameter_value().double_value
+        self.ori_angle_pid.max_iout = self.get_parameter('max_iout_ori').get_parameter_value().double_value
+        self.ori_angle_pid.Kd = self.get_parameter('Kd_ori').get_parameter_value().double_value
+
+        self.distance_pid.Kp = self.get_parameter('Kp_distance').get_parameter_value().double_value
+        self.distance_pid.Ki = self.get_parameter('Ki_distance').get_parameter_value().double_value
+        self.distance_pid.max_out = self.get_parameter('max_out_distance').get_parameter_value().double_value
+        self.distance_pid.max_iout = self.get_parameter('max_iout_distance').get_parameter_value().double_value
+        self.distance_pid.Kd = self.get_parameter('Kd_distance').get_parameter_value().double_value
      
     def get_position_(self):
         try:

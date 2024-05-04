@@ -1,4 +1,0 @@
-source;share/imu_complementary_filter/local_setup.bash
-source;share/imu_complementary_filter/local_setup.dsv
-source;share/imu_complementary_filter/local_setup.sh
-source;share/imu_complementary_filter/local_setup.zsh

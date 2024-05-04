@@ -30,15 +30,15 @@ class Motion_Controller(Node):
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.move_cmd = Twist()
 
-        self.declare_parameter('Kp_ori', 1.5)
+        self.declare_parameter('Kp_ori', 0.51)
         self.ori_angle_pid.Kp = self.get_parameter('Kp_ori').get_parameter_value().double_value
-        self.declare_parameter('Ki_ori', 0.005)
+        self.declare_parameter('Ki_ori', 0.0)
         self.ori_angle_pid.Ki = self.get_parameter('Ki_ori').get_parameter_value().double_value
-        self.declare_parameter('max_out_ori', 2.0)
+        self.declare_parameter('max_out_ori', 1.6)
         self.ori_angle_pid.max_out = self.get_parameter('max_out_ori').get_parameter_value().double_value
-        self.declare_parameter('max_iout_ori', 0.02)
+        self.declare_parameter('max_iout_ori', 0.0)
         self.ori_angle_pid.max_iout = self.get_parameter('max_iout_ori').get_parameter_value().double_value
-        self.declare_parameter('Kd_ori', 0.0)
+        self.declare_parameter('Kd_ori', 0.126)
         self.ori_angle_pid.Kd = self.get_parameter('Kd_ori').get_parameter_value().double_value
 
         self.declare_parameter('Kp_distance', 1.5)

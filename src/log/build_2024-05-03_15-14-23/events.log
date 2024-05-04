@@ -1,0 +1,197 @@
+[0.000000] (-) TimerEvent: {}
+[0.001459] (-) JobUnselected: {'identifier': 'farming_navigation2'}
+[0.001949] (-) JobUnselected: {'identifier': 'farming_vision'}
+[0.003090] (-) JobUnselected: {'identifier': 'imu_filter_madgwick'}
+[0.004129] (-) JobUnselected: {'identifier': 'imu_tools'}
+[0.004602] (-) JobUnselected: {'identifier': 'motion_controller'}
+[0.004776] (-) JobUnselected: {'identifier': 'robot_localization'}
+[0.004931] (-) JobUnselected: {'identifier': 'yahboomcar_base_node'}
+[0.005095] (-) JobUnselected: {'identifier': 'yahboomcar_bringup'}
+[0.005260] (-) JobUnselected: {'identifier': 'yahboomcar_ctrl'}
+[0.005413] (-) JobUnselected: {'identifier': 'yahboomcar_description'}
+[0.005604] (imu_complementary_filter) JobQueued: {'identifier': 'imu_complementary_filter', 'dependencies': OrderedDict()}
+[0.005771] (imu_complementary_filter) JobStarted: {'identifier': 'imu_complementary_filter'}
+[0.100070] (-) TimerEvent: {}
+[0.201077] (-) TimerEvent: {}
+[0.304024] (-) TimerEvent: {}
+[0.405115] (-) TimerEvent: {}
+[0.510173] (-) TimerEvent: {}
+[0.612811] (-) TimerEvent: {}
+[0.715365] (-) TimerEvent: {}
+[0.818400] (-) TimerEvent: {}
+[0.926184] (-) TimerEvent: {}
+[1.028050] (-) TimerEvent: {}
+[1.129373] (-) TimerEvent: {}
+[1.231646] (-) TimerEvent: {}
+[1.332747] (-) TimerEvent: {}
+[1.434250] (-) TimerEvent: {}
+[1.537750] (-) TimerEvent: {}
+[1.638994] (-) TimerEvent: {}
+[1.741565] (-) TimerEvent: {}
+[1.843247] (-) TimerEvent: {}
+[1.946370] (-) TimerEvent: {}
+[2.048391] (-) TimerEvent: {}
+[2.151030] (-) TimerEvent: {}
+[2.253329] (-) TimerEvent: {}
+[2.356430] (-) TimerEvent: {}
+[2.459777] (-) TimerEvent: {}
+[2.561079] (-) TimerEvent: {}
+[2.667283] (-) TimerEvent: {}
+[2.768931] (-) TimerEvent: {}
+[2.873001] (-) TimerEvent: {}
+[2.974176] (-) TimerEvent: {}
+[3.076470] (-) TimerEvent: {}
+[3.177606] (-) TimerEvent: {}
+[3.282185] (-) TimerEvent: {}
+[3.389084] (-) TimerEvent: {}
+[3.490713] (-) TimerEvent: {}
+[3.592811] (-) TimerEvent: {}
+[3.695761] (-) TimerEvent: {}
+[3.797857] (-) TimerEvent: {}
+[3.899167] (-) TimerEvent: {}
+[4.000919] (-) TimerEvent: {}
+[4.107216] (-) TimerEvent: {}
+[4.220541] (-) TimerEvent: {}
+[4.326050] (-) TimerEvent: {}
+[4.427243] (-) TimerEvent: {}
+[4.533868] (-) TimerEvent: {}
+[4.636356] (-) TimerEvent: {}
+[4.739097] (-) TimerEvent: {}
+[4.840395] (-) TimerEvent: {}
+[4.941485] (-) TimerEvent: {}
+[5.043601] (-) TimerEvent: {}
+[5.144788] (-) TimerEvent: {}
+[5.249604] (-) TimerEvent: {}
+[5.353819] (-) TimerEvent: {}
+[5.456569] (-) TimerEvent: {}
+[5.558644] (-) TimerEvent: {}
+[5.660426] (-) TimerEvent: {}
+[5.763674] (-) TimerEvent: {}
+[5.867957] (-) TimerEvent: {}
+[5.969100] (-) TimerEvent: {}
+[6.072276] (-) TimerEvent: {}
+[6.175723] (-) TimerEvent: {}
+[6.277640] (-) TimerEvent: {}
+[6.380117] (-) TimerEvent: {}
+[6.482557] (-) TimerEvent: {}
+[6.584524] (-) TimerEvent: {}
+[6.685614] (-) TimerEvent: {}
+[6.786906] (-) TimerEvent: {}
+[6.889364] (-) TimerEvent: {}
+[6.992480] (-) TimerEvent: {}
+[7.094741] (-) TimerEvent: {}
+[7.196983] (-) TimerEvent: {}
+[7.301853] (-) TimerEvent: {}
+[7.405088] (-) TimerEvent: {}
+[7.507104] (-) TimerEvent: {}
+[7.609028] (-) TimerEvent: {}
+[7.648472] (imu_complementary_filter) JobProgress: {'identifier': 'imu_complementary_filter', 'progress': 'cmake'}
+[7.652813] (imu_complementary_filter) JobProgress: {'identifier': 'imu_complementary_filter', 'progress': 'build'}
+[7.657771] (imu_complementary_filter) Command: {'cmd': ['/usr/bin/cmake', '--build', '/root/farming_ws/src/build/imu_complementary_filter', '--', '-j4', '-l4'], 'cwd': '/root/farming_ws/src/build/imu_complementary_filter', 'env': OrderedDict([('LANGUAGE', 'en_US.UTF-8'), ('USER', 'root'), ('SSH_CLIENT', '192.168.8.167 47548 22'), ('LC_TIME', 'zh_CN.UTF-8'), ('XDG_SESSION_TYPE', 'tty'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/root/farming_ws/install/robot_localization/lib:/root/farming_ws/install/imu_filter_madgwick/lib:/root/catkin_ws/install/serial/lib:/root/catkin_ws/install/originbot_msgs/lib:/userdata/dev_ws/install/serial/lib:/userdata/dev_ws/install/send_goal/lib:/userdata/dev_ws/install/originbot_msgs/lib:/opt/tros/opt/yaml_cpp_vendor/lib:/opt/tros/lib:/usr/lib/aarch64-linux-gnu/gazebo-11/plugins:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/aarch64-linux-gnu:/opt/ros/foxy/lib'), ('MOTD_SHOWN', 'pam'), ('HOME', '/root'), ('OLDPWD', '/root/farming_ws'), ('SSH_TTY', '/dev/pts/0'), ('ROS_PYTHON_VERSION', '3'), ('LC_MONETARY', 'zh_CN.UTF-8'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/0/bus'), ('COLCON_PREFIX_PATH', '/root/farming_ws/src/install:/root/farming_ws/install:/root/catkin_ws/install:/userdata/dev_ws/install:/opt/tros'), ('ROS_DISTRO', 'foxy'), ('LOGNAME', 'root'), ('_', '/usr/local/bin/colcon'), ('ROS_VERSION', '2'), ('PKG_CONFIG_PATH', '/opt/tros/lib/x86_64-linux-gnu/pkgconfig:/opt/tros/lib/pkgconfig'), ('XDG_SESSION_CLASS', 'user'), ('TERM', 'xterm-256color'), ('XDG_SESSION_ID', '1'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/tros/bin:/opt/ros/foxy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'), ('CAM_TYPE', 'mipi'), ('LC_ADDRESS', 'zh_CN.UTF-8'), ('XDG_RUNTIME_DIR', '/run/user/0'), ('LANG', 'en_US.UTF-8'), ('LC_TELEPHONE', 'zh_CN.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('AMENT_PREFIX_PATH', '/root/farming_ws/src/install/imu_complementary_filter:/root/farming_ws/install/yahboomcar_description:/root/farming_ws/install/yahboomcar_ctrl:/root/farming_ws/install/yahboomcar_bringup:/root/farming_ws/install/yahboomcar_base_node:/root/farming_ws/install/imu_tools:/root/farming_ws/install/robot_localization:/root/farming_ws/install/motion_controller:/root/farming_ws/install/imu_filter_madgwick:/root/farming_ws/install/imu_complementary_filter:/root/farming_ws/install/farming_vision:/root/farming_ws/install/farming_navigation2:/root/catkin_ws/install/ydlidar_ros2_driver:/root/catkin_ws/install/vlpr:/root/catkin_ws/install/utils:/root/catkin_ws/install/take_pictures_node:/root/catkin_ws/install/originbot_base:/root/catkin_ws/install/serial:/root/catkin_ws/install/send_goal:/root/catkin_ws/install/qr_code_detection:/root/catkin_ws/install/qr_code_control:/root/catkin_ws/install/play_football:/root/catkin_ws/install/parking_search:/root/catkin_ws/install/originbot_teleop:/root/catkin_ws/install/originbot_navigation:/root/catkin_ws/install/originbot_linefollower:/root/catkin_ws/install/originbot_demo:/root/catkin_ws/install/originbot_msgs:/root/catkin_ws/install/originbot_bringup:/root/catkin_ws/install/originbot_autonomous:/root/catkin_ws/install/line_follower_perception:/root/catkin_ws/install/gesture_control:/root/catkin_ws/install/body_tracking:/userdata/dev_ws/install/ydlidar_ros2_driver:/userdata/dev_ws/install/vlpr:/userdata/dev_ws/install/utils:/userdata/dev_ws/install/take_pictures_node:/userdata/dev_ws/install/originbot_base:/userdata/dev_ws/install/serial:/userdata/dev_ws/install/send_goal:/userdata/dev_ws/install/qr_code_detection:/userdata/dev_ws/install/qr_code_control:/userdata/dev_ws/install/play_football:/userdata/dev_ws/install/parking_search:/userdata/dev_ws/install/originbot_teleop:/userdata/dev_ws/install/originbot_navigation:/userdata/dev_ws/install/originbot_linefollower:/userdata/dev_ws/install/originbot_demo:/userdata/dev_ws/install/originbot_msgs:/userdata/dev_ws/install/originbot_bringup:/userdata/dev_ws/install/originbot_autonomous:/userdata/dev_ws/install/line_follower_perception:/userdata/dev_ws/install/gesture_control:/userdata/dev_ws/install/body_tracking:/opt/tros:/opt/ros/foxy'), ('SHELL', '/bin/bash'), ('LC_NAME', 'zh_CN.UTF-8'), ('LC_MEASUREMENT', 'zh_CN.UTF-8'), ('LC_IDENTIFICATION', 'zh_CN.UTF-8'), ('PWD', '/root/farming_ws/src/build/imu_complementary_filter'), ('LC_ALL', 'en_US.UTF-8'), ('SSH_CONNECTION', '192.168.8.167 47548 192.168.8.80 22'), ('PYTHONPATH', '/root/farming_ws/install/yahboomcar_description/lib/python3.8/site-packages:/root/farming_ws/install/yahboomcar_ctrl/lib/python3.8/site-packages:/root/farming_ws/install/yahboomcar_bringup/lib/python3.8/site-packages:/root/farming_ws/install/robot_localization/lib/python3.8/site-packages:/root/farming_ws/install/motion_controller/lib/python3.8/site-packages:/root/farming_ws/install/farming_vision/lib/python3.8/site-packages:/root/farming_ws/install/farming_navigation2/lib/python3.8/site-packages:/root/catkin_ws/install/vlpr/lib/python3.8/site-packages:/root/catkin_ws/install/qr_code_detection/lib/python3.8/site-packages:/root/catkin_ws/install/qr_code_control/lib/python3.8/site-packages:/root/catkin_ws/install/originbot_linefollower/lib/python3.8/site-packages:/root/catkin_ws/install/originbot_demo/lib/python3.8/site-packages:/root/catkin_ws/install/originbot_msgs/lib/python3.8/site-packages:/userdata/dev_ws/install/vlpr/lib/python3.8/site-packages:/userdata/dev_ws/install/qr_code_detection/lib/python3.8/site-packages:/userdata/dev_ws/install/qr_code_control/lib/python3.8/site-packages:/userdata/dev_ws/install/originbot_linefollower/lib/python3.8/site-packages:/userdata/dev_ws/install/originbot_demo/lib/python3.8/site-packages:/userdata/dev_ws/install/originbot_msgs/lib/python3.8/site-packages:/opt/tros/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages'), ('LC_NUMERIC', 'zh_CN.UTF-8'), ('LC_PAPER', 'zh_CN.UTF-8'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/root/farming_ws/src/install/imu_complementary_filter:/root/farming_ws/install/yahboomcar_base_node:/root/farming_ws/install/imu_tools:/root/farming_ws/install/robot_localization:/root/farming_ws/install/imu_filter_madgwick:/root/farming_ws/install/imu_complementary_filter:/root/catkin_ws/install/ydlidar_ros2_driver:/root/catkin_ws/install/utils:/root/catkin_ws/install/take_pictures_node:/root/catkin_ws/install/originbot_base:/root/catkin_ws/install/serial:/root/catkin_ws/install/send_goal:/root/catkin_ws/install/play_football:/root/catkin_ws/install/parking_search:/root/catkin_ws/install/originbot_teleop:/root/catkin_ws/install/originbot_navigation:/root/catkin_ws/install/originbot_msgs:/root/catkin_ws/install/originbot_bringup:/root/catkin_ws/install/originbot_autonomous:/root/catkin_ws/install/line_follower_perception:/root/catkin_ws/install/gesture_control:/root/catkin_ws/install/body_tracking:/userdata/dev_ws/install/ydlidar_ros2_driver:/userdata/dev_ws/install/utils:/userdata/dev_ws/install/take_pictures_node:/userdata/dev_ws/install/originbot_base:/userdata/dev_ws/install/serial:/userdata/dev_ws/install/send_goal:/userdata/dev_ws/install/play_football:/userdata/dev_ws/install/parking_search:/userdata/dev_ws/install/originbot_teleop:/userdata/dev_ws/install/originbot_navigation:/userdata/dev_ws/install/originbot_msgs:/userdata/dev_ws/install/originbot_bringup:/userdata/dev_ws/install/originbot_autonomous:/userdata/dev_ws/install/line_follower_perception:/userdata/dev_ws/install/gesture_control:/userdata/dev_ws/install/body_tracking:/opt/tros:/root/farming_ws/install/yahboomcar_description:/root/farming_ws/install/yahboomcar_ctrl:/root/farming_ws/install/yahboomcar_bringup:/root/farming_ws/install/motion_controller:/root/farming_ws/install/farming_vision:/root/farming_ws/install/farming_navigation2:/root/catkin_ws/install/vlpr:/root/catkin_ws/install/qr_code_detection:/root/catkin_ws/install/qr_code_control:/root/catkin_ws/install/originbot_linefollower:/root/catkin_ws/install/originbot_demo:/userdata/dev_ws/install/vlpr:/userdata/dev_ws/install/qr_code_detection:/userdata/dev_ws/install/qr_code_control:/userdata/dev_ws/install/originbot_linefollower:/userdata/dev_ws/install/originbot_demo:/opt/ros/foxy')]), 'shell': False}
+[7.709337] (-) TimerEvent: {}
+[7.810545] (-) TimerEvent: {}
+[7.911625] (-) TimerEvent: {}
+[7.972528] (imu_complementary_filter) StdoutLine: {'line': b'[ 60%] Built target complementary_filter\n'}
+[8.011843] (-) TimerEvent: {}
+[8.112822] (-) TimerEvent: {}
+[8.119455] (imu_complementary_filter) StdoutLine: {'line': b'[100%] Built target complementary_filter_node\n'}
+[8.173458] (imu_complementary_filter) CommandEnded: {'returncode': 0}
+[8.213142] (-) TimerEvent: {}
+[8.289997] (imu_complementary_filter) JobProgress: {'identifier': 'imu_complementary_filter', 'progress': 'install'}
+[8.313409] (-) TimerEvent: {}
+[8.344280] (imu_complementary_filter) Command: {'cmd': ['/usr/bin/cmake', '--install', '/root/farming_ws/src/build/imu_complementary_filter'], 'cwd': '/root/farming_ws/src/build/imu_complementary_filter', 'env': OrderedDict([('LANGUAGE', 'en_US.UTF-8'), ('USER', 'root'), ('SSH_CLIENT', '192.168.8.167 47548 22'), ('LC_TIME', 'zh_CN.UTF-8'), ('XDG_SESSION_TYPE', 'tty'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/root/farming_ws/install/robot_localization/lib:/root/farming_ws/install/imu_filter_madgwick/lib:/root/catkin_ws/install/serial/lib:/root/catkin_ws/install/originbot_msgs/lib:/userdata/dev_ws/install/serial/lib:/userdata/dev_ws/install/send_goal/lib:/userdata/dev_ws/install/originbot_msgs/lib:/opt/tros/opt/yaml_cpp_vendor/lib:/opt/tros/lib:/usr/lib/aarch64-linux-gnu/gazebo-11/plugins:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/aarch64-linux-gnu:/opt/ros/foxy/lib'), ('MOTD_SHOWN', 'pam'), ('HOME', '/root'), ('OLDPWD', '/root/farming_ws'), ('SSH_TTY', '/dev/pts/0'), ('ROS_PYTHON_VERSION', '3'), ('LC_MONETARY', 'zh_CN.UTF-8'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/0/bus'), ('COLCON_PREFIX_PATH', '/root/farming_ws/src/install:/root/farming_ws/install:/root/catkin_ws/install:/userdata/dev_ws/install:/opt/tros'), ('ROS_DISTRO', 'foxy'), ('LOGNAME', 'root'), ('_', '/usr/local/bin/colcon'), ('ROS_VERSION', '2'), ('PKG_CONFIG_PATH', '/opt/tros/lib/x86_64-linux-gnu/pkgconfig:/opt/tros/lib/pkgconfig'), ('XDG_SESSION_CLASS', 'user'), ('TERM', 'xterm-256color'), ('XDG_SESSION_ID', '1'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/tros/bin:/opt/ros/foxy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'), ('CAM_TYPE', 'mipi'), ('LC_ADDRESS', 'zh_CN.UTF-8'), ('XDG_RUNTIME_DIR', '/run/user/0'), ('LANG', 'en_US.UTF-8'), ('LC_TELEPHONE', 'zh_CN.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('AMENT_PREFIX_PATH', '/root/farming_ws/src/install/imu_complementary_filter:/root/farming_ws/install/yahboomcar_description:/root/farming_ws/install/yahboomcar_ctrl:/root/farming_ws/install/yahboomcar_bringup:/root/farming_ws/install/yahboomcar_base_node:/root/farming_ws/install/imu_tools:/root/farming_ws/install/robot_localization:/root/farming_ws/install/motion_controller:/root/farming_ws/install/imu_filter_madgwick:/root/farming_ws/install/imu_complementary_filter:/root/farming_ws/install/farming_vision:/root/farming_ws/install/farming_navigation2:/root/catkin_ws/install/ydlidar_ros2_driver:/root/catkin_ws/install/vlpr:/root/catkin_ws/install/utils:/root/catkin_ws/install/take_pictures_node:/root/catkin_ws/install/originbot_base:/root/catkin_ws/install/serial:/root/catkin_ws/install/send_goal:/root/catkin_ws/install/qr_code_detection:/root/catkin_ws/install/qr_code_control:/root/catkin_ws/install/play_football:/root/catkin_ws/install/parking_search:/root/catkin_ws/install/originbot_teleop:/root/catkin_ws/install/originbot_navigation:/root/catkin_ws/install/originbot_linefollower:/root/catkin_ws/install/originbot_demo:/root/catkin_ws/install/originbot_msgs:/root/catkin_ws/install/originbot_bringup:/root/catkin_ws/install/originbot_autonomous:/root/catkin_ws/install/line_follower_perception:/root/catkin_ws/install/gesture_control:/root/catkin_ws/install/body_tracking:/userdata/dev_ws/install/ydlidar_ros2_driver:/userdata/dev_ws/install/vlpr:/userdata/dev_ws/install/utils:/userdata/dev_ws/install/take_pictures_node:/userdata/dev_ws/install/originbot_base:/userdata/dev_ws/install/serial:/userdata/dev_ws/install/send_goal:/userdata/dev_ws/install/qr_code_detection:/userdata/dev_ws/install/qr_code_control:/userdata/dev_ws/install/play_football:/userdata/dev_ws/install/parking_search:/userdata/dev_ws/install/originbot_teleop:/userdata/dev_ws/install/originbot_navigation:/userdata/dev_ws/install/originbot_linefollower:/userdata/dev_ws/install/originbot_demo:/userdata/dev_ws/install/originbot_msgs:/userdata/dev_ws/install/originbot_bringup:/userdata/dev_ws/install/originbot_autonomous:/userdata/dev_ws/install/line_follower_perception:/userdata/dev_ws/install/gesture_control:/userdata/dev_ws/install/body_tracking:/opt/tros:/opt/ros/foxy'), ('SHELL', '/bin/bash'), ('LC_NAME', 'zh_CN.UTF-8'), ('LC_MEASUREMENT', 'zh_CN.UTF-8'), ('LC_IDENTIFICATION', 'zh_CN.UTF-8'), ('PWD', '/root/farming_ws/src/build/imu_complementary_filter'), ('LC_ALL', 'en_US.UTF-8'), ('SSH_CONNECTION', '192.168.8.167 47548 192.168.8.80 22'), ('PYTHONPATH', '/root/farming_ws/install/yahboomcar_description/lib/python3.8/site-packages:/root/farming_ws/install/yahboomcar_ctrl/lib/python3.8/site-packages:/root/farming_ws/install/yahboomcar_bringup/lib/python3.8/site-packages:/root/farming_ws/install/robot_localization/lib/python3.8/site-packages:/root/farming_ws/install/motion_controller/lib/python3.8/site-packages:/root/farming_ws/install/farming_vision/lib/python3.8/site-packages:/root/farming_ws/install/farming_navigation2/lib/python3.8/site-packages:/root/catkin_ws/install/vlpr/lib/python3.8/site-packages:/root/catkin_ws/install/qr_code_detection/lib/python3.8/site-packages:/root/catkin_ws/install/qr_code_control/lib/python3.8/site-packages:/root/catkin_ws/install/originbot_linefollower/lib/python3.8/site-packages:/root/catkin_ws/install/originbot_demo/lib/python3.8/site-packages:/root/catkin_ws/install/originbot_msgs/lib/python3.8/site-packages:/userdata/dev_ws/install/vlpr/lib/python3.8/site-packages:/userdata/dev_ws/install/qr_code_detection/lib/python3.8/site-packages:/userdata/dev_ws/install/qr_code_control/lib/python3.8/site-packages:/userdata/dev_ws/install/originbot_linefollower/lib/python3.8/site-packages:/userdata/dev_ws/install/originbot_demo/lib/python3.8/site-packages:/userdata/dev_ws/install/originbot_msgs/lib/python3.8/site-packages:/opt/tros/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages'), ('LC_NUMERIC', 'zh_CN.UTF-8'), ('LC_PAPER', 'zh_CN.UTF-8'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/root/farming_ws/src/install/imu_complementary_filter:/root/farming_ws/install/yahboomcar_base_node:/root/farming_ws/install/imu_tools:/root/farming_ws/install/robot_localization:/root/farming_ws/install/imu_filter_madgwick:/root/farming_ws/install/imu_complementary_filter:/root/catkin_ws/install/ydlidar_ros2_driver:/root/catkin_ws/install/utils:/root/catkin_ws/install/take_pictures_node:/root/catkin_ws/install/originbot_base:/root/catkin_ws/install/serial:/root/catkin_ws/install/send_goal:/root/catkin_ws/install/play_football:/root/catkin_ws/install/parking_search:/root/catkin_ws/install/originbot_teleop:/root/catkin_ws/install/originbot_navigation:/root/catkin_ws/install/originbot_msgs:/root/catkin_ws/install/originbot_bringup:/root/catkin_ws/install/originbot_autonomous:/root/catkin_ws/install/line_follower_perception:/root/catkin_ws/install/gesture_control:/root/catkin_ws/install/body_tracking:/userdata/dev_ws/install/ydlidar_ros2_driver:/userdata/dev_ws/install/utils:/userdata/dev_ws/install/take_pictures_node:/userdata/dev_ws/install/originbot_base:/userdata/dev_ws/install/serial:/userdata/dev_ws/install/send_goal:/userdata/dev_ws/install/play_football:/userdata/dev_ws/install/parking_search:/userdata/dev_ws/install/originbot_teleop:/userdata/dev_ws/install/originbot_navigation:/userdata/dev_ws/install/originbot_msgs:/userdata/dev_ws/install/originbot_bringup:/userdata/dev_ws/install/originbot_autonomous:/userdata/dev_ws/install/line_follower_perception:/userdata/dev_ws/install/gesture_control:/userdata/dev_ws/install/body_tracking:/opt/tros:/root/farming_ws/install/yahboomcar_description:/root/farming_ws/install/yahboomcar_ctrl:/root/farming_ws/install/yahboomcar_bringup:/root/farming_ws/install/motion_controller:/root/farming_ws/install/farming_vision:/root/farming_ws/install/farming_navigation2:/root/catkin_ws/install/vlpr:/root/catkin_ws/install/qr_code_detection:/root/catkin_ws/install/qr_code_control:/root/catkin_ws/install/originbot_linefollower:/root/catkin_ws/install/originbot_demo:/userdata/dev_ws/install/vlpr:/userdata/dev_ws/install/qr_code_detection:/userdata/dev_ws/install/qr_code_control:/userdata/dev_ws/install/originbot_linefollower:/userdata/dev_ws/install/originbot_demo:/opt/ros/foxy')]), 'shell': False}
+[8.396031] (imu_complementary_filter) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[8.401011] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/lib/imu_complementary_filter/libcomplementary_filter.a\n'}
+[8.402214] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/lib/imu_complementary_filter/complementary_filter_node\n'}
+[8.403388] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/include/imu_complementary_filter\n'}
+[8.404527] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/include/imu_complementary_filter/complementary_filter.h\n'}
+[8.405615] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/include/imu_complementary_filter/complementary_filter_ros.h\n'}
+[8.406728] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/launch\n'}
+[8.407761] (imu_complementary_filter) StdoutLine: {'line': b'-- Installing: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/launch/complementary_filter.launch.py\n'}
+[8.408945] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/launch/.complementary_filter.launch.py.swp\n'}
+[8.410108] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/ament_index/resource_index/package_run_dependencies/imu_complementary_filter\n'}
+[8.410946] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/ament_index/resource_index/parent_prefix_path/imu_complementary_filter\n'}
+[8.411826] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/environment/ament_prefix_path.sh\n'}
+[8.412555] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/environment/ament_prefix_path.dsv\n'}
+[8.413213] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/environment/path.sh\n'}
+[8.413822] (-) TimerEvent: {}
+[8.414728] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/environment/path.dsv\n'}
+[8.416138] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/local_setup.bash\n'}
+[8.417343] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/local_setup.sh\n'}
+[8.419043] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/local_setup.zsh\n'}
+[8.421453] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/local_setup.dsv\n'}
+[8.422204] (imu_complementary_filter) StdoutLine: {'line': b'-- Installing: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/package.dsv\n'}
+[8.423284] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/ament_index/resource_index/packages/imu_complementary_filter\n'}
+[8.424504] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/cmake/ament_cmake_export_include_directories-extras.cmake\n'}
+[8.425293] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/cmake/ament_cmake_export_dependencies-extras.cmake\n'}
+[8.427026] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/cmake/imu_complementary_filterConfig.cmake\n'}
+[8.428944] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/cmake/imu_complementary_filterConfig-version.cmake\n'}
+[8.430052] (imu_complementary_filter) StdoutLine: {'line': b'-- Up-to-date: /root/farming_ws/src/install/imu_complementary_filter/share/imu_complementary_filter/package.xml\n'}
+[8.431752] (imu_complementary_filter) CommandEnded: {'returncode': 0}
+[8.514058] (-) TimerEvent: {}
+[8.616542] (-) TimerEvent: {}
+[8.719289] (-) TimerEvent: {}
+[8.822010] (-) TimerEvent: {}
+[8.929088] (-) TimerEvent: {}
+[9.030280] (-) TimerEvent: {}
+[9.136178] (-) TimerEvent: {}
+[9.239117] (-) TimerEvent: {}
+[9.340435] (-) TimerEvent: {}
+[9.442067] (-) TimerEvent: {}
+[9.544595] (-) TimerEvent: {}
+[9.646870] (-) TimerEvent: {}
+[9.747967] (-) TimerEvent: {}
+[9.854282] (-) TimerEvent: {}
+[9.959885] (-) TimerEvent: {}
+[10.062855] (-) TimerEvent: {}
+[10.164196] (-) TimerEvent: {}
+[10.267558] (-) TimerEvent: {}
+[10.368889] (-) TimerEvent: {}
+[10.470226] (-) TimerEvent: {}
+[10.573294] (-) TimerEvent: {}
+[10.679515] (-) TimerEvent: {}
+[10.793864] (-) TimerEvent: {}
+[10.897521] (-) TimerEvent: {}
+[11.003858] (-) TimerEvent: {}
+[11.107061] (-) TimerEvent: {}
+[11.210030] (-) TimerEvent: {}
+[11.313916] (-) TimerEvent: {}
+[11.415675] (-) TimerEvent: {}
+[11.518401] (-) TimerEvent: {}
+[11.621471] (-) TimerEvent: {}
+[11.723475] (-) TimerEvent: {}
+[11.829747] (-) TimerEvent: {}
+[11.932319] (-) TimerEvent: {}
+[12.035307] (-) TimerEvent: {}
+[12.137243] (-) TimerEvent: {}
+[12.238354] (-) TimerEvent: {}
+[12.343684] (-) TimerEvent: {}
+[12.445007] (-) TimerEvent: {}
+[12.547852] (-) TimerEvent: {}
+[12.649082] (-) TimerEvent: {}
+[12.751447] (-) TimerEvent: {}
+[12.853665] (-) TimerEvent: {}
+[12.955980] (-) TimerEvent: {}
+[13.059151] (-) TimerEvent: {}
+[13.162051] (-) TimerEvent: {}
+[13.263211] (-) TimerEvent: {}
+[13.367262] (-) TimerEvent: {}
+[13.469507] (-) TimerEvent: {}
+[13.570765] (-) TimerEvent: {}
+[13.673290] (-) TimerEvent: {}
+[13.780337] (-) TimerEvent: {}
+[13.882255] (-) TimerEvent: {}
+[13.988239] (-) TimerEvent: {}
+[14.089398] (-) TimerEvent: {}
+[14.192332] (-) TimerEvent: {}
+[14.293419] (-) TimerEvent: {}
+[14.396166] (-) TimerEvent: {}
+[14.499655] (-) TimerEvent: {}
+[14.601433] (-) TimerEvent: {}
+[14.703947] (-) TimerEvent: {}
+[14.804934] (-) TimerEvent: {}
+[14.906095] (-) TimerEvent: {}
+[15.010165] (-) TimerEvent: {}
+[15.112291] (-) TimerEvent: {}
+[15.186034] (imu_complementary_filter) JobEnded: {'identifier': 'imu_complementary_filter', 'rc': 0}
+[15.190069] (-) EventReactorShutdown: {}

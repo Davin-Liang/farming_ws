@@ -1,0 +1,57 @@
+[49.551s] DEBUG:colcon:Command line arguments: ['/usr/local/bin/colcon', 'build', '--packages-select', 'motion_controller']
+[49.552s] DEBUG:colcon:Parsed command line arguments: Namespace(allow_overriding=[], ament_cmake_args=None, base_paths=['.'], build_base='build', catkin_cmake_args=None, catkin_skip_building_tests=False, cmake_args=None, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, cmake_target=None, cmake_target_skip_unavailable=False, continue_on_error=False, event_handlers=None, executor='parallel', ignore_user_meta=False, install_base='install', log_base=None, log_level=None, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7f92caf790>>, merge_install=False, metas=['./colcon.meta'], packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_end=None, packages_ignore=None, packages_ignore_regex=None, packages_select=['motion_controller'], packages_select_build_failed=False, packages_select_by_dep=None, packages_select_regex=None, packages_select_test_failures=False, packages_skip=None, packages_skip_build_finished=False, packages_skip_by_dep=None, packages_skip_regex=None, packages_skip_test_passed=False, packages_skip_up_to=None, packages_start=None, packages_up_to=None, packages_up_to_regex=None, parallel_workers=4, paths=None, symlink_install=False, test_result_base=None, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7f92caf790>, verb_name='build', verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0x7f92a735b0>)
+[52.669s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[52.670s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[52.670s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[52.670s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[52.670s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[52.671s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[52.671s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/root/farming_ws/src/motion_controller/config'
+[52.671s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[52.672s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[52.673s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[52.673s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[52.673s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[52.674s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[52.674s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[52.674s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[52.674s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[52.843s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[52.843s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[52.844s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[52.844s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[52.844s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[52.845s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[52.846s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[52.846s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[52.847s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[52.848s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[52.848s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[52.849s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[52.849s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[52.850s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[52.850s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[52.850s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[52.850s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[52.851s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[52.851s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[53.768s] WARNING:colcon.colcon_core.package_selection:ignoring unknown package 'motion_controller' in --packages-select
+[57.534s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[57.534s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[59.389s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 12 installed packages in /root/farming_ws/install
+[60.313s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 22 installed packages in /root/catkin_ws/install
+[61.235s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 22 installed packages in /userdata/dev_ws/install
+[62.276s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 331 installed packages in /opt/tros
+[63.225s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 314 installed packages in /opt/ros/foxy
+[63.295s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[65.927s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[66.852s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[66.853s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[66.854s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[66.854s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[66.854s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[67.818s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.notify_send': Could not find 'notify-send'
+[67.819s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[67.819s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[67.820s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[67.823s] DEBUG:colcon.colcon_notification.desktop_notification.notify2:Failed to initialize notify2: org.freedesktop.DBus.Error.ServiceUnknown: The name org.freedesktop.Notifications was not provided by any .service files

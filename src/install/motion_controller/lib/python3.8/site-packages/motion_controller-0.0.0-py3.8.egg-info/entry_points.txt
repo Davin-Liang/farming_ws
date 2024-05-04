@@ -1,0 +1,3 @@
+[console_scripts]
+motion_controller_test = motion_controller.motion_controller:main
+

@@ -11,7 +11,7 @@ from math import pi # 3.14
 import yaml
 import time
 import os
-from .pid import PID
+from pid import PID
 # from builtin_interfaces.msg import Duration
 
 # 1. 必须安装上 PyKDL
@@ -117,7 +117,7 @@ class Motion_Controller(Node):
         time.sleep(10.0)
 
         # 创建定时器
-        self.distance_timer = self.create_timer(0.005, self.distance_timer_work_)
+        self.distance_timer = self.create_timer(0.04, self.distance_timer_work_)
         # self.angle_timer = self.create_timer(0.01, self.angle_timer_work_)
 
         self.file_path = os.path.expanduser('~/farming_ws/src/motion_controller/config/position_point.yaml')

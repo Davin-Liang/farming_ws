@@ -1,0 +1,38 @@
+running egg_info
+creating ../build/motion_controller/motion_controller.egg-info
+writing ../build/motion_controller/motion_controller.egg-info/PKG-INFO
+writing dependency_links to ../build/motion_controller/motion_controller.egg-info/dependency_links.txt
+writing entry points to ../build/motion_controller/motion_controller.egg-info/entry_points.txt
+writing requirements to ../build/motion_controller/motion_controller.egg-info/requires.txt
+writing top-level names to ../build/motion_controller/motion_controller.egg-info/top_level.txt
+writing manifest file '../build/motion_controller/motion_controller.egg-info/SOURCES.txt'
+reading manifest file '../build/motion_controller/motion_controller.egg-info/SOURCES.txt'
+writing manifest file '../build/motion_controller/motion_controller.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /root/farming_ws/src/build/motion_controller/build
+creating /root/farming_ws/src/build/motion_controller/build/lib
+creating /root/farming_ws/src/build/motion_controller/build/lib/motion_controller
+copying motion_controller/pid.py -> /root/farming_ws/src/build/motion_controller/build/lib/motion_controller
+copying motion_controller/motion_controller.py -> /root/farming_ws/src/build/motion_controller/build/lib/motion_controller
+copying motion_controller/__init__.py -> /root/farming_ws/src/build/motion_controller/build/lib/motion_controller
+running install
+running install_lib
+creating /root/farming_ws/src/install/motion_controller/lib/python3.8/site-packages/motion_controller
+copying /root/farming_ws/src/build/motion_controller/build/lib/motion_controller/pid.py -> /root/farming_ws/src/install/motion_controller/lib/python3.8/site-packages/motion_controller
+copying /root/farming_ws/src/build/motion_controller/build/lib/motion_controller/motion_controller.py -> /root/farming_ws/src/install/motion_controller/lib/python3.8/site-packages/motion_controller
+copying /root/farming_ws/src/build/motion_controller/build/lib/motion_controller/__init__.py -> /root/farming_ws/src/install/motion_controller/lib/python3.8/site-packages/motion_controller
+byte-compiling /root/farming_ws/src/install/motion_controller/lib/python3.8/site-packages/motion_controller/pid.py to pid.cpython-38.pyc
+byte-compiling /root/farming_ws/src/install/motion_controller/lib/python3.8/site-packages/motion_controller/motion_controller.py to motion_controller.cpython-38.pyc
+byte-compiling /root/farming_ws/src/install/motion_controller/lib/python3.8/site-packages/motion_controller/__init__.py to __init__.cpython-38.pyc
+running install_data
+creating /root/farming_ws/src/install/motion_controller/share/ament_index
+creating /root/farming_ws/src/install/motion_controller/share/ament_index/resource_index
+creating /root/farming_ws/src/install/motion_controller/share/ament_index/resource_index/packages
+copying resource/motion_controller -> /root/farming_ws/src/install/motion_controller/share/ament_index/resource_index/packages
+copying package.xml -> /root/farming_ws/src/install/motion_controller/share/motion_controller
+running install_egg_info
+Copying ../build/motion_controller/motion_controller.egg-info to /root/farming_ws/src/install/motion_controller/lib/python3.8/site-packages/motion_controller-0.0.0-py3.8.egg-info
+running install_scripts
+Installing motion_controller_test script to /root/farming_ws/src/install/motion_controller/lib/motion_controller
+writing list of installed files to '/root/farming_ws/src/build/motion_controller/install.log'

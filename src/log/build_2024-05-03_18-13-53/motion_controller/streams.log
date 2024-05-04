@@ -1,0 +1,24 @@
+[21.827s] Invoking command in '/root/farming_ws/src/motion_controller': PYTHONPATH=/root/farming_ws/src/build/motion_controller/prefix_override:/root/farming_ws/src/install/motion_controller/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/motion_controller build --build-base /root/farming_ws/src/build/motion_controller/build install --record /root/farming_ws/src/build/motion_controller/install.log --install-scripts $base/lib/motion_controller --single-version-externally-managed
+[23.724s] running egg_info
+[23.729s] writing ../build/motion_controller/motion_controller.egg-info/PKG-INFO
+[23.731s] writing dependency_links to ../build/motion_controller/motion_controller.egg-info/dependency_links.txt
+[23.732s] writing entry points to ../build/motion_controller/motion_controller.egg-info/entry_points.txt
+[23.733s] writing requirements to ../build/motion_controller/motion_controller.egg-info/requires.txt
+[23.734s] writing top-level names to ../build/motion_controller/motion_controller.egg-info/top_level.txt
+[24.023s] reading manifest file '../build/motion_controller/motion_controller.egg-info/SOURCES.txt'
+[24.029s] writing manifest file '../build/motion_controller/motion_controller.egg-info/SOURCES.txt'
+[24.030s] running build
+[24.031s] running build_py
+[24.032s] copying motion_controller/motion_controller.py -> /root/farming_ws/src/build/motion_controller/build/lib/motion_controller
+[24.033s] running install
+[24.040s] running install_lib
+[24.046s] copying /root/farming_ws/src/build/motion_controller/build/lib/motion_controller/motion_controller.py -> /root/farming_ws/src/install/motion_controller/lib/python3.8/site-packages/motion_controller
+[24.051s] byte-compiling /root/farming_ws/src/install/motion_controller/lib/python3.8/site-packages/motion_controller/motion_controller.py to motion_controller.cpython-38.pyc
+[24.072s] running install_data
+[24.076s] running install_egg_info
+[24.087s] removing '/root/farming_ws/src/install/motion_controller/lib/python3.8/site-packages/motion_controller-0.0.0-py3.8.egg-info' (and everything under it)
+[24.089s] Copying ../build/motion_controller/motion_controller.egg-info to /root/farming_ws/src/install/motion_controller/lib/python3.8/site-packages/motion_controller-0.0.0-py3.8.egg-info
+[24.094s] running install_scripts
+[24.218s] Installing motion_controller_test script to /root/farming_ws/src/install/motion_controller/lib/motion_controller
+[24.221s] writing list of installed files to '/root/farming_ws/src/build/motion_controller/install.log'
+[24.385s] Invoked command in '/root/farming_ws/src/motion_controller' returned '0': PYTHONPATH=/root/farming_ws/src/build/motion_controller/prefix_override:/root/farming_ws/src/install/motion_controller/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/motion_controller build --build-base /root/farming_ws/src/build/motion_controller/build install --record /root/farming_ws/src/build/motion_controller/install.log --install-scripts $base/lib/motion_controller --single-version-externally-managed

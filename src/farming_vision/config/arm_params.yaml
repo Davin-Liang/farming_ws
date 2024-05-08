@@ -1,0 +1,12 @@
+joint1: 90.0
+joint1_default: 90.0 # jointx_default 的值务必需要和 jointx 的值相同
+joint1_limiting: [10.0, 150.0]
+joint2: 90.0
+joint2_default: 90.0
+joint2_limiting: [10.0, 150.0]
+joint3: 90.0
+joint3_default: 90.0
+joint3_limiting: [10.0, 150.0]
+joint4: 90.0
+joint4_default: 90.0
+joint4_limiting: [10.0, 150.0]

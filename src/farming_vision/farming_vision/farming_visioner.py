@@ -7,27 +7,83 @@ from ai_msgs.msg import PerceptionTargets # type: ignore
 import os
 import yaml
 from std_msgs.msg import String, Bool, Int16MultiArray
+import threading
+import time
 
 class Farming_visioner(Node):
     def __init__(self, name):
         super().__init__(name)
         self.get_logger().info("Wassup, bro, I am %s, M3!" % name)
-        self.area_scaling_factor = 0.5
+        # 加载 arm 参数
         self.file_path = os.path.expanduser('~/farming_ws/src/motion_controller/config/position_point.yaml') # TODO:
-        self.load_config_file_() # 加载 arm 参数
+        self.load_config_file_()
+        # 重要 BOOL 值
         self.reset_vision_detect = False # 是否重置视觉数据
         self.open_vision_detect = False # 是否打开视觉检测
-        self.pre_process = False # 是否打开数据预处理
-        self.flowers_with_tag = []
-        self.flowers_with_tag_again = []
-        self.O_distance_threthold_of_judge_same_goal = 200
-        self.central_point_of_camera = [520, 480]
-        self.area_of_polliating = 400 # 
-        self.joint_speed = 4 # 将关节的转动的角度当作速度
+        self.pre_process = True # 是否打开数据预处理
+        # 数据字典
+        self.flowers_with_tag = [] # 存储花属性
+        self.flowers_with_tag_again = [] # 存储花属性
+        # 可调参数
+        self.area_scaling_factor = 0.5 # 面积缩放系数
+        self.O_distance_threthold_of_judge_same_goal = 200 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
+        self.central_point_of_camera = [520, 480] # 相机中心点
+        self.area_of_polliating = 400 # 识别框为多少时才进行授粉的面积阈值
+        self.joint_speed = 4 # 关节转动速度，将关节的转动的角度当作速度
         self.thretholds_of_joint_moving = {'x_error': 5, 'y_error': 5, 'area_error': 50}
+        # 使用到的订阅者和发布者
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
         self.joint_angles_publisher_ = self.create_publisher(Int16MultiArray, "joint_angles", 10)
         self.angles_of_joints = Int16MultiArray()
+
+        self.set_new_param_to_ros('reset_vision_detect', 'bool')
+        self.set_new_param_to_ros('open_vision_detect', 'bool')
+        self.set_new_param_to_ros('pre_process', 'bool')
+        self.set_new_param_to_ros('area_scaling_factor')
+        self.set_new_param_to_ros('O_distance_threthold_of_judge_same_goal')
+        self.set_new_param_to_ros('area_of_polliating')
+        self.set_new_param_to_ros('joint_speed')
+
+        self.param_timer = self.create_timer(0.04, self.param_timer_work_)
+    
+    def param_timer_work_(self):
+        self.update_params_()
+
+    def add_variable(self, var_name, value):
+        """ 通过一个字符串创建一个类中变量 """
+        setattr(self, var_name, value)
+    
+    def get_variable(self, var_name):
+        """ 通过一个字符串读取类中变量的值 """
+        return getattr(self, var_name, None)
+    
+    def update_variable(self, var_name, new_value):
+        """ 通过一个字符串更新一个类中变量的值 """
+        setattr(self, var_name, new_value)
+
+    def set_new_param_to_ros(self, var_name, data_type='double'):
+        """ 通过一个字符串向参数服务器定义一个值，并读取该值 """
+        if data_type == 'bool':
+            self.declare_parameter(var_name, self.get_variable(var_name))
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().bool_value)
+        if data_type == 'double':
+            self.declare_parameter(var_name, self.get_variable(var_name))
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().double_value)
+
+    def update_params_from_ros(self, var_name, data_type='double'):
+        if data_type == 'bool':
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().bool_value)
+        if data_type == 'double':
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().double_value)
+
+    def update_params_(self):
+        self.update_params_from_ros('reset_vision_detect', 'bool')
+        self.update_params_from_ros('open_vision_detect', 'bool')
+        self.update_params_from_ros('pre_process', 'bool')
+        self.update_params_from_ros('area_scaling_factor')
+        self.update_params_from_ros('O_distance_threthold_of_judge_same_goal')
+        self.update_params_from_ros('area_of_polliating')
+        self.update_params_from_ros('joint_speed')
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """
@@ -55,6 +111,8 @@ class Farming_visioner(Node):
 
         if 0 != len(flowers_lists): # 预防处理空数据
             self.confrim_moving_goal_for_arm(flowers_lists)
+
+        time.sleep(0.1)
 
     def confrim_moving_goal_for_arm(self, flowers_lists):
         """ 确定 arm 的移动目标 """
@@ -110,7 +168,6 @@ class Farming_visioner(Node):
         self.arm_params['joint4'] = self.arm_params['joint4_default']
         self.open_vision_detect = False
         self.pre_process = True
-        
     
     def limit_num(self, num, num_range):
         if num > num_range[1]:

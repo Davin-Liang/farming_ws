@@ -8,7 +8,10 @@ import random
 import threading
 from math import pi
 from time import sleep
-from Rosmaster_Lib import Rosmaster
+
+import yaml
+from Rosmaster_Lib import Rosmaster # type: ignore
+from std_msgs.msg import Int16MultiArray
 
 #ros lib
 import rclpy
@@ -17,6 +20,7 @@ from std_msgs.msg import String,Float32,Int32,Bool
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Imu,MagneticField, JointState
 from rclpy.clock import Clock
+import os
 
 #from dynamic_reconfigure.server import Server
 car_type_dic={
@@ -32,6 +36,15 @@ class yahboomcar_driver(Node):
 		self.RA2DE = 180 / pi
 		self.car = Rosmaster()
 		self.car.set_car_type(4)
+
+        # 加载 arm 参数
+		self.file_path = os.path.expanduser('~/farming_ws/src/motion_controller/config/position_point.yaml') # TODO:
+		self.load_config_file_()
+		self.car.set_pwm_servo_all(self.arm_params['joint1_default'], 
+									self.arm_params['joint2_default'],
+									self.arm_params['joint3_default'],
+									self.arm_params['joint4_default'])
+
 		#get parameter
 		self.declare_parameter('car_type', 'X1')
 		self.car_type = self.get_parameter('car_type').get_parameter_value().string_value
@@ -56,6 +69,7 @@ class yahboomcar_driver(Node):
 		print (self.nav_use_rotvel)
 
 		#create subcriber
+		self.joint_angles_subscriber_ = self.create_subscription(Int16MultiArray, "joint_angles", self.joint_angles_callback_, 10)
 		self.sub_cmd_vel = self.create_subscription(Twist,"cmd_vel",self.cmd_vel_callback,1)
 		self.sub_RGBLight = self.create_subscription(Int32,"RGBLight",self.RGBLightcallback,100)
 		self.sub_BUzzer = self.create_subscription(Bool,"Buzzer",self.Buzzercallback,100)
@@ -76,6 +90,16 @@ class yahboomcar_driver(Node):
 		self.edition = Float32()
 		self.edition.data = 1.0
 		self.car.create_receive_threading()
+
+	def load_config_file_(self):
+		""" 读取 YAML 文件 """
+		with open(self.file_path, 'r') as file:
+			self.arm_params = yaml.safe_load(file) 
+
+	def joint_angles_callback_(self, msg):
+		joint_angles = msg.data
+		self.car.set_pwm_servo_all(joint_angles[0], joint_angles[1], joint_angles[2], joint_angles[3])
+
 	#callback function
 	def cmd_vel_callback(self, msg):
         # 小车运动控制，订阅者回调函数

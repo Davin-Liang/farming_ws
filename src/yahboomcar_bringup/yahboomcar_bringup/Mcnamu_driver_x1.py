@@ -38,7 +38,7 @@ class yahboomcar_driver(Node):
 		self.car.set_car_type(4)
 
         # 加载 arm 参数
-		self.file_path = os.path.expanduser('~/farming_ws/src/motion_controller/config/position_point.yaml') # TODO:
+		self.file_path = os.path.expanduser('~/farming_ws/src/farming_vision/config/arm_params.yaml') # TODO:
 		self.load_config_file_()
 		self.car.set_pwm_servo_all(self.arm_params['joint1_default'], 
 									self.arm_params['joint2_default'],

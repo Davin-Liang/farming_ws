@@ -1,12 +1,34 @@
-joint1: 90.0
-joint1_default: 90.0 # jointx_default 的值务必需要和 jointx 的值相同
-joint1_limiting: [10.0, 150.0]
-joint2: 90.0
-joint2_default: 90.0
+joint1_a_left: 90.0
+joint1_a_right: 90.0
+joint2_a_left: 90.0
+joint2_a_right: 90.0
+joint3_a_left: 90.0
+joint3_a_right: 90.0
+joint4_a_left: 90.0
+joint4_a_right: 90.0
+
+joint1_moving: 90.0
+joint1_b_front: 90.0
+joint1_b_back: 90.0
+joint2_moving: 90.0
+joint2_b_front: 90.0
+joint2_b_back: 90.0
+joint3_moving: 90.0
+joint3_b_front: 90.0
+joint3_b_back: 90.0
+joint4_moving: 90.0
+joint4_b_front: 90.0
+joint4_b_back: 90.0
+
+joint1_c_left: 90.0
+joint1_c_right: 90.0
 joint2_limiting: [10.0, 150.0]
-joint3: 90.0
-joint3_default: 90.0
+joint2_c_left: 90.0
+joint2_c_right: 90.0
+joint2_limiting: [10.0, 150.0]
+joint3_c_left: 90.0
+joint3_c_right: 90.0
 joint3_limiting: [10.0, 150.0]
-joint4: 90.0
-joint4_default: 90.0
+joint4_c_left: 90.0
+joint4_c_right: 90.0
 joint4_limiting: [10.0, 150.0]

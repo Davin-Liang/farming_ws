@@ -12,20 +12,13 @@ import yaml
 import time
 import os
 from pid import PID
-# from builtin_interfaces.msg import Duration
-
-# 1. 必须安装上 PyKDL
 
 class Motion_Controller(Node):
     def __init__(self, name):
         super().__init__(name)
 
         self.ori_angle_pid = PID(1.1, 0.012, 0.0, 2.0, 0.1)
-        # self.ori_speed_pid = PID(1.5, 0.05, 0.0, 2.0, 0.25)
-        
         self.distance_pid = PID(0.6, 0.02, 0.0, 0.5, 0.15)
-        # self.distance_speed_pid = PID()
-
 
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.move_cmd = Twist()
@@ -110,36 +103,50 @@ class Motion_Controller(Node):
         self.last_angle     = self.odom_angle # 记录上一次角度
         self.angle          *= self.reverse
 
-        self.note_start_turning = True
         self.move_direction = "x"
         self.status_of_finishing_goal = True
 
         time.sleep(10.0)
 
         # 创建定时器
-        self.distance_timer = self.create_timer(0.04, self.distance_timer_work_)
-        # self.angle_timer = self.create_timer(0.01, self.angle_timer_work_)
+        self.work_timer = self.create_timer(0.04, self.timer_work_)
 
         self.file_path = os.path.expanduser('~/farming_ws/src/motion_controller/config/position_point.yaml')
         self.load_config_file_()
         print ("Finish init work.")
+ 
+    # ---------------- 对外接口函数 ----------------
+    def set_distance(self, distance):
+        """ 设置车轮方向的行驶距离及以什么样的速度行驶 """
+        self.distance = distance
 
+    def set_angle(self, angle):
+        """ 设置底盘转动角度 """
+        if angle > 0:
+            self.angle = angle
+        else:
+            self.angle = -angle
+            self.reverse = -self.reverse
 
-    def angle_timer_work_(self):
-        ref = self.get_odom_angle_()
-        ref = self.get_odom_angle_()
-        print(ref)
-        # print(radians(self.angle))
-        self.ori_angle_pid.pid_calculate(ref=ref, goal=self.angle)
-        self.move_cmd.angular.z = self.ori_angle_pid.out
-        self.cmd_vel.publish(self.move_cmd)
-        
-    def distance_timer_work_(self):
+    def move_based_on_point(self, point_name, direction="x", liear_speed="0.5"):
+        """ 根据坐标点来导航 """
+        while not self.status_of_finishing_goal: # 等待完成上一个目标
+            time.sleep(0.001)
+        point = self.points[point_name]
+        position = self.get_coordinate_value_()
+        print("现在正在前往：", point)
+        if direction == "x":
+            distance = abs(point[0] - position.x)
+            self.set_distance(distance=distance, speed=liear_speed)
+        elif direction == "y":
+            distance = abs(point[1] - position.y)
+            self.set_distance(distance=distance, speed=liear_speed)
+    # ----------------------------------------------
+
+    def timer_work_(self):
         # 更新参数
         self.get_param_()
         ref = self.get_odom_angle_()
-        print(ref)
-        # print(radians(self.angle))
         self.ori_angle_pid.pid_calculate(ref=ref, goal=self.angle)
         self.move_cmd.angular.z = self.ori_angle_pid.out
 
@@ -179,34 +186,6 @@ class Motion_Controller(Node):
             print("停车状态下的 Y 坐标值: ", self.y_start)
             # self.cmd_vel.publish(Twist())   
         self.cmd_vel.publish(self.move_cmd)
-
-        # # 角度控制
-        # if self.start_action_for_angle:
-        #     self.angle_error = self.angle - self.turn_angle
-        #     if self.start_action_for_angle and (abs(self.angle_error) > self.angle_tolerance):
-        #         self.move_cmd.linear.x = 0.0
-        #         self.move_cmd.angular.z = copysign(self.angular_speed, self.angle_error)
-        #         self.cmd_vel.publish(self.move_cmd)
-
-        #         if self.note_start_turning:
-        #             self.note_start_turning = False
-        #             self.last_angle = self.get_odom_angle_()
-        #         self.odom_angle = self.get_odom_angle_()
-        #         self.delta_angle = self.odom_angular_scale_correction * self.normalize_angle(self.odom_angle - self.last_angle)
-        #         self.turn_angle += self.delta_angle
-        #         print("目前转动的角度为: ",self.turn_angle)
-        #         self.angle_error = self.angle - self.turn_angle
-        #         print("角度误差为: ",self.angle_error)
-        #         self.last_angle = self.odom_angle
-        #     else: # 未设定目标的情况
-        #         self.status_of_finishing_goal = False
-        #         self.turn_angle = 0.0 # 将转动角度归零
-        #         self.cmd_vel.publish(Twist()) # 把车暂停
-        #         self.start_action_for_angle = rclpy.parameter.Parameter('start_action_for_angle', rclpy.Parameter.Type.BOOL, False)
-        #         all_new_parameters = [self.start_action_for_angle]
-        #         self.set_parameters(all_new_parameters)
-        #         self.reverse = -self.reverse # 换方向转动
-        #         self.last_angle = 0
 
     def get_coordinate_value_(self):
         position = Point()
@@ -272,21 +251,6 @@ class Motion_Controller(Node):
             self.get_logger().info('transform not ready')
             return       
 
-    def set_distance(self, distance, speed=0.5):
-        """ 设置车轮方向的行驶距离及以什么样的速度行驶 """
-        self.distance = distance
-        self.liear_speed = speed
-
-    def set_angle(self, angle, speed=1.0):
-        self.start_action_for_angle = True
-        self.note_start_turning = True
-        if angle > 0:
-            self.angle = angle
-        else:
-            self.angle = -angle
-            self.reverse = -self.reverse
-        self.angular_speed = speed
-
     def normalize_angle(self, angle):
         res = angle
         while res > pi:
@@ -294,20 +258,6 @@ class Motion_Controller(Node):
         while res < -pi:
             res += 2.0 * pi
         return res
-    
-    def move_based_on_point(self, point_name, direction="x", liear_speed="0.5"):
-        """ 根据坐标点来导航 """
-        while not self.status_of_finishing_goal: # 等待完成上一个目标
-            time.sleep(0.001)
-        point = self.points[point_name]
-        position = self.get_coordinate_value_()
-        print("现在正在前往：", point)
-        if direction == "x":
-            distance = abs(point[0] - position.x)
-            self.set_distance(distance=distance, speed=liear_speed)
-        elif direction == "y":
-            distance = abs(point[1] - position.y)
-            self.set_distance(distance=distance, speed=liear_speed)
 
     def load_config_file_(self):
         """ 读取 YAML 文件 """

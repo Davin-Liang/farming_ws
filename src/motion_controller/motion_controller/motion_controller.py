@@ -99,9 +99,9 @@ class Motion_Controller(Node):
         self.reverse        = 1 # 控制车转动的方向
         self.turn_angle     = 0 # 距离上一次停止后车转动的角度
         self.delta_angle    = 0
-        self.odom_angle     = self.get_odom_angle_()
-        self.last_angle     = self.odom_angle # 记录上一次角度
-        self.angle          *= self.reverse
+        self.real_angle = 0.0
+        self.last_real_angle = 0.0
+        self.total_angle = 0.0
 
         self.move_direction = "x"
         self.status_of_finishing_goal = True
@@ -246,6 +246,17 @@ class Motion_Controller(Node):
             """ 获取旋转矩阵的欧拉角。GetRPY()返回的是一个长度为3的列表, 包含了旋转矩阵的roll、pitch和yaw角度。
                     在这里, [2]索引表示取得yaw角度, 也就是绕z轴的旋转角度 """
             angle_rot = cacl_rot.GetRPY()[2]
+            self.real_angle = angle_rot
+            if abs(self.real_angle - self.last_real_angle) > 180.0:
+                if self.real_angle < self.last_real_angle:
+                    self.total_angle += 360.0 - self.last_real_angle + self.real_angle
+                else:
+                    self.total_angle -= 360.0 - self.real_angle + self.last_real_angle
+            else:
+                self.total_angle += self.real_angle - self.last_real_angle
+            self.last_real_angle = self.real_angle
+
+            return self.total_angle / 180.0 * pi
             return angle_rot
         except (LookupException, ConnectivityException, ExtrapolationException):
             self.get_logger().info('transform not ready')
@@ -270,12 +281,6 @@ def main():
     try:
         node = Motion_Controller("Motion_Controller")
         rclpy.spin(node)
-
-        
-        # node.move_based_on_point("pollination_site_1_2", direction="x", liear_speed=0.6)
-        # node.move_based_on_point("pollination_site_3_4", direction="x", liear_speed=0.6)
-        # node.set_angle(90, speed=1.0)
-        # node.move_based_on_point("pollination_site_7", direction="y", liear_speed=0.6)
 
     except KeyboardInterrupt:
         pass

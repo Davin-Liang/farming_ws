@@ -114,12 +114,17 @@ class Farming_visioner(Node):
         if data_type == 'double':
             self.declare_parameter(var_name, self.get_variable(var_name))
             self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().double_value)
+        if data_type == 'string':
+            self.declare_parameter(var_name, self.get_variable(var_name))
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().string_value)
 
     def update_params_from_ros(self, var_name, data_type='double'):
         if data_type == 'bool':
             self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().bool_value)
         if data_type == 'double':
             self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().double_value)
+        if data_type == 'string':
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().string_value)
 
     def update_params_(self):
         # self.update_params_from_ros('reset_vision_detect', 'bool')
@@ -201,8 +206,8 @@ class Farming_visioner(Node):
         if (abs(x_error) < self.threthold_of_x_error and
             abs(area_error) < self.threthold_of_area_error and
             abs(y_error) < self.threthold_of_y_error):
-            for index, flowers_with_tag in enumerate(self.flowers_with_tag_again):
-                if flowers_with_tag['Moving'] == True:
+            for index, flower_with_tag in enumerate(self.flowers_with_tag):
+                if flower_with_tag['Moving'] == True:
                     self.flowers_with_tag_again[index]['Moving'] = False
                     self.flowers_with_tag_again[index]['Pollinated'] = True
             self.reset_arm_default_pose()
@@ -238,7 +243,7 @@ class Farming_visioner(Node):
                     flower_with_tag['Area'] = flower['Area']
                     if index == 0:
                         flower_with_tag['Moving'] = True
-                    self.flowers_with_tag.append(flower_with_tag)
+                    self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
 
                     if flower['Type'] == 'male':
                         male_num += 1

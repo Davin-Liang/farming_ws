@@ -1,3 +1,6 @@
+# A 区
+# '_a_left' 指的是车在 A 区行驶时车的左边
+# '_a_left' 指的是车在 A 区行驶时车的左边
 joint1_a_left: 90.0
 joint1_a_right: 90.0
 joint2_a_left: 90.0
@@ -6,7 +9,9 @@ joint3_a_left: 90.0
 joint3_a_right: 90.0
 joint4_a_left: 90.0
 joint4_a_right: 90.0
-
+# B 区
+# '_b_front' 指的是车在 A 区行驶时车的前方
+# '_b_back' 指的是车在 A 区行驶时车的后方
 joint1_moving: 90.0
 joint1_b_front: 90.0
 joint1_b_back: 90.0
@@ -19,16 +24,17 @@ joint3_b_back: 90.0
 joint4_moving: 90.0
 joint4_b_front: 90.0
 joint4_b_back: 90.0
-
+# C 区
 joint1_c_left: 90.0
 joint1_c_right: 90.0
-joint2_limiting: [10.0, 150.0]
 joint2_c_left: 90.0
 joint2_c_right: 90.0
-joint2_limiting: [10.0, 150.0]
 joint3_c_left: 90.0
 joint3_c_right: 90.0
-joint3_limiting: [10.0, 150.0]
 joint4_c_left: 90.0
 joint4_c_right: 90.0
+
+joint1_limiting: [10.0, 150.0]
+joint2_limiting: [10.0, 150.0]
+joint3_limiting: [10.0, 150.0]
 joint4_limiting: [10.0, 150.0]

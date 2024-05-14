@@ -23,6 +23,7 @@ class Farming_visioner(Node):
         self.open_vision_detect = False # 是否打开视觉检测
         self.pre_process = False # 是否打开数据预处理
         self.debug_mode = False
+        self.reset_arm = False
         # 数据字典
         self.flowers_with_tag = [] # 存储花属性
         self.flowers_with_tag_again = [] # 存储花属性
@@ -44,8 +45,7 @@ class Farming_visioner(Node):
 
         # self.set_new_param_to_ros('reset_vision_detect', 'bool')
         self.set_new_param_to_ros('debug_mode', 'bool')
-        self.set_new_param_to_ros('open_vision_detect', 'bool')
-        self.set_new_param_to_ros('pre_process', 'bool')
+        self.set_new_param_to_ros('reset_arm', 'bool')
         self.set_new_param_to_ros('area_scaling_factor')
         self.set_new_param_to_ros('O_distance_threthold_of_judge_same_goal')
         self.set_new_param_to_ros('area_of_polliating')
@@ -58,9 +58,6 @@ class Farming_visioner(Node):
     
     # ---------------- 对外接口函数 -----------------
     def vision_control_arm(self, pose_name):
-        self.open_vision_detect     = True
-        self.pre_process            = True
-        self.reset_vision_data()
         self.pose_name = pose_name
         self.arm_params['joint1'] = self.default_arm_params['joint1_'+self.pose_name]
         self.arm_params['joint2'] = self.default_arm_params['joint2_'+self.pose_name]
@@ -72,9 +69,17 @@ class Farming_visioner(Node):
         self.angles_of_joints.data.append(self.arm_params['joint3'])
         self.angles_of_joints.data.append(self.arm_params['joint4'])
         self.joint_angles_publisher_.publish(self.angles_of_joints)
+        self.open_vision_detect     = True
+        self.pre_process            = True
+        self.reset_vision_data()
         # 堵塞函数直到完成任务
         while self.open_vision_detect:
-            time.sleep(0.1)
+            pass
+        if self.debug_mode:
+            all_new_parameters = []
+            self.debug_mode = rclpy.parameter.Parameter('debug_mode', rclpy.Parameter.Type.DOUBLE, False)
+            all_new_parameters.append(self.debug_mode)
+            self.set_parameters(all_new_parameters)
 
     def reset_vision_data(self):
         self.flowers_with_tag.clear()
@@ -85,7 +90,7 @@ class Farming_visioner(Node):
         self.reset_vision_detect = False
         # 堵塞函数直到完成任务
         while self.open_vision_detect:
-            time.sleep(0.1)
+            pass
     # ----------------------------------------------
 
 
@@ -93,6 +98,8 @@ class Farming_visioner(Node):
         self.update_params_()
         if self.debug_mode:
             self.vision_control_arm('a_left')
+        if self.reset_arm:
+            self.reset_arm_default_pose()
 
     def add_variable(self, var_name, value):
         """ 通过一个字符串创建一个类中变量 """
@@ -127,9 +134,6 @@ class Farming_visioner(Node):
             self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().string_value)
 
     def update_params_(self):
-        # self.update_params_from_ros('reset_vision_detect', 'bool')
-        self.update_params_from_ros('open_vision_detect', 'bool')
-        self.update_params_from_ros('pre_process', 'bool')
         self.update_params_from_ros('area_scaling_factor')
         self.update_params_from_ros('O_distance_threthold_of_judge_same_goal')
         self.update_params_from_ros('area_of_polliating')
@@ -137,6 +141,8 @@ class Farming_visioner(Node):
         self.update_params_from_ros('threthold_of_x_error')
         self.update_params_from_ros('threthold_of_y_error')
         self.update_params_from_ros('threthold_of_area_error')
+        self.update_params_from_ros('debug_mode')
+        self.update_params_from_ros('reset_arm')
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """
@@ -211,16 +217,22 @@ class Farming_visioner(Node):
                     self.flowers_with_tag_again[index]['Moving'] = False
                     self.flowers_with_tag_again[index]['Pollinated'] = True
             self.reset_arm_default_pose()
+            return
         self.joint_angles_publisher_.publish(self.angles_of_joints)
 
     def reset_arm_default_pose(self):
         """ 控制 arm 回到初始姿态 """
+        self.open_vision_detect = False
+        self.pre_process = False
         self.arm_params['joint1'] = self.default_arm_params['joint1_'+self.pose_name]
         self.arm_params['joint2'] = self.default_arm_params['joint2_'+self.pose_name]
         self.arm_params['joint3'] = self.default_arm_params['joint3_'+self.pose_name]
         self.arm_params['joint4'] = self.default_arm_params['joint4_'+self.pose_name]
-        self.open_vision_detect = False
-        self.pre_process = False
+        self.angles_of_joints.data.append(self.arm_params['joint1'])
+        self.angles_of_joints.data.append(self.arm_params['joint2'])
+        self.angles_of_joints.data.append(self.arm_params['joint3'])
+        self.angles_of_joints.data.append(self.arm_params['joint4'])
+        self.joint_angles_publisher_.publish(self.angles_of_joints)
     
     def limit_num(self, num, num_range):
         if num > num_range[1]:

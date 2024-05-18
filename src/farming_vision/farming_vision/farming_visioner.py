@@ -7,7 +7,7 @@ from ai_msgs.msg import PerceptionTargets # type: ignore
 import os
 import yaml
 from std_msgs.msg import String, Bool, Int16MultiArray
-import threading
+from  threading import Thread
 import time
 import subprocess
 import copy
@@ -75,7 +75,7 @@ class Farming_visioner(Node):
         # 堵塞函数直到完成任务
         while self.open_vision_detect:
             pass
-        if self.debug_mode:
+        if self.debug_mode: # 完成目标后，自动将 self.debug_mode 参数置 false
             all_new_parameters = []
             self.debug_mode = rclpy.parameter.Parameter('debug_mode', rclpy.Parameter.Type.DOUBLE, False)
             all_new_parameters.append(self.debug_mode)
@@ -97,9 +97,11 @@ class Farming_visioner(Node):
     def param_timer_work_(self):
         self.update_params_()
         if self.debug_mode:
-            self.vision_control_arm('a_left')
+            self.debug_thread = Thread(target=self.vision_control_arm, args=('a_left',))
+            # self.vision_control_arm('a_left')
         if self.reset_arm:
             self.reset_arm_default_pose()
+
 
     def add_variable(self, var_name, value):
         """ 通过一个字符串创建一个类中变量 """
@@ -224,6 +226,12 @@ class Farming_visioner(Node):
         """ 控制 arm 回到初始姿态 """
         self.open_vision_detect = False
         self.pre_process = False
+        all_new_parameters = []
+        self.debug_mode = rclpy.parameter.Parameter('debug_mode', rclpy.Parameter.Type.DOUBLE, False)
+        all_new_parameters.append(self.debug_mode)
+        self.reset_arm = rclpy.parameter.Parameter('reset_arm', rclpy.Parameter.Type.DOUBLE, False)
+        all_new_parameters.append(self.reset_arm)
+        self.set_parameters(all_new_parameters)
         self.arm_params['joint1'] = self.default_arm_params['joint1_'+self.pose_name]
         self.arm_params['joint2'] = self.default_arm_params['joint2_'+self.pose_name]
         self.arm_params['joint3'] = self.default_arm_params['joint3_'+self.pose_name]
@@ -314,6 +322,8 @@ def main():
     finally:
         if node:
             node.destroy_node()
+        if node.debug_thread is not None:
+            node.debug_thread.join()
         rclpy.shutdown()
 
 if __name__ == '__main__':

@@ -40,10 +40,10 @@ class yahboomcar_driver(Node):
         # 加载 arm 参数
 		self.file_path = os.path.expanduser('~/farming_ws/src/farming_vision/config/arm_params.yaml') # TODO:
 		self.load_config_file_()
-		self.car.set_pwm_servo_all(self.arm_params['joint1_default'], 
-									self.arm_params['joint2_default'],
-									self.arm_params['joint3_default'],
-									self.arm_params['joint4_default'])
+		self.car.set_pwm_servo_all(self.arm_params['joint1_a_left'], 
+									self.arm_params['joint2_a_left'],
+									self.arm_params['joint3_a_left'],
+									self.arm_params['joint4_a_left'])
 
 		#get parameter
 		self.declare_parameter('car_type', 'X1')

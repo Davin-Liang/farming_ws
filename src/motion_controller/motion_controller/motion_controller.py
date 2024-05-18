@@ -134,6 +134,10 @@ class Motion_Controller(Node):
     # ---------------- 对外接口函数 ----------------
     def set_distance(self, distance):
         """ 设置车轮方向的行驶距离及以什么样的速度行驶 """
+        all_new_parameters = []
+        self.start_for_pid_distance = rclpy.parameter.Parameter('start_for_pid_distance', rclpy.Parameter.Type.BOOL, True)
+        all_new_parameters.append(self.start_for_lidar_distance)
+        self.set_parameters(all_new_parameters)
         self.distance = distance
 
     def set_angle(self, angle):
@@ -157,10 +161,14 @@ class Motion_Controller(Node):
     def start_car_and_lidar_controls_stopping(self, speed, threthold=0.1):
         """ 开动车并使用单线激光控制小车停止 """
         all_new_parameters = []
-        self.liear_speed = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.DOUBLE, speed)
+        self.start_for_lidar_distance = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.BOOL, True)
+        all_new_parameters.append(self.start_for_lidar_distance)
+        self.liear_speed = rclpy.parameter.Parameter('liear_speed', rclpy.Parameter.Type.DOUBLE, speed)
         all_new_parameters.append(self.liear_speed)
-        self.lidar_threthold = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.DOUBLE, threthold)
+        self.lidar_threthold = rclpy.parameter.Parameter('lidar_threthold', rclpy.Parameter.Type.DOUBLE, threthold)
         all_new_parameters.append(self.lidar_threthold)
+        self.set_parameters(all_new_parameters)
+        all_new_parameters.clear()
         time.sleep(1.0) # 保证 car 驶出激光遮挡区域
 
         # 等待 car 到位
@@ -317,7 +325,7 @@ class Motion_Controller(Node):
             else:
                 self.total_angle += self.real_angle - self.last_real_angle
             self.last_real_angle = self.real_angle
-
+            print("现在角度为", self.total_angle)
             return radians(self.total_angle)
             return angle_rot
         except (LookupException, ConnectivityException, ExtrapolationException):

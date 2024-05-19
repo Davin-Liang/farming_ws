@@ -30,11 +30,11 @@ class Farming_visioner(Node):
         self.flowers_with_tag_again = [] # 存储花属性
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
         # 可调参数
-        self.area_scaling_factor = 0.5 # 面积缩放系数
-        self.O_distance_threthold_of_judge_same_goal = 200 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
+        self.area_scaling_factor = 0.25 # 面积缩放系数
+        self.O_distance_threthold_of_judge_same_goal = 100 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
         self.central_point_of_camera = [520, 480] # 相机中心点
-        self.area_of_polliating = 400 # 识别框为多少时才进行授粉的面积阈值
-        self.joint_speed = 3 # 关节转动速度，将关节的转动的角度当作速度
+        self.area_of_polliating = 2000 # 识别框为多少时才进行授粉的面积阈值
+        self.joint_speed = 1 # 关节转动速度，将关节的转动的角度当作速度
         self.threthold_of_x_error = 5.0
         self.threthold_of_y_error = 5.0
         self.threthold_of_area_error = 50.0
@@ -45,18 +45,23 @@ class Farming_visioner(Node):
         self.angles_of_joints = Int16MultiArray()
 
         # self.set_new_param_to_ros('reset_vision_detect', 'bool')
-        self.set_new_param_to_ros('debug_mode', 'bool')
-        self.set_new_param_to_ros('reset_arm', 'bool')
-        self.set_new_param_to_ros('area_scaling_factor')
-        self.set_new_param_to_ros('O_distance_threthold_of_judge_same_goal')
-        self.set_new_param_to_ros('area_of_polliating')
-        self.set_new_param_to_ros('joint_speed')
-        self.set_new_param_to_ros('threthold_of_x_error')
-        self.set_new_param_to_ros('threthold_of_y_error')
-        self.set_new_param_to_ros('threthold_of_area_error')
+        # self.set_new_param_to_ros('debug_mode', 'bool')
+        # self.set_new_param_to_ros('reset_arm', 'bool')
+        # self.set_new_param_to_ros('area_scaling_factor')
+        # self.set_new_param_to_ros('O_distance_threthold_of_judge_same_goal')
+        # self.set_new_param_to_ros('area_of_polliating')
+        # self.set_new_param_to_ros('joint_speed')
+        # self.set_new_param_to_ros('threthold_of_x_error')
+        # self.set_new_param_to_ros('threthold_of_y_error')
+        # self.set_new_param_to_ros('threthold_of_area_error')
 
         self.param_timer = self.create_timer(0.04, self.param_timer_work_)
-    
+        self.spin_thread = Thread(target=self.spin_task)
+        self.spin_thread.start()
+        
+    def spin_task(self):
+        rclpy.spin(self)
+
     # ---------------- 对外接口函数 -----------------
     def vision_control_arm(self, pose_name):
         self.pose_name = pose_name
@@ -64,7 +69,8 @@ class Farming_visioner(Node):
         self.arm_params['joint2'] = self.default_arm_params['joint2_'+self.pose_name]
         self.arm_params['joint3'] = self.default_arm_params['joint3_'+self.pose_name]
         self.arm_params['joint4'] = self.default_arm_params['joint4_'+self.pose_name]
-        self.angles_of_joints.data.clear()
+        print(self.arm_params)
+        self.angles_of_joints.data = []
         self.angles_of_joints.data.append(self.arm_params['joint1'])
         self.angles_of_joints.data.append(self.arm_params['joint2'])
         self.angles_of_joints.data.append(self.arm_params['joint3'])
@@ -74,12 +80,13 @@ class Farming_visioner(Node):
         self.pre_process            = True
         self.reset_vision_data()
         # 堵塞函数直到完成任务
+        print("正在等待完成任务")
         while self.open_vision_detect:
             pass
         self.active_thread = False
         if self.debug_mode: # 完成目标后，自动将 self.debug_mode 参数置 false
             all_new_parameters = []
-            self.debug_mode = rclpy.parameter.Parameter('debug_mode', rclpy.Parameter.Type.DOUBLE, False)
+            self.debug_mode = rclpy.parameter.Parameter('debug_mode', rclpy.Parameter.Type.BOOL, False)
             all_new_parameters.append(self.debug_mode)
             self.set_parameters(all_new_parameters)
 
@@ -97,7 +104,7 @@ class Farming_visioner(Node):
 
 
     def param_timer_work_(self):
-        self.update_params_()
+        # self.update_params_()
         if self.reset_arm:
             self.reset_arm_default_pose()
         if self.debug_mode and self.active_thread == False:
@@ -143,15 +150,18 @@ class Farming_visioner(Node):
         self.update_params_from_ros('area_scaling_factor')
         self.update_params_from_ros('O_distance_threthold_of_judge_same_goal')
         self.update_params_from_ros('area_of_polliating')
+        print(self.area_of_polliating)
         self.update_params_from_ros('joint_speed')
         self.update_params_from_ros('threthold_of_x_error')
         self.update_params_from_ros('threthold_of_y_error')
         self.update_params_from_ros('threthold_of_area_error')
-        self.update_params_from_ros('debug_mode')
-        self.update_params_from_ros('reset_arm')
+        self.update_params_from_ros('debug_mode', 'BOOL')
+        print(self.debug_mode)
+        self.update_params_from_ros('reset_arm', 'BOOL')
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """
+        print("正在等待开启视觉")
         if not self.open_vision_detect:
             return
         print("正在通过视觉控制机械臂")
@@ -206,16 +216,17 @@ class Farming_visioner(Node):
                 y_error = self.central_point_of_camera[1] - flower_with_tag['CentralPoint'][1]
                 area_error = self.area_of_polliating - flower_with_tag['Area']
                 break
-        self.angles_of_joints.data.clear()
+        self.angles_of_joints.data = []
         if abs(x_error) > self.threthold_of_x_error:
-            self.arm_params['joint1'] = self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, -x_error), self.default_arm_params['joint1_limiting'])
+            self.arm_params['joint1'] = int(self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, -x_error), self.default_arm_params['joint1_limiting']))
+            print(self.arm_params['joint1'])
             self.angles_of_joints.data.append(self.arm_params['joint1'])
         if abs(area_error) > self.threthold_of_area_error:
-            self.arm_params['joint2'] = self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, -area_error), self.default_arm_params['joint2_limiting'])
+            self.arm_params['joint2'] = int(self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, area_error), self.default_arm_params['joint2_limiting']))
             self.angles_of_joints.data.append(self.arm_params['joint2'])
         self.angles_of_joints.data.append(self.arm_params['joint3'])
         if abs(y_error) > self.threthold_of_y_error:
-            self.arm_params['joint4'] = self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting'])
+            self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
             self.angles_of_joints.data.append(self.arm_params['joint4'])
         if (abs(x_error) < self.threthold_of_x_error and
             abs(area_error) < self.threthold_of_area_error and

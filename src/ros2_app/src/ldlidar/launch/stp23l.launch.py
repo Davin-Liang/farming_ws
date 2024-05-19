@@ -12,7 +12,7 @@ def generate_launch_description():
       parameters=[
         {'product_name': 'LDLiDAR_STP23L'},
         {'topic_name': 'laser'},
-        {'port_name': '/dev/ttyUSB0'},
+        {'port_name': '/dev/ttyACM0'},
         {'port_baudrate': 230400},
         {'frame_id': 'base_laser'}
       ]

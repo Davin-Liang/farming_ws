@@ -158,7 +158,7 @@ class Motion_Controller(Node):
             distance = abs(point[1] - position.y)
             self.set_distance(distance=distance, speed=liear_speed)
 
-    def start_car_and_lidar_controls_stopping(self, speed, threthold=0.1):
+    def start_car_and_lidar_controls_stopping(self, speed, threthold=0.1, ignore_num=0):
         """ 开动车并使用单线激光控制小车停止 """
         all_new_parameters = []
         self.start_for_lidar_distance = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.BOOL, True)
@@ -172,8 +172,12 @@ class Motion_Controller(Node):
         time.sleep(1.0) # 保证 car 驶出激光遮挡区域
 
         # 等待 car 到位
-        while self.lidar_distance > self.lidar_threthold:
-            pass
+        real_ignore_num = 0
+        while self.lidar_distance > self.lidar_threthold or real_ignore_num != ignore_num:
+            if ignore_num == 0:
+                pass
+            else:
+                real_ignore_num += 1
         self.start_for_lidar_distance = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.BOOL, False)
         all_new_parameters.append(self.start_for_lidar_distance)
         self.set_parameters(all_new_parameters)

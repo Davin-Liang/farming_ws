@@ -24,6 +24,7 @@ class Farming_visioner(Node):
         self.pre_process = False # 是否打开数据预处理
         self.debug_mode = False
         self.reset_arm = False
+        self.active_thread = False
         # 数据字典
         self.flowers_with_tag = [] # 存储花属性
         self.flowers_with_tag_again = [] # 存储花属性
@@ -75,6 +76,7 @@ class Farming_visioner(Node):
         # 堵塞函数直到完成任务
         while self.open_vision_detect:
             pass
+        self.active_thread = False
         if self.debug_mode: # 完成目标后，自动将 self.debug_mode 参数置 false
             all_new_parameters = []
             self.debug_mode = rclpy.parameter.Parameter('debug_mode', rclpy.Parameter.Type.DOUBLE, False)
@@ -96,11 +98,13 @@ class Farming_visioner(Node):
 
     def param_timer_work_(self):
         self.update_params_()
-        if self.debug_mode:
-            self.debug_thread = Thread(target=self.vision_control_arm, args=('a_left',))
-            # self.vision_control_arm('a_left')
         if self.reset_arm:
             self.reset_arm_default_pose()
+        if self.debug_mode and self.active_thread == False:
+            print("正在单点测试")
+            self.debug_thread = Thread(target=self.vision_control_arm, args=('a_left',))
+            self.active_thread = True
+            # self.vision_control_arm('a_left')
 
 
     def add_variable(self, var_name, value):
@@ -150,6 +154,7 @@ class Farming_visioner(Node):
         """ 视觉回调函数 """
         if not self.open_vision_detect:
             return
+        print("正在通过视觉控制机械臂")
 
         flowers_lists = []
         flower = {'Type': '', 'CentralPoint': [], 'Area': 0} # 类型、中心点坐标、面积
@@ -181,6 +186,7 @@ class Farming_visioner(Node):
         self.data_pre_processing(flowers_lists)
 
         # 更新数据
+        print("正在更新数据")
         for flower in flowers_lists:
             for index, flower_with_tag in enumerate(self.flowers_with_tag):
                 if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
@@ -196,16 +202,16 @@ class Farming_visioner(Node):
         area_error = 0
         for flower_with_tag in self.flowers_with_tag:
             if flower_with_tag['Moving'] == True:
-                x_error = flower_with_tag['CentralPoint'][0] - self.central_point_of_camera[0]
-                y_error = flower_with_tag['CentralPoint'][1] - self.central_point_of_camera[1]
-                area_error = flower_with_tag['Area'] - self.area_of_polliating
+                x_error = self.central_point_of_camera[0] - flower_with_tag['CentralPoint'][0]
+                y_error = self.central_point_of_camera[1] - flower_with_tag['CentralPoint'][1]
+                area_error = self.area_of_polliating - flower_with_tag['Area']
                 break
         self.angles_of_joints.data.clear()
         if abs(x_error) > self.threthold_of_x_error:
-            self.arm_params['joint1'] = self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, x_error), self.default_arm_params['joint1_limiting'])
+            self.arm_params['joint1'] = self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, -x_error), self.default_arm_params['joint1_limiting'])
             self.angles_of_joints.data.append(self.arm_params['joint1'])
         if abs(area_error) > self.threthold_of_area_error:
-            self.arm_params['joint2'] = self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, area_error), self.default_arm_params['joint2_limiting'])
+            self.arm_params['joint2'] = self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, -area_error), self.default_arm_params['joint2_limiting'])
             self.angles_of_joints.data.append(self.arm_params['joint2'])
         self.angles_of_joints.data.append(self.arm_params['joint3'])
         if abs(y_error) > self.threthold_of_y_error:
@@ -214,6 +220,7 @@ class Farming_visioner(Node):
         if (abs(x_error) < self.threthold_of_x_error and
             abs(area_error) < self.threthold_of_area_error and
             abs(y_error) < self.threthold_of_y_error):
+            print("已经完成授粉")
             for index, flower_with_tag in enumerate(self.flowers_with_tag):
                 if flower_with_tag['Moving'] == True:
                     self.flowers_with_tag_again[index]['Moving'] = False
@@ -224,6 +231,7 @@ class Farming_visioner(Node):
 
     def reset_arm_default_pose(self):
         """ 控制 arm 回到初始姿态 """
+        print("控制 arm 回到初始姿态")
         self.open_vision_detect = False
         self.pre_process = False
         all_new_parameters = []
@@ -255,6 +263,7 @@ class Farming_visioner(Node):
         flower_with_tag = {'Type': '', 'CentralPoint': [], 'Area': 0, 'Moving': False, 'Pollinated': False}
         if self.pre_process:
             if len(self.flowers_with_tag) == 0:
+                print("正在进行数据预处理")
                 male_num = 0
                 female_num = 0
                 for index, flower in enumerate(flowers_lists):
@@ -274,6 +283,7 @@ class Farming_visioner(Node):
                 # 语音播报
                 self.voice_broadcast(male_num, female_num)
             else:
+                print("正在授粉第二个目标点")
                 self.flowers_with_tag = self.flowers_with_tag_again
                 # 更新中心点坐标参数
                 for flower in flowers_lists:

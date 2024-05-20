@@ -17,7 +17,7 @@ class Farming_visioner(Node):
         super().__init__(name)
         self.get_logger().info("Wassup, bro, I am %s, M3!" % name)
         # 加载 arm 参数
-        self.file_path = os.path.expanduser('~/farming_ws/src/farming_vision/config/arm_params.yaml') # TODO:
+        self.file_path = os.path.expanduser('~/farming_ws/src/farming_vision/config/arm_params.yaml')
         self.load_config_file_()
         # 重要 BOOL 值
         self.open_vision_detect = False # 是否打开视觉检测
@@ -38,29 +38,16 @@ class Farming_visioner(Node):
         self.threthold_of_x_error = 5.0
         self.threthold_of_y_error = 5.0
         self.threthold_of_area_error = 50.0
-        self.thretholds_of_joint_moving = {'x_error': 5, 'y_error': 5, 'area_error': 50}
         # 使用到的订阅者和发布者
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
         self.joint_angles_publisher_ = self.create_publisher(Int16MultiArray, "joint_angles", 10)
         self.angles_of_joints = Int16MultiArray()
 
-        # self.set_new_param_to_ros('reset_vision_detect', 'bool')
-        # self.set_new_param_to_ros('debug_mode', 'bool')
-        # self.set_new_param_to_ros('reset_arm', 'bool')
-        # self.set_new_param_to_ros('area_scaling_factor')
-        # self.set_new_param_to_ros('O_distance_threthold_of_judge_same_goal')
-        # self.set_new_param_to_ros('area_of_polliating')
-        # self.set_new_param_to_ros('joint_speed')
-        # self.set_new_param_to_ros('threthold_of_x_error')
-        # self.set_new_param_to_ros('threthold_of_y_error')
-        # self.set_new_param_to_ros('threthold_of_area_error')
+        self.set_ros_param_()
 
         self.param_timer = self.create_timer(0.04, self.param_timer_work_)
-        self.spin_thread = Thread(target=self.spin_task)
+        self.spin_thread = Thread(target=self.spin_task_)
         self.spin_thread.start()
-        
-    def spin_task(self):
-        rclpy.spin(self)
 
     # ---------------- 对外接口函数 -----------------
     def vision_control_arm(self, pose_name):
@@ -112,39 +99,6 @@ class Farming_visioner(Node):
             self.debug_thread = Thread(target=self.vision_control_arm, args=('a_left',))
             self.active_thread = True
             # self.vision_control_arm('a_left')
-
-
-    def add_variable(self, var_name, value):
-        """ 通过一个字符串创建一个类中变量 """
-        setattr(self, var_name, value)
-    
-    def get_variable(self, var_name):
-        """ 通过一个字符串读取类中变量的值 """
-        return getattr(self, var_name, None)
-    
-    def update_variable(self, var_name, new_value):
-        """ 通过一个字符串更新一个类中变量的值 """
-        setattr(self, var_name, new_value)
-
-    def set_new_param_to_ros(self, var_name, data_type='double'):
-        """ 通过一个字符串向参数服务器定义一个值，并读取该值 """
-        if data_type == 'bool':
-            self.declare_parameter(var_name, self.get_variable(var_name))
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().bool_value)
-        if data_type == 'double':
-            self.declare_parameter(var_name, self.get_variable(var_name))
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().double_value)
-        if data_type == 'string':
-            self.declare_parameter(var_name, self.get_variable(var_name))
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().string_value)
-
-    def update_params_from_ros(self, var_name, data_type='double'):
-        if data_type == 'bool':
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().bool_value)
-        if data_type == 'double':
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().double_value)
-        if data_type == 'string':
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().string_value)
 
     def update_params_(self):
         self.update_params_from_ros('area_scaling_factor')
@@ -221,8 +175,8 @@ class Farming_visioner(Node):
             self.arm_params['joint1'] = int(self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, -x_error), self.default_arm_params['joint1_limiting']))
             print(self.arm_params['joint1'])
             self.angles_of_joints.data.append(self.arm_params['joint1'])
-        if abs(area_error) > self.threthold_of_area_error:
-            self.arm_params['joint2'] = int(self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, area_error), self.default_arm_params['joint2_limiting']))
+        # if abs(area_error) > self.threthold_of_area_error:
+        #     self.arm_params['joint2'] = int(self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, -area_error), self.default_arm_params['joint2_limiting']))
             self.angles_of_joints.data.append(self.arm_params['joint2'])
         self.angles_of_joints.data.append(self.arm_params['joint3'])
         if abs(y_error) > self.threthold_of_y_error:
@@ -329,7 +283,52 @@ class Farming_visioner(Node):
         with open(self.file_path, 'r') as file:
             self.default_arm_params = yaml.safe_load(file)
 
+    def set_ros_param_(self):
+        self.set_new_param_to_ros('reset_vision_detect', 'bool')
+        self.set_new_param_to_ros('debug_mode', 'bool')
+        self.set_new_param_to_ros('reset_arm', 'bool')
+        self.set_new_param_to_ros('area_scaling_factor')
+        self.set_new_param_to_ros('O_distance_threthold_of_judge_same_goal')
+        self.set_new_param_to_ros('area_of_polliating')
+        self.set_new_param_to_ros('joint_speed')
+        self.set_new_param_to_ros('threthold_of_x_error')
+        self.set_new_param_to_ros('threthold_of_y_error')
+        self.set_new_param_to_ros('threthold_of_area_error')
 
+    def spin_task_(self):
+        rclpy.spin(self)
+
+    def add_variable(self, var_name, value):
+        """ 通过一个字符串创建一个类中变量 """
+        setattr(self, var_name, value)
+    
+    def get_variable(self, var_name):
+        """ 通过一个字符串读取类中变量的值 """
+        return getattr(self, var_name, None)
+    
+    def update_variable(self, var_name, new_value):
+        """ 通过一个字符串更新一个类中变量的值 """
+        setattr(self, var_name, new_value)
+
+    def set_new_param_to_ros(self, var_name, data_type='double'):
+        """ 通过一个字符串向参数服务器定义一个值，并读取该值 """
+        if data_type == 'bool':
+            self.declare_parameter(var_name, self.get_variable(var_name))
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().bool_value)
+        if data_type == 'double':
+            self.declare_parameter(var_name, self.get_variable(var_name))
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().double_value)
+        if data_type == 'string':
+            self.declare_parameter(var_name, self.get_variable(var_name))
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().string_value)
+
+    def update_params_from_ros(self, var_name, data_type='double'):
+        if data_type == 'bool':
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().bool_value)
+        if data_type == 'double':
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().double_value)
+        if data_type == 'string':
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().string_value)
 
 def main():
     rclpy.init()

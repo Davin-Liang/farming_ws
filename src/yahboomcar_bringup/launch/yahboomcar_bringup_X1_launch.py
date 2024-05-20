@@ -111,6 +111,13 @@ def generate_launch_description():
         executable='static_transform_publisher', 
         emulate_tty=True,
         arguments="0.0 0.0 0.0 0.0 0.0 0.0 /base_link /imu_link".split(' '))
+    
+    # 激光NODE
+    lidar_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory('ldlidar'), 'launch'),
+            '/stp23l.launch.py'])
+    )
 
     return LaunchDescription([
         gui_arg,
@@ -129,5 +136,6 @@ def generate_launch_description():
         ekf_node,
         yahboom_joy_node,
         base_footprint_tf,
-        imu_tf
+        imu_tf,
+        lidar_node
     ])

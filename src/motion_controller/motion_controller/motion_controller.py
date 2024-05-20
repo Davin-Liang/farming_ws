@@ -1,3 +1,4 @@
+from threading import Thread
 import rclpy
 from rclpy.node import Node
 from rclpy.duration import Duration
@@ -129,8 +130,12 @@ class Motion_Controller(Node):
 
         self.file_path = os.path.expanduser('~/farming_ws/src/motion_controller/config/position_point.yaml')
         self.load_config_file_()
+
+        self.spin_thread = Thread(target=self.spin_task_)
+        self.spin_thread.start()
+
         print ("Finish init work.")
- 
+
     # ---------------- 对外接口函数 ----------------
     def set_distance(self, distance):
         """ 设置车轮方向的行驶距离及以什么样的速度行驶 """
@@ -182,38 +187,6 @@ class Motion_Controller(Node):
         all_new_parameters.append(self.start_for_lidar_distance)
         self.set_parameters(all_new_parameters)
     # ----------------------------------------------
-
-    def set_new_param_to_ros(self, var_name, data_type='double'):
-        """ 通过一个字符串向参数服务器定义一个值，并读取该值 """
-        if data_type == 'bool':
-            self.declare_parameter(var_name, self.get_variable(var_name))
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().bool_value)
-        if data_type == 'double':
-            self.declare_parameter(var_name, self.get_variable(var_name))
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().double_value)
-        if data_type == 'string':
-            self.declare_parameter(var_name, self.get_variable(var_name))
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().string_value)
-
-    def update_params_from_ros(self, var_name, data_type='double'):
-        if data_type == 'bool':
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().bool_value)
-        if data_type == 'double':
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().double_value)
-        if data_type == 'string':
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().string_value)
-
-    def add_variable(self, var_name, value):
-        """ 通过一个字符串创建一个类中变量 """
-        setattr(self, var_name, value)
-    
-    def get_variable(self, var_name):
-        """ 通过一个字符串读取类中变量的值 """
-        return getattr(self, var_name, None)
-    
-    def update_variable(self, var_name, new_value):
-        """ 通过一个字符串更新一个类中变量的值 """
-        setattr(self, var_name, new_value)
 
     def lidar_callback_(self, msg):
         """ 单线激光雷达的回调函数 """
@@ -320,7 +293,7 @@ class Motion_Controller(Node):
             """ 获取旋转矩阵的欧拉角。GetRPY()返回的是一个长度为3的列表, 包含了旋转矩阵的roll、pitch和yaw角度。
                     在这里, [2]索引表示取得yaw角度, 也就是绕z轴的旋转角度 """
             angle_rot = cacl_rot.GetRPY()[2]
-            self.real_angle = degrees(angle_rot)
+            self.real_angle = degrees(angle_rot) + 180.0 # 将 -180~180 转换到 0~360，但程序一启动就是 180
             if abs(self.real_angle - self.last_real_angle) > 180.0:
                 if self.real_angle < self.last_real_angle:
                     self.total_angle += 360.0 - self.last_real_angle + self.real_angle
@@ -347,7 +320,42 @@ class Motion_Controller(Node):
     def load_config_file_(self):
         """ 读取 YAML 文件 """
         with open(self.file_path, 'r') as file:
-            self.points = yaml.safe_load(file)       
+            self.points = yaml.safe_load(file)      
+
+    def spin_task_(self):
+        rclpy.spin(self) 
+
+    def set_new_param_to_ros(self, var_name, data_type='double'):
+        """ 通过一个字符串向参数服务器定义一个值，并读取该值 """
+        if data_type == 'bool':
+            self.declare_parameter(var_name, self.get_variable(var_name))
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().bool_value)
+        if data_type == 'double':
+            self.declare_parameter(var_name, self.get_variable(var_name))
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().double_value)
+        if data_type == 'string':
+            self.declare_parameter(var_name, self.get_variable(var_name))
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().string_value)
+
+    def update_params_from_ros(self, var_name, data_type='double'):
+        if data_type == 'bool':
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().bool_value)
+        if data_type == 'double':
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().double_value)
+        if data_type == 'string':
+            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().string_value)
+
+    def add_variable(self, var_name, value):
+        """ 通过一个字符串创建一个类中变量 """
+        setattr(self, var_name, value)
+    
+    def get_variable(self, var_name):
+        """ 通过一个字符串读取类中变量的值 """
+        return getattr(self, var_name, None)
+    
+    def update_variable(self, var_name, new_value):
+        """ 通过一个字符串更新一个类中变量的值 """
+        setattr(self, var_name, new_value)
 
 
 def main():

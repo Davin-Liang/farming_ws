@@ -69,7 +69,7 @@ class yahboomcar_driver(Node):
 		print (self.nav_use_rotvel)
 
 		#create subcriber
-		self.joint_angles_subscriber_ = self.create_subscription(Int16MultiArray, "joint_angles", self.joint_angles_callback_, 10)
+		self.joint_angles_subscriber_ = self.create_subscription(Int16MultiArray, "joint_angles", self.joint_angles_callback_, 100)
 		self.sub_cmd_vel = self.create_subscription(Twist,"cmd_vel",self.cmd_vel_callback,1)
 		self.sub_RGBLight = self.create_subscription(Int32,"RGBLight",self.RGBLightcallback,100)
 		self.sub_BUzzer = self.create_subscription(Bool,"Buzzer",self.Buzzercallback,100)

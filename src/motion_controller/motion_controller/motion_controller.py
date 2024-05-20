@@ -61,7 +61,7 @@ class Motion_Controller(Node):
         # self.declare_parameter('angle', 0.0)
         # self.angle = self.get_parameter('angle').get_parameter_value().double_value
         # self.angle = radians(self.angle)
-        self.distance = 1.0
+        self.distance = 0.0
         self.set_new_param_to_ros('distance')
         self.angle = 0.0
         self.set_new_param_to_ros('angle')
@@ -102,6 +102,7 @@ class Motion_Controller(Node):
         self.set_new_param_to_ros('odom_frame', 'string')
 
         self.lidar_threthold = 0.1
+        self.set_new_param_to_ros('lidar_threthold')
         
         #init the tf listener
         self.tf_buffer = Buffer()
@@ -140,14 +141,19 @@ class Motion_Controller(Node):
     def set_distance(self, distance):
         """ 设置车轮方向的行驶距离及以什么样的速度行驶 """
         all_new_parameters = []
+        self.distance = rclpy.parameter.Parameter('distance', rclpy.Parameter.Type.DOUBLE, distance)
+        all_new_parameters.append(self.distance)
         self.start_for_pid_distance = rclpy.parameter.Parameter('start_for_pid_distance', rclpy.Parameter.Type.BOOL, True)
-        all_new_parameters.append(self.start_for_lidar_distance)
+        all_new_parameters.append(self.start_for_pid_distance)
         self.set_parameters(all_new_parameters)
-        self.distance = distance
+
 
     def set_angle(self, angle):
         """ 设置底盘转动角度 """
-        self.angle = angle
+        all_new_parameters = []
+        self.angle = rclpy.parameter.Parameter('angle', rclpy.Parameter.Type.DOUBLE, angle)
+        all_new_parameters.append(self.angle)
+        self.set_parameters(all_new_parameters)
 
     def move_based_on_point(self, point_name, direction="x", liear_speed="0.5"):
         """ 根据坐标点来导航 """
@@ -165,28 +171,49 @@ class Motion_Controller(Node):
 
     def start_car_and_lidar_controls_stopping(self, speed, threthold=0.1, ignore_num=0):
         """ 开动车并使用单线激光控制小车停止 """
-        all_new_parameters = []
-        self.start_for_lidar_distance = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.BOOL, True)
-        all_new_parameters.append(self.start_for_lidar_distance)
+        all_new_parameter = []
         self.liear_speed = rclpy.parameter.Parameter('liear_speed', rclpy.Parameter.Type.DOUBLE, speed)
-        all_new_parameters.append(self.liear_speed)
+        all_new_parameter.append(self.liear_speed)
         self.lidar_threthold = rclpy.parameter.Parameter('lidar_threthold', rclpy.Parameter.Type.DOUBLE, threthold)
-        all_new_parameters.append(self.lidar_threthold)
-        self.set_parameters(all_new_parameters)
-        all_new_parameters.clear()
-        time.sleep(1.0) # 保证 car 驶出激光遮挡区域
+        all_new_parameter.append(self.lidar_threthold)
+        self.start_for_lidar_distance = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.BOOL, True)
+        all_new_parameter.append(self.start_for_lidar_distance)
+        self.set_parameters(all_new_parameter)
+        # all_new_parameter.clear()
 
         # 等待 car 到位
+        time.sleep(1.0) # 保证 car 驶出激光遮挡区域
+        real_ignore_num = 0
+        print(self.lidar_distance)
+        print(self.lidar_threthold)
+        while self.lidar_distance > self.lidar_threthold or real_ignore_num != ignore_num:
+            if ignore_num == 0:
+                pass
+            else:
+                real_ignore_num += 1
+        all_new_parameters = []
+        self.start_for_lidar_distance = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.BOOL, False)
+        all_new_parameters.append(self.start_for_lidar_distance)
+        self.set_parameters(all_new_parameters)
+
+        # self.wait_thread = Thread(target=self.wait_for_finishing_task_, args=(ignore_num,))
+        # self.wait_thread.start()
+        
+    # ----------------------------------------------
+
+    def wait_for_finishing_task_(self, ignore_num):
+        # 等待 car 到位
+        time.sleep(1.0) # 保证 car 驶出激光遮挡区域
         real_ignore_num = 0
         while self.lidar_distance > self.lidar_threthold or real_ignore_num != ignore_num:
             if ignore_num == 0:
                 pass
             else:
                 real_ignore_num += 1
+        all_new_parameters = []
         self.start_for_lidar_distance = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.BOOL, False)
         all_new_parameters.append(self.start_for_lidar_distance)
         self.set_parameters(all_new_parameters)
-    # ----------------------------------------------
 
     def lidar_callback_(self, msg):
         """ 单线激光雷达的回调函数 """
@@ -256,6 +283,7 @@ class Motion_Controller(Node):
         self.angle = radians(self.angle)
         self.update_params_from_ros('distance_tolerance')
         self.update_params_from_ros('liear_speed')
+        self.update_params_from_ros('lidar_threthold')
 
         self.ori_angle_pid.Kp = self.get_parameter('Kp_ori').get_parameter_value().double_value
         self.ori_angle_pid.Ki = self.get_parameter('Ki_ori').get_parameter_value().double_value
@@ -293,17 +321,17 @@ class Motion_Controller(Node):
             """ 获取旋转矩阵的欧拉角。GetRPY()返回的是一个长度为3的列表, 包含了旋转矩阵的roll、pitch和yaw角度。
                     在这里, [2]索引表示取得yaw角度, 也就是绕z轴的旋转角度 """
             angle_rot = cacl_rot.GetRPY()[2]
-            self.real_angle = degrees(angle_rot) + 180.0 # 将 -180~180 转换到 0~360，但程序一启动就是 180
-            if abs(self.real_angle - self.last_real_angle) > 180.0:
-                if self.real_angle < self.last_real_angle:
-                    self.total_angle += 360.0 - self.last_real_angle + self.real_angle
-                else:
-                    self.total_angle -= 360.0 - self.real_angle + self.last_real_angle
-            else:
-                self.total_angle += self.real_angle - self.last_real_angle
-            self.last_real_angle = self.real_angle
-            print("现在角度为", self.total_angle)
-            return radians(self.total_angle)
+            # self.real_angle = degrees(angle_rot) + 180.0 # 将 -180~180 转换到 0~360，但程序一启动就是 180
+            # if abs(self.real_angle - self.last_real_angle) > 180.0:
+            #     if self.real_angle < self.last_real_angle:
+            #         self.total_angle += 360.0 - self.last_real_angle + self.real_angle
+            #     else:
+            #         self.total_angle -= 360.0 - self.real_angle + self.last_real_angle
+            # else:
+            #     self.total_angle += self.real_angle - self.last_real_angle
+            # self.last_real_angle = self.real_angle
+            # print("现在角度为", self.total_angle)
+            # return radians(self.total_angle)
             return angle_rot
         except (LookupException, ConnectivityException, ExtrapolationException):
             self.get_logger().info('transform not ready')
@@ -362,7 +390,7 @@ def main():
     rclpy.init()
     try:
         node = Motion_Controller("Motion_Controller")
-        rclpy.spin(node)
+        # rclpy.spin(node)
 
     except KeyboardInterrupt:
         pass

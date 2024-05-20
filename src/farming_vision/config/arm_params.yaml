@@ -1,7 +1,7 @@
 # A 区
 # '_a_left' 指的是车在 A 区行驶时车的左边
 # '_a_left' 指的是车在 A 区行驶时车的左边
-joint1_a_left: 45
+joint1_a_left: 68
 joint1_a_right: 45
 joint2_a_left: 80
 joint2_a_right: 80

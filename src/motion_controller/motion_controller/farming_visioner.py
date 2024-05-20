@@ -40,10 +40,10 @@ class Farming_visioner(Node):
         self.threthold_of_area_error = 50.0
         # 使用到的订阅者和发布者
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
-        self.joint_angles_publisher_ = self.create_publisher(Int16MultiArray, "joint_angles", 10)
+        self.joint_angles_publisher_ = self.create_publisher(Int16MultiArray, "joint_angles", 100)
         self.angles_of_joints = Int16MultiArray()
 
-        self.set_ros_param_()
+        # self.set_ros_param_()
 
         self.param_timer = self.create_timer(0.04, self.param_timer_work_)
         self.spin_thread = Thread(target=self.spin_task_)
@@ -125,21 +125,27 @@ class Farming_visioner(Node):
         
         if 0 != len(msg.targets):
             for i in range(len(msg.targets)):
+                print(msg.targets[i].type)
+                print(msg.targets[i].rois[0])
+                flower['CentralPoint'].clear()
                 if msg.targets[i].type == "male": 
                     flower['Type'] = msg.targets[i].type
+
                     flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
                     flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
-                    flower['Area'] = flower['CentralPoint'][0] * flower['CentralPoint'][1] * self.area_scaling_factor
-                elif msg.targets[i].type == "female":
+                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width * self.area_scaling_factor
+                elif msg.targets[i].type == "famale":
                     flower['Type'] = msg.targets[i].type
                     flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
                     flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
-                    flower['Area'] = flower['CentralPoint'][0] * flower['CentralPoint'][1] * self.area_scaling_factor
+                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width * self.area_scaling_factor
 
                 # 得到原始数据
+
                 flowers_lists.append(copy.deepcopy(flower)) # 深拷贝
 
         if 0 != len(flowers_lists): # 预防处理空数据
+            print(flowers_lists)
             self.confrim_moving_goal_for_arm(flowers_lists)
 
         time.sleep(0.1)
@@ -164,6 +170,7 @@ class Farming_visioner(Node):
         y_error = 0
         x_error = 0
         area_error = 0
+        print(self.flowers_with_tag)
         for flower_with_tag in self.flowers_with_tag:
             if flower_with_tag['Moving'] == True:
                 x_error = self.central_point_of_camera[0] - flower_with_tag['CentralPoint'][0]
@@ -171,27 +178,31 @@ class Farming_visioner(Node):
                 area_error = self.area_of_polliating - flower_with_tag['Area']
                 break
         self.angles_of_joints.data = []
+        print(x_error)
         if abs(x_error) > self.threthold_of_x_error:
-            self.arm_params['joint1'] = int(self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, -x_error), self.default_arm_params['joint1_limiting']))
-            print(self.arm_params['joint1'])
+            print("关节速度为", self.joint_speed)
+            self.arm_params['joint1'] = int(self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
+            print("角度值为：", self.arm_params['joint1'])
             self.angles_of_joints.data.append(self.arm_params['joint1'])
         # if abs(area_error) > self.threthold_of_area_error:
         #     self.arm_params['joint2'] = int(self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, -area_error), self.default_arm_params['joint2_limiting']))
             self.angles_of_joints.data.append(self.arm_params['joint2'])
-        self.angles_of_joints.data.append(self.arm_params['joint3'])
-        if abs(y_error) > self.threthold_of_y_error:
-            self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
+            self.angles_of_joints.data.append(self.arm_params['joint3'])
+        # if abs(y_error) > self.threthold_of_y_error:
+        #     self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
             self.angles_of_joints.data.append(self.arm_params['joint4'])
-        if (abs(x_error) < self.threthold_of_x_error and
-            abs(area_error) < self.threthold_of_area_error and
-            abs(y_error) < self.threthold_of_y_error):
-            print("已经完成授粉")
-            for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                if flower_with_tag['Moving'] == True:
-                    self.flowers_with_tag_again[index]['Moving'] = False
-                    self.flowers_with_tag_again[index]['Pollinated'] = True
-            self.reset_arm_default_pose()
-            return
+        # if (abs(x_error) < self.threthold_of_x_error and
+        #     abs(area_error) < self.threthold_of_area_error and
+        #     abs(y_error) < self.threthold_of_y_error):
+        #     print("已经完成授粉")
+        #     for index, flower_with_tag in enumerate(self.flowers_with_tag):
+        #         if flower_with_tag['Moving'] == True:
+        #             self.flowers_with_tag_again[index]['Moving'] = False
+        #             self.flowers_with_tag_again[index]['Pollinated'] = True
+        #     self.reset_arm_default_pose()
+        #     return
+        print("发送命令给机械臂")
+        print(self.angles_of_joints)
         self.joint_angles_publisher_.publish(self.angles_of_joints)
 
     def reset_arm_default_pose(self):
@@ -232,12 +243,12 @@ class Farming_visioner(Node):
                 male_num = 0
                 female_num = 0
                 for index, flower in enumerate(flowers_lists):
-                    flower_with_tag['Type'] = flower['Type']
-                    flower_with_tag['CentralPoint'] = flower['CentralPoint']
-                    flower_with_tag['Area'] = flower['Area']
-                    if index == 0:
+                    if flower['Type'] == 'male':
+                        flower_with_tag['Type'] = flower['Type']
+                        flower_with_tag['CentralPoint'] = flower['CentralPoint']
+                        flower_with_tag['Area'] = flower['Area']
                         flower_with_tag['Moving'] = True
-                    self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
+                        self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
 
                     if flower['Type'] == 'male':
                         male_num += 1
@@ -276,6 +287,8 @@ class Farming_visioner(Node):
 
     def calculate_O_distance(self, point1, point2):
         """ 计算两个坐标点之间的 O 式距离 """
+        print(point1)
+        print(point2)
         return math.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
     
     def load_config_file_(self):

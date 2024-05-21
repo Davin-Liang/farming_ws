@@ -182,17 +182,17 @@ class Farming_visioner(Node):
                 break
         self.angles_of_joints.data = []
         print(x_error)
-        if abs(x_error) > self.threthold_of_x_error:
-            print("关节速度为", self.joint_speed)
-            self.arm_params['joint1'] = int(self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
-            print("角度值为：", self.arm_params['joint1'])
-            self.angles_of_joints.data.append(self.arm_params['joint1'])
+        # if abs(x_error) > self.threthold_of_x_error:
+        #     print("关节速度为", self.joint_speed)
+        #     self.arm_params['joint1'] = int(self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
+        #     print("角度值为：", self.arm_params['joint1'])
+        self.angles_of_joints.data.append(self.arm_params['joint1'])
         # if abs(area_error) > self.threthold_of_area_error:
         #     self.arm_params['joint2'] = int(self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, -area_error), self.default_arm_params['joint2_limiting']))
-            self.angles_of_joints.data.append(self.arm_params['joint2'])
-            self.angles_of_joints.data.append(self.arm_params['joint3'])
-        # if abs(y_error) > self.threthold_of_y_error:
-        #     self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
+        self.angles_of_joints.data.append(self.arm_params['joint2'])
+        self.angles_of_joints.data.append(self.arm_params['joint3'])
+        if abs(y_error) > self.threthold_of_y_error:
+            self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
             self.angles_of_joints.data.append(self.arm_params['joint4'])
         # if (abs(x_error) < self.threthold_of_x_error and
         #     abs(area_error) < self.threthold_of_area_error and

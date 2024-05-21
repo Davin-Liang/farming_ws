@@ -9,6 +9,19 @@ joint3_a_left: 65
 joint3_a_right: 65
 joint4_a_left: 110
 joint4_a_right: 110
+
+joint2_a_1: 80
+joint3_a_1: 65
+joint4_a_1: 80
+
+joint2_a_2: 80
+joint3_a_2: 65
+joint4_a_2: 100
+
+joint2_a_3: 80
+joint3_a_3: 65
+joint4_a_3: 110
+
 # B 区
 # '_b_front' 指的是车在 A 区行驶时车的前方
 # '_b_back' 指的是车在 A 区行驶时车的后方

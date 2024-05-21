@@ -30,6 +30,7 @@ class Farming_visioner(Node):
         self.flowers_with_tag = [] # 存储花属性
         self.flowers_with_tag_again = [] # 存储花属性
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
+        self.place = 'A'
         # 可调参数
         self.area_scaling_factor = 0.25 # 面积缩放系数
         self.O_distance_threthold_of_judge_same_goal = 100 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
@@ -155,19 +156,87 @@ class Farming_visioner(Node):
 
     def confrim_moving_goal_for_arm(self, flowers_lists):
         """ 确定 arm 的移动目标 """
-        # 数据预处理并选择第一个处理的目标
-        self.data_pre_processing(flowers_lists)
+        # # 数据预处理并选择第一个处理的目标
+        # self.data_pre_processing(flowers_lists)
+        # # 更新数据
+        # print("正在更新数据")
+        # for flower in flowers_lists:
+        #     for index, flower_with_tag in enumerate(self.flowers_with_tag):
+        #         if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
+        #             self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
+        #             break # 跳出内层 for 循环
+        # # 控制 arm
+        # self.control_arm()
 
-        # 更新数据
-        print("正在更新数据")
-        for flower in flowers_lists:
-            for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
-                    self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
-                    break # 跳出内层 for 循环
-        
-        # 控制 arm
-        self.control_arm()
+        self.arm_move(flowers_lists)
+
+    def vision_choose_goal_in_A(self, pose_name):
+        """ 传入视觉目标 """
+        self.pose_name = pose_name
+        self.arm_params['joint1'] = self.default_arm_params['joint1_'+self.pose_name]
+        self.arm_params['joint2'] = self.default_arm_params['joint2_'+self.pose_name]
+        self.arm_params['joint3'] = self.default_arm_params['joint3_'+self.pose_name]
+        self.arm_params['joint4'] = self.default_arm_params['joint4_'+self.pose_name]
+        self.angles_of_joints.data = []
+        self.angles_of_joints.data.append(self.arm_params['joint1'])
+        self.angles_of_joints.data.append(self.arm_params['joint2'])
+        self.angles_of_joints.data.append(self.arm_params['joint3'])
+        self.angles_of_joints.data.append(self.arm_params['joint4'])
+        self.joint_angles_publisher_.publish(self.angles_of_joints)
+        time.sleep(1.0)
+        self.open_vision_detect     = True
+        # 堵塞函数直到完成任务
+        print("正在等待完成任务")
+        while self.open_vision_detect:
+            pass
+
+    def arm_move(self, flowers_lists):
+            if len(flowers_lists) == 3:
+                sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][1])
+                # 创建目标字典，并按排序后的结果填充值
+                goal_list = [
+                    sorted_data[0]['Type'],
+                    sorted_data[1]['Type'],
+                    sorted_data[2]['Type']
+                ]
+                print(goal_list)
+
+                for index, flower in enumerate(flowers_lists):
+                    if flower['Type'] == 'male':
+                        male_num += 1
+                    elif flower['Type'] == 'famale':
+                        female_num += 1
+                # 语音播报
+                self.voice_broadcast(male_num, female_num)
+                
+                for index, goal in enumerate(goal_list):
+                    if index == 0:
+                        if goal == 'famale':
+                            self.choose_arm_goal('_a_1')
+                            self.choose_arm_goal(self.pose_name)
+                    if index == 1:
+                        if goal == 'famale':
+                            self.choose_arm_goal('_a_2')
+                            self.choose_arm_goal(self.pose_name)
+                    if index == 2:
+                        if goal == 'famale':
+                            self.choose_arm_goal('_a_3')
+                            self.choose_arm_goal(self.pose_name)
+                
+                self.open_vision_detect = False
+
+
+    def choose_arm_goal(self, pose_name):
+        self.arm_params['joint2'] = self.default_arm_params['joint2_'+pose_name]
+        self.arm_params['joint3'] = self.default_arm_params['joint3_'+pose_name]
+        self.arm_params['joint4'] = self.default_arm_params['joint4_'+pose_name]
+        self.angles_of_joints.data = []
+        self.angles_of_joints.data.append(self.arm_params['joint1'])
+        self.angles_of_joints.data.append(self.arm_params['joint2'])
+        self.angles_of_joints.data.append(self.arm_params['joint3'])
+        self.angles_of_joints.data.append(self.arm_params['joint4'])
+        self.joint_angles_publisher_.publish(self.angles_of_joints)
+        time.sleep(1.0)
 
     def control_arm(self):
         y_error = 0

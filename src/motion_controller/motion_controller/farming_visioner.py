@@ -48,8 +48,8 @@ class Farming_visioner(Node):
         # self.set_ros_param_()
 
         self.param_timer = self.create_timer(0.04, self.param_timer_work_)
-        self.spin_thread = Thread(target=self.spin_task_)
-        self.spin_thread.start()
+        # self.spin_thread1 = Thread(target=self.spin_task_)
+        # self.spin_thread1.start()
 
     # ---------------- 对外接口函数 -----------------
     def vision_control_arm(self, pose_name):
@@ -200,7 +200,8 @@ class Farming_visioner(Node):
                     sorted_data[2]['Type']
                 ]
                 print(goal_list)
-
+                male_num = 0
+                female_num = 0
                 for index, flower in enumerate(flowers_lists):
                     if flower['Type'] == 'male':
                         male_num += 1
@@ -212,15 +213,20 @@ class Farming_visioner(Node):
                 for index, goal in enumerate(goal_list):
                     if index == 0:
                         if goal == 'famale':
-                            self.choose_arm_goal('_a_1')
+                            print("正在去目标1")
+                            self.choose_arm_goal('middle')
+                            self.choose_arm_goal('a_1')
                             self.choose_arm_goal(self.pose_name)
                     if index == 1:
                         if goal == 'famale':
-                            self.choose_arm_goal('_a_2')
+                            print("正在去目标2")
+                            self.choose_arm_goal('middle')
+                            self.choose_arm_goal('a_2')
                             self.choose_arm_goal(self.pose_name)
                     if index == 2:
                         if goal == 'famale':
-                            self.choose_arm_goal('_a_3')
+                            print("正在去目标3")
+                            self.choose_arm_goal('a_3')
                             self.choose_arm_goal(self.pose_name)
                 
                 self.open_vision_detect = False
@@ -236,7 +242,7 @@ class Farming_visioner(Node):
         self.angles_of_joints.data.append(self.arm_params['joint3'])
         self.angles_of_joints.data.append(self.arm_params['joint4'])
         self.joint_angles_publisher_.publish(self.angles_of_joints)
-        time.sleep(1.0)
+        time.sleep(1.5)
 
     def control_arm(self):
         y_error = 0

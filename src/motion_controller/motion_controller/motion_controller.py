@@ -19,41 +19,41 @@ class Motion_Controller(Node):
     def __init__(self, name):
         super().__init__(name)
 
-        self.ori_angle_pid = PID(1.1, 0.012, 0.0, 2.0, 0.1)
-        self.distance_pid = PID(0.6, 0.02, 0.0, 0.5, 0.15)
+        self.ori_angle_pid = PID(0.51, 0.0, 0.126, 1.6, 0.0)
+        self.distance_pid = PID(0.42, 0.0, 0.08, 1.0, 0.0)
 
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.lidar_subcriber_ = self.create_subscription(Range, "laser", self.lidar_callback_, 10)
         self.move_cmd = Twist()
 
-        self.declare_parameter('Kp_ori', 0.51)
-        self.ori_angle_pid.Kp = self.get_parameter('Kp_ori').get_parameter_value().double_value
-        self.declare_parameter('Ki_ori', 0.0)
-        self.ori_angle_pid.Ki = self.get_parameter('Ki_ori').get_parameter_value().double_value
-        self.declare_parameter('max_out_ori', 1.6)
-        self.ori_angle_pid.max_out = self.get_parameter('max_out_ori').get_parameter_value().double_value
-        self.declare_parameter('max_iout_ori', 0.0)
-        self.ori_angle_pid.max_iout = self.get_parameter('max_iout_ori').get_parameter_value().double_value
-        self.declare_parameter('Kd_ori', 0.126)
-        self.ori_angle_pid.Kd = self.get_parameter('Kd_ori').get_parameter_value().double_value
+        # self.declare_parameter('Kp_ori', 0.51)
+        # self.ori_angle_pid.Kp = self.get_parameter('Kp_ori').get_parameter_value().double_value
+        # self.declare_parameter('Ki_ori', 0.0)
+        # self.ori_angle_pid.Ki = self.get_parameter('Ki_ori').get_parameter_value().double_value
+        # self.declare_parameter('max_out_ori', 1.6)
+        # self.ori_angle_pid.max_out = self.get_parameter('max_out_ori').get_parameter_value().double_value
+        # self.declare_parameter('max_iout_ori', 0.0)
+        # self.ori_angle_pid.max_iout = self.get_parameter('max_iout_ori').get_parameter_value().double_value
+        # self.declare_parameter('Kd_ori', 0.126)
+        # self.ori_angle_pid.Kd = self.get_parameter('Kd_ori').get_parameter_value().double_value
 
-        self.declare_parameter('Kp_distance', 0.42)
-        self.distance_pid.Kp = self.get_parameter('Kp_distance').get_parameter_value().double_value
-        self.declare_parameter('Ki_distance', 0.0)
-        self.distance_pid.Ki = self.get_parameter('Ki_distance').get_parameter_value().double_value
-        self.declare_parameter('max_out_distance', 1.0)
-        self.distance_pid.max_out = self.get_parameter('max_out_distance').get_parameter_value().double_value
-        self.declare_parameter('max_iout_distance', 0.0)
-        self.distance_pid.max_iout = self.get_parameter('max_iout_distance').get_parameter_value().double_value
-        self.declare_parameter('Kd_distance', 0.08)
-        self.distance_pid.Kd = self.get_parameter('Kd_distance').get_parameter_value().double_value
+        # self.declare_parameter('Kp_distance', 0.42)
+        # self.distance_pid.Kp = self.get_parameter('Kp_distance').get_parameter_value().double_value
+        # self.declare_parameter('Ki_distance', 0.0)
+        # self.distance_pid.Ki = self.get_parameter('Ki_distance').get_parameter_value().double_value
+        # self.declare_parameter('max_out_distance', 1.0)
+        # self.distance_pid.max_out = self.get_parameter('max_out_distance').get_parameter_value().double_value
+        # self.declare_parameter('max_iout_distance', 0.0)
+        # self.distance_pid.max_iout = self.get_parameter('max_iout_distance').get_parameter_value().double_value
+        # self.declare_parameter('Kd_distance', 0.08)
+        # self.distance_pid.Kd = self.get_parameter('Kd_distance').get_parameter_value().double_value
 
         
         #declare_parameter
         # self.declare_parameter('rate', 20.0)
         # self.rate = self.get_parameter('rate').get_parameter_value().double_value
         self.rate = 20.0
-        self.set_new_param_to_ros('rate')
+        # self.set_new_param_to_ros('rate')
         
         # 目标值
         # self.declare_parameter('distance', 1.0)
@@ -62,22 +62,22 @@ class Motion_Controller(Node):
         # self.angle = self.get_parameter('angle').get_parameter_value().double_value
         # self.angle = radians(self.angle)
         self.distance = 0.0
-        self.set_new_param_to_ros('distance')
+        # self.set_new_param_to_ros('distance')
         self.angle = 0.0
-        self.set_new_param_to_ros('angle')
+        # self.set_new_param_to_ros('angle')
         self.angle = radians(self.angle)
         
         # 行驶和转动的速度
         # self.declare_parameter('liear_speed', 0.5)
         # self.liear_speed = self.get_parameter('liear_speed').get_parameter_value().double_value
         self.liear_speed = 0.5
-        self.set_new_param_to_ros('liear_speed')
+        # self.set_new_param_to_ros('liear_speed')
         
         # 阈值
         # self.declare_parameter('distance_tolerance', 0.03)
         # self.distance_tolerance = self.get_parameter('distance_tolerance').get_parameter_value().double_value
         self.distance_tolerance = 0.03
-        self.set_new_param_to_ros('distance_tolerance')
+        # self.set_new_param_to_ros('distance_tolerance')
         
         # 修正系数
         # self.declare_parameter('odom_linear_scale_correction', 1.0)
@@ -85,24 +85,26 @@ class Motion_Controller(Node):
         # self.declare_parameter('odom_angular_scale_correction', 1.0)
         # self.odom_angular_scale_correction = self.get_parameter('odom_angular_scale_correction').get_parameter_value().double_value
         self.odom_linear_scale_correction = 1.0
-        self.set_new_param_to_ros('odom_linear_scale_correction')
+        # self.set_new_param_to_ros('odom_linear_scale_correction')
         self.odom_angular_scale_correction = 1.0
-        self.set_new_param_to_ros('odom_angular_scale_correction')
+        # self.set_new_param_to_ros('odom_angular_scale_correction')
         
-        self.declare_parameter('start_for_pid_distance', False)
-        self.declare_parameter('start_for_lidar_distance', False)
+        # self.declare_parameter('start_for_pid_distance', False)
+        # self.declare_parameter('start_for_lidar_distance', False)
+        self.start_for_lidar_distance = False
+        self.start_for_pid_distance = False
         
         # self.declare_parameter('base_frame', 'base_footprint')
         # self.base_frame = self.get_parameter('base_frame').get_parameter_value().string_value
         # self.declare_parameter('odom_frame','odom')
         # self.odom_frame = self.get_parameter('odom_frame').get_parameter_value().string_value
         self.base_frame = 'base_footprint'
-        self.set_new_param_to_ros('base_frame', 'string')
+        # self.set_new_param_to_ros('base_frame', 'string')
         self.odom_frame = 'odom'
-        self.set_new_param_to_ros('odom_frame', 'string')
+        # self.set_new_param_to_ros('odom_frame', 'string')
 
         self.lidar_threthold = 0.1
-        self.set_new_param_to_ros('lidar_threthold')
+        # self.set_new_param_to_ros('lidar_threthold')
         
         #init the tf listener
         self.tf_buffer = Buffer()
@@ -120,6 +122,7 @@ class Motion_Controller(Node):
         self.real_angle = 0.0
         self.last_real_angle = 0.0
         self.total_angle = 0.0
+        self.lidar_distance = 0.0
 
         self.move_direction = "x"
         self.status_of_finishing_goal = True
@@ -132,10 +135,11 @@ class Motion_Controller(Node):
         self.file_path = os.path.expanduser('~/farming_ws/src/motion_controller/config/position_point.yaml')
         self.load_config_file_()
 
-        self.spin_thread = Thread(target=self.spin_task_)
-        self.spin_thread.start()
+        # self.spin_thread = Thread(target=self.spin_tas)
+        # self.spin_thread.start()
 
         print ("Finish init work.")
+
 
     # ---------------- 对外接口函数 ----------------
     def set_distance(self, distance):
@@ -178,20 +182,23 @@ class Motion_Controller(Node):
 
     def start_car_and_lidar_controls_stopping(self, speed, threthold=0.1, ignore_num=0):
         """ 开动车并使用单线激光控制小车停止 """
-        all_new_parameter = []
-        self.liear_speed = rclpy.parameter.Parameter('liear_speed', rclpy.Parameter.Type.DOUBLE, speed)
-        all_new_parameter.append(self.liear_speed)
-        self.lidar_threthold = rclpy.parameter.Parameter('lidar_threthold', rclpy.Parameter.Type.DOUBLE, threthold)
-        all_new_parameter.append(self.lidar_threthold)
-        self.start_for_lidar_distance = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.BOOL, True)
-        all_new_parameter.append(self.start_for_lidar_distance)
-        self.set_parameters(all_new_parameter)
+        # all_new_parameter = []
+        # self.liear_speed = rclpy.parameter.Parameter('liear_speed', rclpy.Parameter.Type.DOUBLE, speed)
+        # all_new_parameter.append(self.liear_speed)
+        # self.lidar_threthold = rclpy.parameter.Parameter('lidar_threthold', rclpy.Parameter.Type.DOUBLE, threthold)
+        # all_new_parameter.append(self.lidar_threthold)
+        # self.start_for_lidar_distance = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.BOOL, True)
+        # all_new_parameter.append(self.start_for_lidar_distance)
+        # self.set_parameters(all_new_parameter)
         # all_new_parameter.clear()
+        self.liear_speed = speed
+        self.lidar_threthold = 0.1
+        self.start_for_lidar_distance = True
 
         # 等待 car 到位
         time.sleep(1.0) # 保证 car 驶出激光遮挡区域
         real_ignore_num = 0
-        print(self.lidar_distance)
+        # print(self.lidar_distance)
         print(self.lidar_threthold)
         while self.lidar_distance > self.lidar_threthold or real_ignore_num != ignore_num:
             if ignore_num == 0:
@@ -199,10 +206,11 @@ class Motion_Controller(Node):
             else:
                 real_ignore_num += 1
         print("激光已经到达下一个激光遮挡区域")
-        all_new_parameters = []
-        self.start_for_lidar_distance = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.BOOL, False)
-        all_new_parameters.append(self.start_for_lidar_distance)
-        self.set_parameters(all_new_parameters)
+        self.start_for_lidar_distance = False
+        # all_new_parameters = []
+        # self.start_for_lidar_distance = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.BOOL, False)
+        # all_new_parameters.append(self.start_for_lidar_distance)
+        # self.set_parameters(all_new_parameters)
 
         # self.wait_thread = Thread(target=self.wait_for_finishing_task_, args=(ignore_num,))
         # self.wait_thread.start()
@@ -224,11 +232,12 @@ class Motion_Controller(Node):
 
     def lidar_callback_(self, msg):
         """ 单线激光雷达的回调函数 """
+        print("激光")
         self.lidar_distance = msg.range
 
     def timer_work_(self):
         # 更新参数
-        self.get_param_()
+        # self.get_param_()
         ref = self.get_odom_angle_()
         # 姿态控制
         self.ori_angle_pid.pid_calculate(ref=ref, goal=self.angle)
@@ -252,9 +261,10 @@ class Motion_Controller(Node):
             else:
                 self.move_cmd.linear.x = -self.distance_pid.out
             if abs(self.distance_error) < self.distance_tolerance: # 达到目标的情况
-                self.start_for_pid_distance = rclpy.parameter.Parameter('start_for_pid_distance', rclpy.Parameter.Type.BOOL, False)
-                all_new_parameters = [self.start_for_pid_distance]
-                self.set_parameters(all_new_parameters)
+                # self.start_for_pid_distance = rclpy.parameter.Parameter('start_for_pid_distance', rclpy.Parameter.Type.BOOL, False)
+                # all_new_parameters = [self.start_for_pid_distance]
+                # self.set_parameters(all_new_parameters)
+                self.start_for_pid_distance = False
                 print("任务已完成......")
         elif self.start_for_lidar_distance:
             self.move_cmd.linear.x = self.liear_speed
@@ -357,7 +367,7 @@ class Motion_Controller(Node):
         with open(self.file_path, 'r') as file:
             self.points = yaml.safe_load(file)      
 
-    def spin_task_(self):
+    def spin_tas(self):
         rclpy.spin(self) 
 
     def set_new_param_to_ros(self, var_name, data_type='double'):

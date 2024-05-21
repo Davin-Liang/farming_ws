@@ -3,24 +3,29 @@
 # '_a_left' 指的是车在 A 区行驶时车的左边
 joint1_a_left: 68
 joint1_a_right: 45
-joint2_a_left: 80
+joint2_a_left: 85
 joint2_a_right: 80
-joint3_a_left: 65
+joint3_a_left: 95
 joint3_a_right: 65
-joint4_a_left: 110
-joint4_a_right: 110
+joint4_a_left: 87
+joint4_a_right: 85
 
-joint2_a_1: 80
-joint3_a_1: 65
-joint4_a_1: 80
+joint2_a_1: 118
+joint3_a_1: 89
+joint4_a_1: 107
 
-joint2_a_2: 80
-joint3_a_2: 65
-joint4_a_2: 100
+joint2_a_2: 85
+joint3_a_2: 95
+joint4_a_2: 90
 
-joint2_a_3: 80
-joint3_a_3: 65
-joint4_a_3: 110
+joint2_a_3: 85
+joint3_a_3: 95
+joint4_a_3: 100
+
+# 过渡点
+joint2_middle: 110
+joint3_middle: 105
+joint4_middle: 90
 
 # B 区
 # '_b_front' 指的是车在 A 区行驶时车的前方

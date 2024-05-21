@@ -25,6 +25,7 @@ class Farming_visioner(Node):
         self.debug_mode = False
         self.reset_arm = False
         self.active_thread = False
+        self.arm_moving = False
         # 数据字典
         self.flowers_with_tag = [] # 存储花属性
         self.flowers_with_tag_again = [] # 存储花属性
@@ -65,6 +66,7 @@ class Farming_visioner(Node):
         self.joint_angles_publisher_.publish(self.angles_of_joints)
         self.open_vision_detect     = True
         self.pre_process            = True
+        self.arm_moving = False
         self.reset_vision_data()
         # 堵塞函数直到完成任务
         print("正在等待完成任务")
@@ -91,13 +93,14 @@ class Farming_visioner(Node):
 
 
     def param_timer_work_(self):
+        pass
         # self.update_params_()
-        if self.reset_arm:
-            self.reset_arm_default_pose()
-        if self.debug_mode and self.active_thread == False:
-            print("正在单点测试")
-            self.debug_thread = Thread(target=self.vision_control_arm, args=('a_left',))
-            self.active_thread = True
+        # if self.reset_arm:
+        #     self.reset_arm_default_pose()
+        # if self.debug_mode and self.active_thread == False:
+        #     print("正在单点测试")
+        #     self.debug_thread = Thread(target=self.vision_control_arm, args=('a_left',))
+        #     self.active_thread = True
             # self.vision_control_arm('a_left')
 
     def update_params_(self):
@@ -204,6 +207,7 @@ class Farming_visioner(Node):
         print("发送命令给机械臂")
         print(self.angles_of_joints)
         self.joint_angles_publisher_.publish(self.angles_of_joints)
+        # ros2 topic pub /joint_angles "data: [68, 80, 65, 110]"
 
     def reset_arm_default_pose(self):
         """ 控制 arm 回到初始姿态 """
@@ -247,12 +251,14 @@ class Farming_visioner(Node):
                         flower_with_tag['Type'] = flower['Type']
                         flower_with_tag['CentralPoint'] = flower['CentralPoint']
                         flower_with_tag['Area'] = flower['Area']
-                        flower_with_tag['Moving'] = True
+                        if self.arm_moving == False:
+                            flower_with_tag['Moving'] = True
+                            self.arm_moving = True
                         self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
 
                     if flower['Type'] == 'male':
                         male_num += 1
-                    elif flower['Type'] == 'female':
+                    elif flower['Type'] == 'famale':
                         female_num += 1
                 self.flowers_with_tag_again = self.flowers_with_tag
 
@@ -274,7 +280,7 @@ class Farming_visioner(Node):
                         break
         self.pre_process = False # 关闭数据预处理
 
-    def voice_broadcast(self, male_num, female_num):
+    def voice_broadcast(self, male_num=0, female_num=0, type='male'):
         """ 语音播报 """
         if male_num == 0 and female_num == 3:
             subprocess.Popen(['sudo', 'tinyplay', './voice/voice_0_3.wav', '-D', '0', '-d', '1'])
@@ -284,6 +290,11 @@ class Farming_visioner(Node):
             subprocess.Popen(['sudo', 'tinyplay', './voice/voice_2_1.wav', '-D', '0', '-d', '1'])
         elif male_num == 3 and female_num == 0:
             subprocess.Popen(['sudo', 'tinyplay', './voice/voice_3_0.wav', '-D', '0', '-d', '1'])
+        elif male_num == 0 and female_num == 0:
+            if type == "male":
+                subprocess.Popen(['sudo', 'tinyplay', './voice/male.wav', '-D', '0', '-d', '1'])
+            elif type == "female":
+                subprocess.Popen(['sudo', 'tinyplay', './voice/female.wav', '-D', '0', '-d', '1'])
 
     def calculate_O_distance(self, point1, point2):
         """ 计算两个坐标点之间的 O 式距离 """

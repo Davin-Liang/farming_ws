@@ -119,6 +119,13 @@ def generate_launch_description():
             '/stp23l.launch.py'])
     )
 
+    # vision Node
+    vision_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory('dnn_node_example'), 'launch'),
+            '/dnn_node_example.launch.py'])
+    )
+
     return LaunchDescription([
         gui_arg,
         model_arg,
@@ -137,5 +144,6 @@ def generate_launch_description():
         yahboom_joy_node,
         base_footprint_tf,
         imu_tf,
-        lidar_node
+        lidar_node,
+        vision_node
     ])

@@ -147,6 +147,10 @@ class Motion_Controller(Node):
         all_new_parameters.append(self.start_for_pid_distance)
         self.set_parameters(all_new_parameters)
 
+        # 等待完成任务
+        while not self.start_for_pid_distance:
+            pass
+
 
     def set_angle(self, angle):
         """ 设置底盘转动角度 """
@@ -154,6 +158,9 @@ class Motion_Controller(Node):
         self.angle = rclpy.parameter.Parameter('angle', rclpy.Parameter.Type.DOUBLE, angle)
         all_new_parameters.append(self.angle)
         self.set_parameters(all_new_parameters)
+
+        # 等待转完角度
+        pass
 
     def move_based_on_point(self, point_name, direction="x", liear_speed="0.5"):
         """ 根据坐标点来导航 """
@@ -191,6 +198,7 @@ class Motion_Controller(Node):
                 pass
             else:
                 real_ignore_num += 1
+        print("激光已经到达下一个激光遮挡区域")
         all_new_parameters = []
         self.start_for_lidar_distance = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.BOOL, False)
         all_new_parameters.append(self.start_for_lidar_distance)
@@ -204,12 +212,11 @@ class Motion_Controller(Node):
     def wait_for_finishing_task_(self, ignore_num):
         # 等待 car 到位
         time.sleep(1.0) # 保证 car 驶出激光遮挡区域
-        real_ignore_num = 0
-        while self.lidar_distance > self.lidar_threthold or real_ignore_num != ignore_num:
-            if ignore_num == 0:
+        for i in range(ignore_num+1):
+            while self.lidar_distance > self.lidar_threthold:
                 pass
-            else:
-                real_ignore_num += 1
+            if self.lidar_distance < self.lidar_threthold:
+                time.sleep(1.0)
         all_new_parameters = []
         self.start_for_lidar_distance = rclpy.parameter.Parameter('start_for_lidar_distance', rclpy.Parameter.Type.BOOL, False)
         all_new_parameters.append(self.start_for_lidar_distance)

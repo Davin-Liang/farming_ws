@@ -1,18 +1,26 @@
 #!/usr/bin/env python3
 import math
-from math import copysign
 import rclpy
 from rclpy.node import Node
 from ai_msgs.msg import PerceptionTargets # type: ignore
 import os
 import yaml
-from std_msgs.msg import String, Bool, Int16MultiArray
-from  threading import Thread
+from std_msgs.msg import Int16MultiArray
 import time
 import subprocess
 import copy
+from threading import Thread
+from rclpy.duration import Duration
+from geometry_msgs.msg import Twist, Point
+from sensor_msgs.msg import Range
+from tf2_ros.buffer import Buffer
+from tf2_ros.transform_listener import TransformListener
+from math import sqrt, pow, radians
+from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
+import PyKDL
+from pid import PID
 
-class Farming_visioner(Node):
+class Game_Controller(Node):
     def __init__(self, name):
         super().__init__(name)
         self.get_logger().info("Wassup, bro, I am %s, M3!" % name)
@@ -21,101 +29,122 @@ class Farming_visioner(Node):
         self.load_config_file_()
         # 重要 BOOL 值
         self.open_vision_detect = False # 是否打开视觉检测
-        self.pre_process = False # 是否打开数据预处理
-        self.debug_mode = False
-        self.reset_arm = False
-        self.active_thread = False
-        self.arm_moving = False
         # 数据字典
-        self.flowers_with_tag = [] # 存储花属性
-        self.flowers_with_tag_again = [] # 存储花属性
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
-        self.place = 'A'
-        # 可调参数
-        self.area_scaling_factor = 0.25 # 面积缩放系数
-        self.O_distance_threthold_of_judge_same_goal = 100 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
-        self.central_point_of_camera = [520, 480] # 相机中心点
-        self.area_of_polliating = 2000 # 识别框为多少时才进行授粉的面积阈值
-        self.joint_speed = 1 # 关节转动速度，将关节的转动的角度当作速度
-        self.threthold_of_x_error = 5.0
-        self.threthold_of_y_error = 5.0
-        self.threthold_of_area_error = 50.0
         # 使用到的订阅者和发布者
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
         self.joint_angles_publisher_ = self.create_publisher(Int16MultiArray, "joint_angles", 100)
+        self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
+        self.lidar_subcriber_ = self.create_subscription(Range, "laser", self.lidar_callback_, 10)
         self.angles_of_joints = Int16MultiArray()
+        self.move_cmd = Twist()
 
-        # self.set_ros_param_()
+        self.ori_angle_pid = PID(0.51, 0.0, 0.126, 1.6, 0.0)
+        self.distance_pid = PID(0.42, 0.0, 0.08, 1.0, 0.0)
 
-        self.param_timer = self.create_timer(0.04, self.param_timer_work_)
-        # self.spin_thread1 = Thread(target=self.spin_task_)
-        # self.spin_thread1.start()
+        
+        self.distance = 0.0
+        self.angle = 0.0
+        self.angle = radians(self.angle)
+        self.liear_speed = 0.5
+        self.distance_tolerance = 0.03
+        self.odom_linear_scale_correction = 1.0
+        self.odom_angular_scale_correction = 1.0
+        self.start_for_lidar_distance = False
+        self.start_for_pid_distance = False
+        self.base_frame = 'base_footprint'
+        self.odom_frame = 'odom'
+
+        self.lidar_threthold = 0.1
+        
+        #init the tf listener
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+
+        self.position = Point()
+        self.x_start = self.position.x
+        self.y_start = self.position.y
+
+        self.distance_error = 0
+        self.angle_error    = 0
+        self.run_times = 0
+
+        time.sleep(5.0)
+
+        # 创建定时器
+        self.work_timer = self.create_timer(0.04, self.timer_work_)
+
+        self.spin_thread = Thread(target=self.spin_task_)
+        self.spin_thread.start()
 
     # ---------------- 对外接口函数 -----------------
-    def vision_control_arm(self, pose_name):
-        self.pose_name = pose_name
-        self.arm_params['joint1'] = self.default_arm_params['joint1_'+self.pose_name]
-        self.arm_params['joint2'] = self.default_arm_params['joint2_'+self.pose_name]
-        self.arm_params['joint3'] = self.default_arm_params['joint3_'+self.pose_name]
-        self.arm_params['joint4'] = self.default_arm_params['joint4_'+self.pose_name]
-        print(self.arm_params)
-        self.angles_of_joints.data = []
-        self.angles_of_joints.data.append(self.arm_params['joint1'])
-        self.angles_of_joints.data.append(self.arm_params['joint2'])
-        self.angles_of_joints.data.append(self.arm_params['joint3'])
-        self.angles_of_joints.data.append(self.arm_params['joint4'])
-        self.joint_angles_publisher_.publish(self.angles_of_joints)
+    def set_distance(self, distance):
+        """ 设置车轮方向的行驶距离及以什么样的速度行驶 """
+        self.distance = distance
+        self.start_for_pid_distance = True
+        # 等待完成任务
+        while not self.start_for_pid_distance:
+            pass
+
+    def set_angle(self, angle):
+        """ 设置底盘转动角度 """
+        self.angle = angle
+        # 等待转完角度
+        pass
+
+    def start_car_and_lidar_controls_stopping(self, speed, threthold=0.1, ignore_num=0):
+        """ 开动车并使用单线激光控制小车停止 """
+        self.liear_speed = speed
+        self.lidar_threthold = 0.1
+        self.start_for_lidar_distance = True
+
+        # 等待 car 到位
+        time.sleep(1.0) # 保证 car 驶出激光遮挡区域
+        real_ignore_num = 0
+        print(self.lidar_threthold)
+        while self.lidar_distance > self.lidar_threthold or real_ignore_num != ignore_num:
+            if ignore_num == 0:
+                pass
+            else:
+                real_ignore_num += 1
+        print("激光已经到达下一个激光遮挡区域")
+        self.start_for_lidar_distance = False
+
+    def vision_choose_goal_in_A(self, pose_name):
+        """ 传入视觉目标 """
+        self.choose_arm_goal_in_task_alone(pose_name)
         self.open_vision_detect     = True
-        self.pre_process            = True
-        self.arm_moving = False
-        self.reset_vision_data()
         # 堵塞函数直到完成任务
         print("正在等待完成任务")
         while self.open_vision_detect:
             pass
-        self.active_thread = False
-        if self.debug_mode: # 完成目标后，自动将 self.debug_mode 参数置 false
-            all_new_parameters = []
-            self.debug_mode = rclpy.parameter.Parameter('debug_mode', rclpy.Parameter.Type.BOOL, False)
-            all_new_parameters.append(self.debug_mode)
-            self.set_parameters(all_new_parameters)
 
-    def reset_vision_data(self):
-        self.flowers_with_tag.clear()
-        self.flowers_with_tag_again.clear()
+    def vision_choose_goal_in_B(self, pose_name):
+        self.pose_name = pose_name
+        if pose_name == "front":
+            self.choose_arm_goal_in_task_alone("a_left_pre_front")
+            while self.open_vision_detect:
+                pass
+            self.choose_arm_goal_in_task_alone("a_middle_pre_front")
+            while self.open_vision_detect:
+                pass
+            self.choose_arm_goal_in_task_alone("a_right_pre_front")
+            while self.open_vision_detect:
+                pass
+            self.choose_arm_goal_in_task_alone("moving")
+        if pose_name == "back":
+            self.choose_arm_goal_in_task_alone("a_left_pre_back")
+            while self.open_vision_detect:
+                pass
+            self.choose_arm_goal_in_task_alone("a_middle_pre_back")
+            while self.open_vision_detect:
+                pass
+            self.choose_arm_goal_in_task_alone("a_right_pre_back")
+            while self.open_vision_detect:
+                pass
+            self.choose_arm_goal_in_task_alone("moving")
 
-    def find_next_arm_goal_on_position(self):
-        self.open_vision_detect = True
-        self.reset_vision_detect = False
-        # 堵塞函数直到完成任务
-        while self.open_vision_detect:
-            pass
-    # ----------------------------------------------
-
-
-    def param_timer_work_(self):
-        pass
-        # self.update_params_()
-        # if self.reset_arm:
-        #     self.reset_arm_default_pose()
-        # if self.debug_mode and self.active_thread == False:
-        #     print("正在单点测试")
-        #     self.debug_thread = Thread(target=self.vision_control_arm, args=('a_left',))
-        #     self.active_thread = True
-            # self.vision_control_arm('a_left')
-
-    def update_params_(self):
-        self.update_params_from_ros('area_scaling_factor')
-        self.update_params_from_ros('O_distance_threthold_of_judge_same_goal')
-        self.update_params_from_ros('area_of_polliating')
-        print(self.area_of_polliating)
-        self.update_params_from_ros('joint_speed')
-        self.update_params_from_ros('threthold_of_x_error')
-        self.update_params_from_ros('threthold_of_y_error')
-        self.update_params_from_ros('threthold_of_area_error')
-        self.update_params_from_ros('debug_mode', 'BOOL')
-        print(self.debug_mode)
-        self.update_params_from_ros('reset_arm', 'BOOL')
+        
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """
@@ -152,43 +181,9 @@ class Farming_visioner(Node):
             print(flowers_lists)
             self.confrim_moving_goal_for_arm(flowers_lists)
 
-        time.sleep(0.1)
-
     def confrim_moving_goal_for_arm(self, flowers_lists):
         """ 确定 arm 的移动目标 """
-        # # 数据预处理并选择第一个处理的目标
-        # self.data_pre_processing(flowers_lists)
-        # # 更新数据
-        # print("正在更新数据")
-        # for flower in flowers_lists:
-        #     for index, flower_with_tag in enumerate(self.flowers_with_tag):
-        #         if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
-        #             self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
-        #             break # 跳出内层 for 循环
-        # # 控制 arm
-        # self.control_arm()
-
         self.arm_move(flowers_lists)
-
-    def vision_choose_goal_in_A(self, pose_name):
-        """ 传入视觉目标 """
-        self.pose_name = pose_name
-        self.arm_params['joint1'] = self.default_arm_params['joint1_'+self.pose_name]
-        self.arm_params['joint2'] = self.default_arm_params['joint2_'+self.pose_name]
-        self.arm_params['joint3'] = self.default_arm_params['joint3_'+self.pose_name]
-        self.arm_params['joint4'] = self.default_arm_params['joint4_'+self.pose_name]
-        self.angles_of_joints.data = []
-        self.angles_of_joints.data.append(self.arm_params['joint1'])
-        self.angles_of_joints.data.append(self.arm_params['joint2'])
-        self.angles_of_joints.data.append(self.arm_params['joint3'])
-        self.angles_of_joints.data.append(self.arm_params['joint4'])
-        self.joint_angles_publisher_.publish(self.angles_of_joints)
-        time.sleep(1.0)
-        self.open_vision_detect     = True
-        # 堵塞函数直到完成任务
-        print("正在等待完成任务")
-        while self.open_vision_detect:
-            pass
 
     def arm_move(self, flowers_lists):
             if len(flowers_lists) == 3:
@@ -214,25 +209,49 @@ class Farming_visioner(Node):
                     if index == 0:
                         if goal == 'famale':
                             print("正在去目标1")
-                            self.choose_arm_goal('middle')
-                            self.choose_arm_goal('a_1')
-                            self.choose_arm_goal(self.pose_name)
+                            self.choose_arm_goal_in_task('middle')
+                            self.choose_arm_goal_in_task('a_1')
+                            self.choose_arm_goal_in_task(self.pose_name)
                     if index == 1:
                         if goal == 'famale':
                             print("正在去目标2")
-                            self.choose_arm_goal('middle')
-                            self.choose_arm_goal('a_2')
-                            self.choose_arm_goal(self.pose_name)
+                            self.choose_arm_goal_in_task('middle')
+                            self.choose_arm_goal_in_task('a_2')
+                            self.choose_arm_goal_in_task(self.pose_name)
                     if index == 2:
                         if goal == 'famale':
                             print("正在去目标3")
-                            self.choose_arm_goal('a_3')
-                            self.choose_arm_goal(self.pose_name)
+                            self.choose_arm_goal_in_task('a_3')
+                            self.choose_arm_goal_in_task(self.pose_name)
                 
                 self.open_vision_detect = False
+            else:
+                for flower in flowers_lists:
+                    if flower['Type'] == 'famale':
+                        if self.pose_name == 'front':
+                            if self.run_times == 0:
+                                self.choose_arm_goal_in_task("b_left_front")
+                                self.run_times += 1
+                            if self.run_times == 1:
+                                self.choose_arm_goal_in_task("b_middle_front")
+                                self.run_times += 1
+                            if self.run_times == 2:
+                                self.choose_arm_goal_in_task("b_right_front")
+                                self.run_times = 0
+                        if self.pose_name == 'back':
+                            if self.run_times == 0:
+                                self.choose_arm_goal_in_task("b_left_back")
+                                self.run_times += 1
+                            if self.run_times == 1:
+                                self.choose_arm_goal_in_task("b_middle_back")
+                                self.run_times += 1
+                            if self.run_times == 2:
+                                self.choose_arm_goal_in_task("b_left_back")
+                                self.run_times = 0                        
+                    break
+                self.open_vision_detect = False
 
-
-    def choose_arm_goal(self, pose_name):
+    def choose_arm_goal_in_task(self, pose_name):
         self.arm_params['joint2'] = self.default_arm_params['joint2_'+pose_name]
         self.arm_params['joint3'] = self.default_arm_params['joint3_'+pose_name]
         self.arm_params['joint4'] = self.default_arm_params['joint4_'+pose_name]
@@ -244,117 +263,19 @@ class Farming_visioner(Node):
         self.joint_angles_publisher_.publish(self.angles_of_joints)
         time.sleep(1.5)
 
-    def control_arm(self):
-        y_error = 0
-        x_error = 0
-        area_error = 0
-        print(self.flowers_with_tag)
-        for flower_with_tag in self.flowers_with_tag:
-            if flower_with_tag['Moving'] == True:
-                x_error = self.central_point_of_camera[0] - flower_with_tag['CentralPoint'][0]
-                y_error = self.central_point_of_camera[1] - flower_with_tag['CentralPoint'][1]
-                area_error = self.area_of_polliating - flower_with_tag['Area']
-                break
+    def choose_arm_goal_in_task_alone(self, pose_name):
+        self.arm_params['joint1'] = self.default_arm_params['joint1_'+pose_name]
+        self.arm_params['joint2'] = self.default_arm_params['joint2_'+pose_name]
+        self.arm_params['joint3'] = self.default_arm_params['joint3_'+pose_name]
+        self.arm_params['joint4'] = self.default_arm_params['joint4_'+pose_name]
         self.angles_of_joints.data = []
-        print(x_error)
-        # if abs(x_error) > self.threthold_of_x_error:
-        #     print("关节速度为", self.joint_speed)
-        #     self.arm_params['joint1'] = int(self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
-        #     print("角度值为：", self.arm_params['joint1'])
-        self.angles_of_joints.data.append(self.arm_params['joint1'])
-        # if abs(area_error) > self.threthold_of_area_error:
-        #     self.arm_params['joint2'] = int(self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, -area_error), self.default_arm_params['joint2_limiting']))
-        self.angles_of_joints.data.append(self.arm_params['joint2'])
-        self.angles_of_joints.data.append(self.arm_params['joint3'])
-        if abs(y_error) > self.threthold_of_y_error:
-            self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
-            self.angles_of_joints.data.append(self.arm_params['joint4'])
-        # if (abs(x_error) < self.threthold_of_x_error and
-        #     abs(area_error) < self.threthold_of_area_error and
-        #     abs(y_error) < self.threthold_of_y_error):
-        #     print("已经完成授粉")
-        #     for index, flower_with_tag in enumerate(self.flowers_with_tag):
-        #         if flower_with_tag['Moving'] == True:
-        #             self.flowers_with_tag_again[index]['Moving'] = False
-        #             self.flowers_with_tag_again[index]['Pollinated'] = True
-        #     self.reset_arm_default_pose()
-        #     return
-        print("发送命令给机械臂")
-        print(self.angles_of_joints)
-        self.joint_angles_publisher_.publish(self.angles_of_joints)
-        # ros2 topic pub /joint_angles "data: [68, 80, 65, 110]"
-
-    def reset_arm_default_pose(self):
-        """ 控制 arm 回到初始姿态 """
-        print("控制 arm 回到初始姿态")
-        self.open_vision_detect = False
-        self.pre_process = False
-        all_new_parameters = []
-        self.debug_mode = rclpy.parameter.Parameter('debug_mode', rclpy.Parameter.Type.DOUBLE, False)
-        all_new_parameters.append(self.debug_mode)
-        self.reset_arm = rclpy.parameter.Parameter('reset_arm', rclpy.Parameter.Type.DOUBLE, False)
-        all_new_parameters.append(self.reset_arm)
-        self.set_parameters(all_new_parameters)
-        self.arm_params['joint1'] = self.default_arm_params['joint1_'+self.pose_name]
-        self.arm_params['joint2'] = self.default_arm_params['joint2_'+self.pose_name]
-        self.arm_params['joint3'] = self.default_arm_params['joint3_'+self.pose_name]
-        self.arm_params['joint4'] = self.default_arm_params['joint4_'+self.pose_name]
         self.angles_of_joints.data.append(self.arm_params['joint1'])
         self.angles_of_joints.data.append(self.arm_params['joint2'])
         self.angles_of_joints.data.append(self.arm_params['joint3'])
         self.angles_of_joints.data.append(self.arm_params['joint4'])
         self.joint_angles_publisher_.publish(self.angles_of_joints)
+        time.sleep(1.5)
     
-    def limit_num(self, num, num_range):
-        if num > num_range[1]:
-            num = num_range[1]
-        elif num < num_range[0]:
-            num = num_range[0]
-        return num
-
-    def data_pre_processing(self, flowers_lists):
-        """ 为存储花属性的字典添加花属性：是否正在操作、是否已授粉 """
-        # 类型、中心的坐标、面积、是否正在操作、是否已授粉
-        flower_with_tag = {'Type': '', 'CentralPoint': [], 'Area': 0, 'Moving': False, 'Pollinated': False}
-        if self.pre_process:
-            if len(self.flowers_with_tag) == 0:
-                print("正在进行数据预处理")
-                male_num = 0
-                female_num = 0
-                for index, flower in enumerate(flowers_lists):
-                    if flower['Type'] == 'male':
-                        flower_with_tag['Type'] = flower['Type']
-                        flower_with_tag['CentralPoint'] = flower['CentralPoint']
-                        flower_with_tag['Area'] = flower['Area']
-                        if self.arm_moving == False:
-                            flower_with_tag['Moving'] = True
-                            self.arm_moving = True
-                        self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
-
-                    if flower['Type'] == 'male':
-                        male_num += 1
-                    elif flower['Type'] == 'famale':
-                        female_num += 1
-                self.flowers_with_tag_again = self.flowers_with_tag
-
-                # 语音播报
-                self.voice_broadcast(male_num, female_num)
-            else:
-                print("正在授粉第二个目标点")
-                self.flowers_with_tag = self.flowers_with_tag_again
-                # 更新中心点坐标参数
-                for flower in flowers_lists:
-                    for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                        if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
-                            self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
-                            break
-                # 寻找未“授粉”的花，找到的第一朵就设置为目标
-                for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                    if flower_with_tag['Pollinated'] != True:
-                        self.flowers_with_tag[index]['Moving'] = True
-                        break
-        self.pre_process = False # 关闭数据预处理
-
     def voice_broadcast(self, male_num=0, female_num=0, type='male'):
         """ 语音播报 """
         if male_num == 0 and female_num == 3:
@@ -382,67 +303,126 @@ class Farming_visioner(Node):
         with open(self.file_path, 'r') as file:
             self.default_arm_params = yaml.safe_load(file)
 
-    def set_ros_param_(self):
-        self.set_new_param_to_ros('reset_vision_detect', 'bool')
-        self.set_new_param_to_ros('debug_mode', 'bool')
-        self.set_new_param_to_ros('reset_arm', 'bool')
-        self.set_new_param_to_ros('area_scaling_factor')
-        self.set_new_param_to_ros('O_distance_threthold_of_judge_same_goal')
-        self.set_new_param_to_ros('area_of_polliating')
-        self.set_new_param_to_ros('joint_speed')
-        self.set_new_param_to_ros('threthold_of_x_error')
-        self.set_new_param_to_ros('threthold_of_y_error')
-        self.set_new_param_to_ros('threthold_of_area_error')
-
     def spin_task_(self):
         rclpy.spin(self)
 
-    def add_variable(self, var_name, value):
-        """ 通过一个字符串创建一个类中变量 """
-        setattr(self, var_name, value)
-    
-    def get_variable(self, var_name):
-        """ 通过一个字符串读取类中变量的值 """
-        return getattr(self, var_name, None)
-    
-    def update_variable(self, var_name, new_value):
-        """ 通过一个字符串更新一个类中变量的值 """
-        setattr(self, var_name, new_value)
+    def lidar_callback_(self, msg):
+        """ 单线激光雷达的回调函数 """
+        print("激光")
+        self.lidar_distance = msg.range
 
-    def set_new_param_to_ros(self, var_name, data_type='double'):
-        """ 通过一个字符串向参数服务器定义一个值，并读取该值 """
-        if data_type == 'bool':
-            self.declare_parameter(var_name, self.get_variable(var_name))
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().bool_value)
-        if data_type == 'double':
-            self.declare_parameter(var_name, self.get_variable(var_name))
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().double_value)
-        if data_type == 'string':
-            self.declare_parameter(var_name, self.get_variable(var_name))
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().string_value)
+    def timer_work_(self):
+        # 更新参数
+        # self.get_param_()
+        ref = self.get_odom_angle_()
+        # 姿态控制
+        self.ori_angle_pid.pid_calculate(ref=ref, goal=self.angle)
+        self.move_cmd.angular.z = self.ori_angle_pid.out
 
-    def update_params_from_ros(self, var_name, data_type='double'):
-        if data_type == 'bool':
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().bool_value)
-        if data_type == 'double':
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().double_value)
-        if data_type == 'string':
-            self.update_variable(var_name, self.get_parameter(var_name).get_parameter_value().string_value)
+        # 距离控制
+        if self.start_for_pid_distance:
+            self.position = self.get_coordinate_value_()
+
+            o_distance = self.get_O_distance()
+            o_distance *= self.odom_linear_scale_correction # 修正
+            print("在上一次停下后已经行驶的距离: ", o_distance)
+
+            # 计算误差
+            self.distance_error = o_distance - abs(self.distance) # 负值控制车向前，正值控制车向后
+            print("误差当前值为: ", self.distance_error)
+
+            self.distance_pid.pid_calculate(o_distance, abs(self.distance))
+            if self.distance >= 0:
+                self.move_cmd.linear.x = self.distance_pid.out
+            else:
+                self.move_cmd.linear.x = -self.distance_pid.out
+            if abs(self.distance_error) < self.distance_tolerance: # 达到目标的情况
+                self.start_for_pid_distance = False
+                print("任务已完成......")
+        elif self.start_for_lidar_distance:
+            self.move_cmd.linear.x = self.liear_speed
+        else: # 未设定目标的情况
+            self.move_cmd.linear.x = 0.0
+            self.x_start = self.get_position_().transform.translation.x
+            self.y_start = self.get_position_().transform.translation.y
+            print("正在停车状态......")
+        self.cmd_vel.publish(self.move_cmd)
+
+    def get_coordinate_value_(self):
+        position = Point()
+        position.x = self.get_position_().transform.translation.x
+        position.y = self.get_position_().transform.translation.y
+        return position
+     
+    def get_position_(self):
+        try:
+            now = rclpy.time.Time()
+            # 从 self.tf_buffer 中查询从 self.odom_frame 到 self.base_frame 之间的坐标变换信息，并且在当前时间 now 进行查询
+            trans = self.tf_buffer.lookup_transform(self.odom_frame, self.base_frame, now, Duration(seconds=5))   
+            return trans       
+        except (LookupException, ConnectivityException, ExtrapolationException):
+            self.get_logger().info('transform not ready.')
+            raise
+            return
+         
+    def get_O_distance(self):
+        return sqrt(pow((self.position.x - self.x_start), 2) + pow((self.position.y - self.y_start), 2))
+
+    def get_odom_angle_(self):
+        """ 得到目前的子坐标系相对夫坐标系转动的角度(弧度制)，父坐标系是不动的 """
+        try:
+            now = rclpy.time.Time()
+            rot = self.tf_buffer.lookup_transform(self.odom_frame, self.base_frame, now, Duration(seconds=5))
+            # 创建了一个四元数对象   
+            cacl_rot = PyKDL.Rotation.Quaternion(rot.transform.rotation.x, rot.transform.rotation.y, rot.transform.rotation.z, rot.transform.rotation.w)
+            """ 获取旋转矩阵的欧拉角。GetRPY()返回的是一个长度为3的列表, 包含了旋转矩阵的roll、pitch和yaw角度。
+                    在这里, [2]索引表示取得yaw角度, 也就是绕z轴的旋转角度 """
+            angle_rot = cacl_rot.GetRPY()[2]
+            return angle_rot
+        except (LookupException, ConnectivityException, ExtrapolationException):
+            self.get_logger().info('transform not ready')
+            return   
 
 def main():
     rclpy.init()
     try:
-        node = Farming_visioner("Farming_visioner")
+        node = Game_Controller("Game_Controller")
+
+        node.set_angle(90.0)
+        node.set_distance(1.0)
+        node.start_car_and_lidar_controls_stopping(0.05, 0.4)
+        node.vision_choose_goal_in_A("a_left")
+
+        # A区
+        for i in range(3):
+            node.start_car_and_lidar_controls_stopping(0.05, 0.4)
+            node.vision_choose_goal_in_A("a_left")
+            node.vision_choose_goal_in_A("a_right")
+
+        node.set_distance(-90.0)
+        node.start_car_and_lidar_controls_stopping(-0.05, 0.5, 1)
+        node.set_angle(0.0)
+
+        # B 区
+        for i in range(3):
+            node.choose_arm_goal_in_task_alone("moving")
+            node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+            node.set_distance(0.1)
+            # 前边识别
+            node.vision_choose_goal_in_B("b_front")
+            node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+            node.set_distance(-0.2)
+            # 后边识别
+            node.vision_choose_goal_in_B("b_back")
 
 
-        rclpy.spin(node)
+
     except KeyboardInterrupt:
         pass
     finally:
         if node:
             node.destroy_node()
-        if node.debug_thread is not None:
-            node.debug_thread.join()
+
         rclpy.shutdown()
 
 if __name__ == '__main__':

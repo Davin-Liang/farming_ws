@@ -48,6 +48,7 @@ class Game_Controller(Node):
         self.angle = radians(self.angle)
         self.liear_speed = 0.5
         self.distance_tolerance = 0.03
+        self.angle_tolerance = radians(3.0)
         self.odom_linear_scale_correction = 1.0
         self.odom_angular_scale_correction = 1.0
         self.start_for_lidar_distance = False
@@ -83,14 +84,15 @@ class Game_Controller(Node):
         self.distance = distance
         self.start_for_pid_distance = True
         # 等待完成任务
-        while not self.start_for_pid_distance:
+        while self.start_for_pid_distance:
             pass
 
     def set_angle(self, angle):
         """ 设置底盘转动角度 """
         self.angle = angle
         # 等待转完角度
-        pass
+        while abs(self.angle-self.get_odom_angle_)>self.angle_tolerance:
+            pass
 
     def start_car_and_lidar_controls_stopping(self, speed, threthold=0.1, ignore_num=0):
         """ 开动车并使用单线激光控制小车停止 """
@@ -100,13 +102,9 @@ class Game_Controller(Node):
 
         # 等待 car 到位
         time.sleep(1.0) # 保证 car 驶出激光遮挡区域
-        real_ignore_num = 0
-        print(self.lidar_threthold)
-        while self.lidar_distance > self.lidar_threthold or real_ignore_num != ignore_num:
-            if ignore_num == 0:
+        for i in range(ignore_num+1):
+            while self.lidar_distance > self.lidar_threthold:
                 pass
-            else:
-                real_ignore_num += 1
         print("激光已经到达下一个激光遮挡区域")
         self.start_for_lidar_distance = False
 
@@ -418,7 +416,7 @@ def main():
 
 
     except KeyboardInterrupt:
-        pass
+        node.cmd_vel.publish(Twist())
     finally:
         if node:
             node.destroy_node()

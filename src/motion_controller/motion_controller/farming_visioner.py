@@ -46,9 +46,10 @@ class Game_Controller(Node):
         self.distance = 0.0
         self.angle = 0.0
         self.angle = radians(self.angle)
+        self.deviation_angle = radians(0.85)
         self.liear_speed = 0.5
         self.distance_tolerance = 0.03
-        self.angle_tolerance = radians(3.0)
+        self.angle_tolerance = radians(2.0)
         self.odom_linear_scale_correction = 1.0
         self.odom_angular_scale_correction = 1.0
         self.start_for_lidar_distance = False
@@ -89,31 +90,35 @@ class Game_Controller(Node):
 
     def set_angle(self, angle):
         """ 设置底盘转动角度 """
-        self.angle = angle
+        self.angle = radians(angle)
         # 等待转完角度
-        while abs(self.angle-self.get_odom_angle_)>self.angle_tolerance:
+        while abs(self.angle-self.get_odom_angle_())>self.angle_tolerance:
             pass
 
     def start_car_and_lidar_controls_stopping(self, speed, threthold=0.1, ignore_num=0):
         """ 开动车并使用单线激光控制小车停止 """
         self.liear_speed = speed
-        self.lidar_threthold = 0.1
+        self.lidar_threthold = threthold
         self.start_for_lidar_distance = True
 
         # 等待 car 到位
-        time.sleep(1.0) # 保证 car 驶出激光遮挡区域
+        time.sleep(2.0) # 保证 car 驶出激光遮挡区域
         for i in range(ignore_num+1):
+            print("正在检测中")
+            print("激光", self.lidar_distance)
+            print("阈值", self.lidar_threthold)
             while self.lidar_distance > self.lidar_threthold:
                 pass
         print("激光已经到达下一个激光遮挡区域")
         self.start_for_lidar_distance = False
+        time.sleep(2.0)
 
     def vision_choose_goal_in_A(self, pose_name):
         """ 传入视觉目标 """
         self.choose_arm_goal_in_task_alone(pose_name)
         self.open_vision_detect     = True
         # 堵塞函数直到完成任务
-        print("正在等待完成任务")
+        # print("正在等待完成任务")
         while self.open_vision_detect:
             pass
 
@@ -146,18 +151,18 @@ class Game_Controller(Node):
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """
-        print("正在等待开启视觉")
+        # print("正在等待开启视觉")
         if not self.open_vision_detect:
             return
-        print("正在通过视觉控制机械臂")
+        # print("正在通过视觉控制机械臂")
 
         flowers_lists = []
         flower = {'Type': '', 'CentralPoint': [], 'Area': 0} # 类型、中心点坐标、面积
         
         if 0 != len(msg.targets):
             for i in range(len(msg.targets)):
-                print(msg.targets[i].type)
-                print(msg.targets[i].rois[0])
+                # print(msg.targets[i].type)
+                # print(msg.targets[i].rois[0])
                 flower['CentralPoint'].clear()
                 if msg.targets[i].type == "male": 
                     flower['Type'] = msg.targets[i].type
@@ -176,7 +181,7 @@ class Game_Controller(Node):
                 flowers_lists.append(copy.deepcopy(flower)) # 深拷贝
 
         if 0 != len(flowers_lists): # 预防处理空数据
-            print(flowers_lists)
+            # print(flowers_lists)
             self.confrim_moving_goal_for_arm(flowers_lists)
 
     def confrim_moving_goal_for_arm(self, flowers_lists):
@@ -192,7 +197,7 @@ class Game_Controller(Node):
                     sorted_data[1]['Type'],
                     sorted_data[2]['Type']
                 ]
-                print(goal_list)
+                # print(goal_list)
                 male_num = 0
                 female_num = 0
                 for index, flower in enumerate(flowers_lists):
@@ -292,8 +297,8 @@ class Game_Controller(Node):
 
     def calculate_O_distance(self, point1, point2):
         """ 计算两个坐标点之间的 O 式距离 """
-        print(point1)
-        print(point2)
+        # print(point1)
+        # print(point2)
         return math.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
     
     def load_config_file_(self):
@@ -306,7 +311,7 @@ class Game_Controller(Node):
 
     def lidar_callback_(self, msg):
         """ 单线激光雷达的回调函数 """
-        print("激光")
+        # print("激光")
         self.lidar_distance = msg.range
 
     def timer_work_(self):
@@ -314,7 +319,7 @@ class Game_Controller(Node):
         # self.get_param_()
         ref = self.get_odom_angle_()
         # 姿态控制
-        self.ori_angle_pid.pid_calculate(ref=ref, goal=self.angle)
+        self.ori_angle_pid.pid_calculate(ref=ref+self.deviation_angle, goal=self.angle)
         self.move_cmd.angular.z = self.ori_angle_pid.out
 
         # 距离控制
@@ -323,7 +328,7 @@ class Game_Controller(Node):
 
             o_distance = self.get_O_distance()
             o_distance *= self.odom_linear_scale_correction # 修正
-            print("在上一次停下后已经行驶的距离: ", o_distance)
+            # print("在上一次停下后已经行驶的距离: ", o_distance)
 
             # 计算误差
             self.distance_error = o_distance - abs(self.distance) # 负值控制车向前，正值控制车向后
@@ -333,17 +338,19 @@ class Game_Controller(Node):
             if self.distance >= 0:
                 self.move_cmd.linear.x = self.distance_pid.out
             else:
+                print("distance 为负值")
                 self.move_cmd.linear.x = -self.distance_pid.out
+            print(self.move_cmd.linear.x)
             if abs(self.distance_error) < self.distance_tolerance: # 达到目标的情况
                 self.start_for_pid_distance = False
-                print("任务已完成......")
+                # print("任务已完成......")
         elif self.start_for_lidar_distance:
             self.move_cmd.linear.x = self.liear_speed
         else: # 未设定目标的情况
             self.move_cmd.linear.x = 0.0
             self.x_start = self.get_position_().transform.translation.x
             self.y_start = self.get_position_().transform.translation.y
-            print("正在停车状态......")
+            # print("正在停车状态......")
         self.cmd_vel.publish(self.move_cmd)
 
     def get_coordinate_value_(self):
@@ -386,36 +393,48 @@ def main():
     try:
         node = Game_Controller("Game_Controller")
 
-        node.set_angle(90.0)
-        node.set_distance(1.0)
-        node.start_car_and_lidar_controls_stopping(0.05, 0.4)
-        node.vision_choose_goal_in_A("a_left")
+        # node.set_angle(90.0)
+        # node.set_distance(0.5)
+        # node.start_car_and_lidar_controls_stopping(0.05, 0.4)
+        # node.set_distance(-0.4)
+        # node.vision_choose_goal_in_A("a_left")
 
         # A区
         for i in range(3):
             node.start_car_and_lidar_controls_stopping(0.05, 0.4)
-            node.vision_choose_goal_in_A("a_left")
-            node.vision_choose_goal_in_A("a_right")
-
-        node.set_distance(-90.0)
-        node.start_car_and_lidar_controls_stopping(-0.05, 0.5, 1)
+            # node.vision_choose_goal_in_A("a_left")
+            # node.vision_choose_goal_in_A("a_right")
+            print("1")
+        print("2")
+        node.set_distance(0.5)
+        print("3")
+        node.set_angle(-90.0)
+        time.sleep(1.0)
+        print("4")
+        node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
+        node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
+        node.set_distance(-0.32)
         node.set_angle(0.0)
 
-        # B 区
-        for i in range(3):
-            node.choose_arm_goal_in_task_alone("moving")
-            node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-            node.set_distance(0.1)
-            # 前边识别
-            node.vision_choose_goal_in_B("b_front")
-            node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-            node.set_distance(-0.2)
-            # 后边识别
-            node.vision_choose_goal_in_B("b_back")
+        # # B 区
+        # for i in range(3):
+        #     # node.choose_arm_goal_in_task_alone("moving")
+        #     node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+        #     node.set_distance(0.1)
+        #     # 前边识别
+        #     # node.vision_choose_goal_in_B("b_front")
+        #     node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+        #     node.set_distance(-0.2)
+        #     # 后边识别
+        #     # node.vision_choose_goal_in_B("b_back")
 
 
-
+        while 1:
+            pass
     except KeyboardInterrupt:
+        print("退出暂停小车！！！！！！！！！")
+        node.cmd_vel.publish(Twist())
+        node.cmd_vel.publish(Twist())
         node.cmd_vel.publish(Twist())
     finally:
         if node:

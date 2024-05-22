@@ -2,25 +2,25 @@
 # '_a_left' 指的是车在 A 区行驶时车的左边
 # '_a_left' 指的是车在 A 区行驶时车的左边
 joint1_a_left: 68
-joint2_a_left: 85
+joint2_a_left: 79
 joint3_a_left: 95
-joint4_a_left: 87
-joint1_a_right: 45
+joint4_a_left: 75
+joint1_a_right: 157
 joint2_a_right: 80
 joint3_a_right: 65
 joint4_a_right: 85
 
-joint2_a_1: 118
-joint3_a_1: 89
-joint4_a_1: 107
+joint2_a_1: 120
+joint3_a_1: 90
+joint4_a_1: 110
 
-joint2_a_2: 85
-joint3_a_2: 95
-joint4_a_2: 90
+joint2_a_2: 117
+joint3_a_2: 80
+joint4_a_2: 107
 
-joint2_a_3: 85
-joint3_a_3: 95
-joint4_a_3: 100
+joint2_a_3: 115
+joint3_a_3: 64
+joint4_a_3: 116
 
 # 过渡点
 joint2_middle: 110
@@ -30,71 +30,71 @@ joint4_middle: 90
 # B 区
 # '_b_front' 指的是车在 A 区行驶时车的前方
 # '_b_back' 指的是车在 A 区行驶时车的后方
-joint1_moving: 90
-joint2_moving: 90
-joint3_moving: 90
-joint4_moving: 90
+joint1_moving: 111
+joint2_moving: 79
+joint3_moving: 70
+joint4_moving: 75
 # -----------------------
-joint1_b_left_front: 90
-joint2_b_left_front: 90
-joint3_b_left_front: 90
-joint4_b_left_front: 90
+joint1_b_left_front: 97
+joint2_b_left_front: 111
+joint3_b_left_front: 124
+joint4_b_left_front: 99
 
-joint1_b_middle_front: 90
-joint2_b_middle_front: 90
-joint3_b_middle_front: 90
-joint4_b_middle_front: 90
+joint1_b_middle_front: 111
+joint2_b_middle_front: 107
+joint3_b_middle_front: 124
+joint4_b_middle_front: 93
 
-joint1_b_right_front: 90
-joint2_b_right_front: 90
-joint3_b_right_front: 90
-joint4_b_right_front: 90
+joint1_b_right_front: 126
+joint2_b_right_front: 110
+joint3_b_right_front: 124
+joint4_b_right_front: 99
 # ---------------------
-joint1_b_left_front_pre: 90
-joint2_b_left_front_pre: 90
-joint3_b_left_front_pre: 90
-joint4_b_left_front_pre: 90
+joint1_b_left_front_pre: 126
+joint2_b_left_front_pre: 110
+joint3_b_left_front_pre: 124
+joint4_b_left_front_pre: 99
 
-joint1_b_middle_front_pre: 90
-joint2_b_middle_front_pre: 90
-joint3_b_middle_front_pre: 90
-joint4_b_middle_front_pre: 90
+joint1_b_middle_front_pre: 111
+joint2_b_middle_front_pre: 111
+joint3_b_middle_front_pre: 118
+joint4_b_middle_front_pre: 95
 
-joint1_b_right_front_pre: 90
-joint2_b_right_front_pre: 90
-joint3_b_right_front_pre: 90
-joint4_b_right_front_pre: 90
+joint1_b_right_front_pre: 126
+joint2_b_right_front_pre: 115
+joint3_b_right_front_pre: 124
+joint4_b_right_front_pre: 96
 # -------------------------
 # -------------------------
-joint1_b_left_back: 90
-joint2_b_left_back: 90
-joint3_b_left_back: 90
-joint4_b_left_back: 90
+joint1_b_left_back: 35
+joint2_b_left_back: 115
+joint3_b_left_back: 124
+joint4_b_left_back: 92
 
-joint1_b_middle_back: 90
-joint2_b_middle_back: 90
-joint3_b_middle_back: 90
-joint4_b_middle_back: 90
+joint1_b_middle_back: 21
+joint2_b_middle_back: 109
+joint3_b_middle_back: 118
+joint4_b_middle_back: 95
 
-joint1_b_right_back: 90
-joint2_b_right_back: 90
-joint3_b_right_back: 90
-joint4_b_right_back: 90
+joint1_b_right_back: 7
+joint2_b_right_back: 115
+joint3_b_right_back: 124
+joint4_b_right_back: 96
 # ---------------------
-joint1_b_left_back_pre: 90
-joint2_b_left_back_pre: 90
-joint3_b_left_back_pre: 90
-joint4_b_left_back_pre: 90
+joint1_b_left_back_pre: 37
+joint2_b_left_back_pre: 111
+joint3_b_left_back_pre: 124
+joint4_b_left_back_pre: 100
 
-joint1_b_middle_back_pre: 90
-joint2_b_middle_back_pre: 90
-joint3_b_middle_back_pre: 90
-joint4_b_middle_back_pre: 90
+joint1_b_middle_back_pre: 21
+joint2_b_middle_back_pre: 107
+joint3_b_middle_back_pre: 124
+joint4_b_middle_back_pre: 93
 
-joint1_b_right_back_pre: 90
-joint2_b_right_back_pre: 90
-joint3_b_right_back_pre: 90
-joint4_b_right_back_pre: 90
+joint1_b_right_back_pre: 7
+joint2_b_right_back_pre: 111
+joint3_b_right_back_pre: 124
+joint4_b_right_back_pre: 100
 # -------------------------
 # joint1_b_front: 90
 # joint2_b_front: 90

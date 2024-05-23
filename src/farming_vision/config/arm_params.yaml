@@ -1,3 +1,13 @@
+joint1_vision_patrol_1: 126
+joint2_vision_patrol_1: 115
+joint3_vision_patrol_1: 124
+joint4_vision_patrol_1: 96
+
+joint1_vision_patrol_2: 126
+joint2_vision_patrol_2: 115
+joint3_vision_patrol_2: 124
+joint4_vision_patrol_2: 96
+
 # A 区
 # '_a_left' 指的是车在 A 区行驶时车的左边
 # '_a_left' 指的是车在 A 区行驶时车的左边

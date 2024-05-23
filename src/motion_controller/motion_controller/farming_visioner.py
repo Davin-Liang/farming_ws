@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import math
 import rclpy
+import cv2, cv_bridge
+import numpy as np
 from rclpy.node import Node
 from ai_msgs.msg import PerceptionTargets # type: ignore
 import os
@@ -12,7 +14,7 @@ import copy
 from threading import Thread
 from rclpy.duration import Duration
 from geometry_msgs.msg import Twist, Point
-from sensor_msgs.msg import Range
+from sensor_msgs.msg import Range, Image
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 from math import sqrt, pow, radians
@@ -27,8 +29,12 @@ class Game_Controller(Node):
         # 加载 arm 参数
         self.file_path = os.path.expanduser('~/farming_ws/src/farming_vision/config/arm_params.yaml')
         self.load_config_file_()
+
+        self.bridge = cv_bridge.CvBridge()
+    
         # 重要 BOOL 值
         self.open_vision_detect = False # 是否打开视觉检测
+        self.open_vision_patrol = False # 是否打开视觉寻线
         # 数据字典
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
         # 使用到的订阅者和发布者
@@ -37,6 +43,11 @@ class Game_Controller(Node):
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.lidar_subcriber_ = self.create_subscription(Range, "laser", self.lidar_callback_, 10)
         self.angles_of_joints = Int16MultiArray()
+
+        self.image_sub = self.create_subscription(Image, '/image_raw', self.image_callback, 10)
+        self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.pub = self.create_publisher(Image, '/camera/process_image', 10)
+
         self.move_cmd = Twist()
 
         self.ori_angle_pid = PID(0.685, 0.0, 0.426, 1.4, 0.0)
@@ -79,7 +90,60 @@ class Game_Controller(Node):
         self.spin_thread = Thread(target=self.spin_task_)
         self.spin_thread.start()
 
+    def image_callback(self, msg):
+        np_arr = np.fromstring(msg.data, np.uint8)
+        # 使用 OpenCV 解码 JPEG 数据
+        image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+        # 定义白色的HSV颜色范围
+        # 白色的HSV颜色范围的下界和上界
+        # 色调值从0到180（覆盖所有色调），饱和度值从0到25（低饱和度，即接近灰色），明度值从200到255（高亮度）
+        lower_white = np.array([0, 0, 200])
+        upper_white = np.array([180, 25, 255])
+        # 创建一个掩模，表示图像中白色部分的区域
+        # # 检查图像中的每个像素，如果像素值在 lower_white 和 upper_white 范围内，则该像素在掩模中对应的位置会被设置为255（白色），否则会被设置为0（黑色）。
+        mask = cv2.inRange(hsv, lower_white, upper_white)
+
+        # 获取图像的高度、宽度和深度
+        h, w, d = image.shape
+        # 定义搜索区域的上下边界
+        search_top = int(h / 2)
+        search_bot = int(h / 2 + 20)
+        # 将掩模的上半部分和下半部分设置为0，仅保留中间一条窄带的掩模
+        mask[0:search_top, 0:w] = 0
+        mask[search_bot:h, 0:w] = 0
+        # 计算掩模区域的图像矩（Moments），用于后续的质心计算
+        M = cv2.moments(mask)
+
+        if M['m00'] > 0:
+            # 计算白色区域的质心
+            cx = int(M['m10'] / M['m00'])
+            cy = int(M['m01'] / M['m00'])
+            # 在图像中绘制一个红色圆圈，标记出质心位置
+            cv2.circle(image, (cx, cy), 20, (0, 0, 255), -1)
+
+            # 基于检测的目标中心点，计算机器人的控制参数
+            err = cx - w / 2
+            if self.open_vision_patrol:
+                self.cmd_vel.angular.z = -float(err) / 400
+
+        # 发布处理后的图像
+        self.pub.publish(self.bridge.cv2_to_imgmsg(image, 'bgr8'))
+
     # ---------------- 对外接口函数 -----------------
+    def set_vision_patrol_mode(self, mode):
+        if mode == 1:
+            self.open_vision_patrol = True
+        elif mode == 0:
+            self.open_vision_patrol = False
+            self.cmd_vel.angular.z  = 0.0
+
+    def control_car_turn(self, turn_speed, turn_time):
+        self.cmd_vel.angular.z = turn_speed
+        time.sleep(turn_time)
+        self.cmd_vel.angular.z = 0.0
+
     def set_distance(self, distance):
         """ 设置车轮方向的行驶距离及以什么样的速度行驶 """
         self.distance = distance
@@ -346,10 +410,10 @@ class Game_Controller(Node):
     def timer_work_(self):
         # 更新参数
         # self.get_param_()
-        ref = self.get_odom_angle_()
+        # ref = self.get_odom_angle_()
         # 姿态控制
-        self.ori_angle_pid.pid_calculate(ref=ref+self.deviation_angle, goal=self.angle)
-        self.move_cmd.angular.z = self.ori_angle_pid.out
+        # self.ori_angle_pid.pid_calculate(ref=ref+self.deviation_angle, goal=self.angle)
+        # self.move_cmd.angular.z = self.ori_angle_pid.out
 
         # 距离控制
         if self.start_for_pid_distance:

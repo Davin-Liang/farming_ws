@@ -87,6 +87,7 @@ class Game_Controller(Node):
         # 等待完成任务
         while self.start_for_pid_distance:
             pass
+        time.sleep(2.0)
 
     def set_angle(self, angle):
         """ 设置底盘转动角度 """
@@ -94,6 +95,7 @@ class Game_Controller(Node):
         # 等待转完角度
         while abs(self.angle-self.get_odom_angle_())>self.angle_tolerance:
             pass
+        time.sleep(2.0)
 
     def start_car_and_lidar_controls_stopping(self, speed, threthold=0.1, ignore_num=0):
         """ 开动车并使用单线激光控制小车停止 """
@@ -125,24 +127,24 @@ class Game_Controller(Node):
     def vision_choose_goal_in_B(self, pose_name):
         self.pose_name = pose_name
         if pose_name == "front":
-            self.choose_arm_goal_in_task_alone("a_left_pre_front")
+            self.choose_arm_goal_in_task_alone("b_left_front_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_in_task_alone("a_middle_pre_front")
+            self.choose_arm_goal_in_task_alone("b_middle_front_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_in_task_alone("a_right_pre_front")
+            self.choose_arm_goal_in_task_alone("b_right_front_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_in_task_alone("moving")
+            self.choose_arm_goal_in_task_alone("moving_pre")
         if pose_name == "back":
-            self.choose_arm_goal_in_task_alone("a_left_pre_back")
+            self.choose_arm_goal_in_task_alone("b_left_back_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_in_task_alone("a_middle_pre_back")
+            self.choose_arm_goal_in_task_alone("b_middle_back_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_in_task_alone("a_right_pre_back")
+            self.choose_arm_goal_in_task_alone("b_right_back_pre")
             while self.open_vision_detect:
                 pass
             self.choose_arm_goal_in_task_alone("moving")
@@ -214,17 +216,20 @@ class Game_Controller(Node):
                             print("正在去目标1")
                             self.choose_arm_goal_in_task('middle')
                             self.choose_arm_goal_in_task('a_1')
+                            self.voice_broadcast(type="female")
                             self.choose_arm_goal_in_task(self.pose_name)
                     if index == 1:
                         if goal == 'famale':
                             print("正在去目标2")
                             self.choose_arm_goal_in_task('middle')
                             self.choose_arm_goal_in_task('a_2')
+                            self.voice_broadcast(type="female")
                             self.choose_arm_goal_in_task(self.pose_name)
                     if index == 2:
                         if goal == 'famale':
                             print("正在去目标3")
                             self.choose_arm_goal_in_task('a_3')
+                            self.voice_broadcast(type="female")
                             self.choose_arm_goal_in_task(self.pose_name)
                 
                 self.open_vision_detect = False
@@ -233,26 +238,46 @@ class Game_Controller(Node):
                     if flower['Type'] == 'famale':
                         if self.pose_name == 'front':
                             if self.run_times == 0:
+                                self.voice_broadcast(type="female")
                                 self.choose_arm_goal_in_task("b_left_front")
                                 self.run_times += 1
+                                self.open_vision_detect = False
+                                return
                             if self.run_times == 1:
+                                self.voice_broadcast(type="female")
                                 self.choose_arm_goal_in_task("b_middle_front")
                                 self.run_times += 1
+                                self.open_vision_detect = False
+                                return
                             if self.run_times == 2:
+                                self.voice_broadcast(type="female")
                                 self.choose_arm_goal_in_task("b_right_front")
                                 self.run_times = 0
+                                self.open_vision_detect = False
+                                return
                         if self.pose_name == 'back':
                             if self.run_times == 0:
+                                self.voice_broadcast(type="female")
                                 self.choose_arm_goal_in_task("b_left_back")
                                 self.run_times += 1
+                                self.open_vision_detect = False
+                                return
                             if self.run_times == 1:
+                                self.voice_broadcast(type="female")
                                 self.choose_arm_goal_in_task("b_middle_back")
                                 self.run_times += 1
+                                self.open_vision_detect = False
+                                return
                             if self.run_times == 2:
+                                self.voice_broadcast(type="female")
                                 self.choose_arm_goal_in_task("b_left_back")
-                                self.run_times = 0                        
+                                self.run_times = 0
+                                self.open_vision_detect = False
+                                return
+                    else:                       
+                        self.voice_broadcast(type="male")
                     break
-                self.open_vision_detect = False
+                
 
     def choose_arm_goal_in_task(self, pose_name):
         self.arm_params['joint2'] = self.default_arm_params['joint2_'+pose_name]
@@ -282,23 +307,27 @@ class Game_Controller(Node):
     def voice_broadcast(self, male_num=0, female_num=0, type='male'):
         """ 语音播报 """
         if male_num == 0 and female_num == 3:
-            subprocess.Popen(['sudo', 'tinyplay', './voice/voice_0_3.wav', '-D', '0', '-d', '1'])
+            print("雄花数量为 0 朵，雌花为 3 朵")
+            subprocess.Popen(['sudo', 'tinyplay', './voice/voice_0_3.wav', '-D', '1', '-d', '0'])
         elif male_num == 1 and female_num == 2:
-            subprocess.Popen(['sudo', 'tinyplay', './voice/voice_1_2.wav', '-D', '0', '-d', '1'])
+            print("雄花数量为 1 朵，雌花为 2 朵")
+            subprocess.Popen(['sudo', 'tinyplay', './voice/voice_1_2.wav', '-D', '1', '-d', '0'])
         elif male_num == 2 and female_num == 1:
-            subprocess.Popen(['sudo', 'tinyplay', './voice/voice_2_1.wav', '-D', '0', '-d', '1'])
+            print("雄花数量为 2 朵，雌花为 1 朵")
+            subprocess.Popen(['sudo', 'tinyplay', './voice/voice_2_1.wav', '-D', '1', '-d', '0'])
         elif male_num == 3 and female_num == 0:
-            subprocess.Popen(['sudo', 'tinyplay', './voice/voice_3_0.wav', '-D', '0', '-d', '1'])
+            print("雄花数量为 3 朵，雌花为 0 朵")
+            subprocess.Popen(['sudo', 'tinyplay', './voice/voice_3_0.wav', '-D', '1', '-d', '0'])
         elif male_num == 0 and female_num == 0:
             if type == "male":
-                subprocess.Popen(['sudo', 'tinyplay', './voice/male.wav', '-D', '0', '-d', '1'])
+                print("该授粉点为雄花，不可授粉")
+                subprocess.Popen(['sudo', 'tinyplay', './voice/male.wav', '-D', '1', '-d', '0'])
             elif type == "female":
-                subprocess.Popen(['sudo', 'tinyplay', './voice/female.wav', '-D', '0', '-d', '1'])
+                print("该授粉点为雌花，可授粉")
+                subprocess.Popen(['sudo', 'tinyplay', './voice/female.wav', '-D', '1', '-d', '0'])
 
     def calculate_O_distance(self, point1, point2):
         """ 计算两个坐标点之间的 O 式距离 """
-        # print(point1)
-        # print(point2)
         return math.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
     
     def load_config_file_(self):
@@ -332,13 +361,13 @@ class Game_Controller(Node):
 
             # 计算误差
             self.distance_error = o_distance - abs(self.distance) # 负值控制车向前，正值控制车向后
-            print("误差当前值为: ", self.distance_error)
+            # print("误差当前值为: ", self.distance_error)
 
             self.distance_pid.pid_calculate(o_distance, abs(self.distance))
             if self.distance >= 0:
                 self.move_cmd.linear.x = self.distance_pid.out
             else:
-                print("distance 为负值")
+                # print("distance 为负值")
                 self.move_cmd.linear.x = -self.distance_pid.out
             print(self.move_cmd.linear.x)
             if abs(self.distance_error) < self.distance_tolerance: # 达到目标的情况
@@ -416,23 +445,31 @@ def main():
         node.set_distance(-0.32)
         node.set_angle(0.0)
 
-        # # B 区
-        # for i in range(3):
-        #     # node.choose_arm_goal_in_task_alone("moving")
-        #     node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-        #     node.set_distance(0.1)
-        #     # 前边识别
-        #     # node.vision_choose_goal_in_B("b_front")
-        #     node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-        #     node.set_distance(-0.2)
-        #     # 后边识别
-        #     # node.vision_choose_goal_in_B("b_back")
+        # B 区
+        node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
+        node.set_distance(0.2)
+        # node.vision_choose_goal_in_B("front")
+        
+        for i in range(2):
+            # node.choose_arm_goal_in_task_alone("moving")
+            node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+            node.set_distance(0.1)
+            # node.vision_choose_goal_in_B("front")
+            # node.vision_choose_goal_in_B("back")
+            node.choose_arm_goal_in_task_alone("moving")
+
+        node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+        node.set_distance(0.1)
+        # node.vision_choose_goal_in_B("back")
 
 
         while 1:
             pass
     except KeyboardInterrupt:
         print("退出暂停小车！！！！！！！！！")
+        node.cmd_vel.publish(Twist())
+        node.cmd_vel.publish(Twist())
+        node.cmd_vel.publish(Twist())
         node.cmd_vel.publish(Twist())
         node.cmd_vel.publish(Twist())
         node.cmd_vel.publish(Twist())

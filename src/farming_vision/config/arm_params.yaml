@@ -35,35 +35,35 @@ joint2_moving: 79
 joint3_moving: 70
 joint4_moving: 75
 # -----------------------
-joint1_b_left_front: 97
-joint2_b_left_front: 111
-joint3_b_left_front: 124
-joint4_b_left_front: 99
-
-joint1_b_middle_front: 111
-joint2_b_middle_front: 107
-joint3_b_middle_front: 124
-joint4_b_middle_front: 93
-
-joint1_b_right_front: 126
-joint2_b_right_front: 110
-joint3_b_right_front: 124
-joint4_b_right_front: 99
-# ---------------------
-joint1_b_left_front_pre: 126
-joint2_b_left_front_pre: 110
+joint1_b_left_front_pre: 97
+joint2_b_left_front_pre: 111
 joint3_b_left_front_pre: 124
 joint4_b_left_front_pre: 99
 
 joint1_b_middle_front_pre: 111
-joint2_b_middle_front_pre: 111
-joint3_b_middle_front_pre: 118
-joint4_b_middle_front_pre: 95
+joint2_b_middle_front_pre: 107
+joint3_b_middle_front_pre: 124
+joint4_b_middle_front_pre: 93
 
 joint1_b_right_front_pre: 126
-joint2_b_right_front_pre: 115
+joint2_b_right_front_pre: 110
 joint3_b_right_front_pre: 124
-joint4_b_right_front_pre: 96
+joint4_b_right_front_pre: 99
+# ---------------------
+joint1_b_left_front: 126
+joint2_b_left_front: 110
+joint3_b_left_front: 124
+joint4_b_left_front: 99
+
+joint1_b_middle_front: 111
+joint2_b_middle_front: 111
+joint3_b_middle_front: 118
+joint4_b_middle_front: 95
+
+joint1_b_right_front: 126
+joint2_b_right_front: 115
+joint3_b_right_front: 124
+joint4_b_right_front: 96
 # -------------------------
 # -------------------------
 joint1_b_left_back: 35

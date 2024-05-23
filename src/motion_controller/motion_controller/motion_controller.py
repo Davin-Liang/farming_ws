@@ -26,34 +26,34 @@ class Motion_Controller(Node):
         self.lidar_subcriber_ = self.create_subscription(Range, "laser", self.lidar_callback_, 10)
         self.move_cmd = Twist()
 
-        # self.declare_parameter('Kp_ori', 0.51)
-        # self.ori_angle_pid.Kp = self.get_parameter('Kp_ori').get_parameter_value().double_value
-        # self.declare_parameter('Ki_ori', 0.0)
-        # self.ori_angle_pid.Ki = self.get_parameter('Ki_ori').get_parameter_value().double_value
-        # self.declare_parameter('max_out_ori', 1.6)
-        # self.ori_angle_pid.max_out = self.get_parameter('max_out_ori').get_parameter_value().double_value
-        # self.declare_parameter('max_iout_ori', 0.0)
-        # self.ori_angle_pid.max_iout = self.get_parameter('max_iout_ori').get_parameter_value().double_value
-        # self.declare_parameter('Kd_ori', 0.126)
-        # self.ori_angle_pid.Kd = self.get_parameter('Kd_ori').get_parameter_value().double_value
+        self.declare_parameter('Kp_ori', 0.51)
+        self.ori_angle_pid.Kp = self.get_parameter('Kp_ori').get_parameter_value().double_value
+        self.declare_parameter('Ki_ori', 0.0)
+        self.ori_angle_pid.Ki = self.get_parameter('Ki_ori').get_parameter_value().double_value
+        self.declare_parameter('max_out_ori', 1.6)
+        self.ori_angle_pid.max_out = self.get_parameter('max_out_ori').get_parameter_value().double_value
+        self.declare_parameter('max_iout_ori', 0.0)
+        self.ori_angle_pid.max_iout = self.get_parameter('max_iout_ori').get_parameter_value().double_value
+        self.declare_parameter('Kd_ori', 0.126)
+        self.ori_angle_pid.Kd = self.get_parameter('Kd_ori').get_parameter_value().double_value
 
-        # self.declare_parameter('Kp_distance', 0.42)
-        # self.distance_pid.Kp = self.get_parameter('Kp_distance').get_parameter_value().double_value
-        # self.declare_parameter('Ki_distance', 0.0)
-        # self.distance_pid.Ki = self.get_parameter('Ki_distance').get_parameter_value().double_value
-        # self.declare_parameter('max_out_distance', 1.0)
-        # self.distance_pid.max_out = self.get_parameter('max_out_distance').get_parameter_value().double_value
-        # self.declare_parameter('max_iout_distance', 0.0)
-        # self.distance_pid.max_iout = self.get_parameter('max_iout_distance').get_parameter_value().double_value
-        # self.declare_parameter('Kd_distance', 0.08)
-        # self.distance_pid.Kd = self.get_parameter('Kd_distance').get_parameter_value().double_value
+        self.declare_parameter('Kp_distance', 0.42)
+        self.distance_pid.Kp = self.get_parameter('Kp_distance').get_parameter_value().double_value
+        self.declare_parameter('Ki_distance', 0.0)
+        self.distance_pid.Ki = self.get_parameter('Ki_distance').get_parameter_value().double_value
+        self.declare_parameter('max_out_distance', 1.0)
+        self.distance_pid.max_out = self.get_parameter('max_out_distance').get_parameter_value().double_value
+        self.declare_parameter('max_iout_distance', 0.0)
+        self.distance_pid.max_iout = self.get_parameter('max_iout_distance').get_parameter_value().double_value
+        self.declare_parameter('Kd_distance', 0.08)
+        self.distance_pid.Kd = self.get_parameter('Kd_distance').get_parameter_value().double_value
 
         
-        #declare_parameter
+        # declare_parameter
         # self.declare_parameter('rate', 20.0)
         # self.rate = self.get_parameter('rate').get_parameter_value().double_value
         self.rate = 20.0
-        # self.set_new_param_to_ros('rate')
+        self.set_new_param_to_ros('rate')
         
         # 目标值
         # self.declare_parameter('distance', 1.0)
@@ -62,22 +62,22 @@ class Motion_Controller(Node):
         # self.angle = self.get_parameter('angle').get_parameter_value().double_value
         # self.angle = radians(self.angle)
         self.distance = 0.0
-        # self.set_new_param_to_ros('distance')
+        self.set_new_param_to_ros('distance')
         self.angle = 0.0
-        # self.set_new_param_to_ros('angle')
+        self.set_new_param_to_ros('angle')
         self.angle = radians(self.angle)
         
         # 行驶和转动的速度
         # self.declare_parameter('liear_speed', 0.5)
         # self.liear_speed = self.get_parameter('liear_speed').get_parameter_value().double_value
         self.liear_speed = 0.5
-        # self.set_new_param_to_ros('liear_speed')
+        self.set_new_param_to_ros('liear_speed')
         
         # 阈值
         # self.declare_parameter('distance_tolerance', 0.03)
         # self.distance_tolerance = self.get_parameter('distance_tolerance').get_parameter_value().double_value
         self.distance_tolerance = 0.03
-        # self.set_new_param_to_ros('distance_tolerance')
+        self.set_new_param_to_ros('distance_tolerance')
         
         # 修正系数
         # self.declare_parameter('odom_linear_scale_correction', 1.0)
@@ -85,26 +85,26 @@ class Motion_Controller(Node):
         # self.declare_parameter('odom_angular_scale_correction', 1.0)
         # self.odom_angular_scale_correction = self.get_parameter('odom_angular_scale_correction').get_parameter_value().double_value
         self.odom_linear_scale_correction = 1.0
-        # self.set_new_param_to_ros('odom_linear_scale_correction')
+        self.set_new_param_to_ros('odom_linear_scale_correction')
         self.odom_angular_scale_correction = 1.0
-        # self.set_new_param_to_ros('odom_angular_scale_correction')
+        self.set_new_param_to_ros('odom_angular_scale_correction')
         
-        # self.declare_parameter('start_for_pid_distance', False)
-        # self.declare_parameter('start_for_lidar_distance', False)
-        self.start_for_lidar_distance = False
-        self.start_for_pid_distance = False
+        self.declare_parameter('start_for_pid_distance', False)
+        self.declare_parameter('start_for_lidar_distance', False)
+        # self.start_for_lidar_distance = False
+        # self.start_for_pid_distance = False
         
         # self.declare_parameter('base_frame', 'base_footprint')
         # self.base_frame = self.get_parameter('base_frame').get_parameter_value().string_value
         # self.declare_parameter('odom_frame','odom')
         # self.odom_frame = self.get_parameter('odom_frame').get_parameter_value().string_value
         self.base_frame = 'base_footprint'
-        # self.set_new_param_to_ros('base_frame', 'string')
+        self.set_new_param_to_ros('base_frame', 'string')
         self.odom_frame = 'odom'
-        # self.set_new_param_to_ros('odom_frame', 'string')
+        self.set_new_param_to_ros('odom_frame', 'string')
 
         self.lidar_threthold = 0.1
-        # self.set_new_param_to_ros('lidar_threthold')
+        self.set_new_param_to_ros('lidar_threthold')
         
         #init the tf listener
         self.tf_buffer = Buffer()
@@ -237,7 +237,7 @@ class Motion_Controller(Node):
 
     def timer_work_(self):
         # 更新参数
-        # self.get_param_()
+        self.get_param_()
         ref = self.get_odom_angle_()
         # 姿态控制
         self.ori_angle_pid.pid_calculate(ref=ref, goal=self.angle)
@@ -407,7 +407,7 @@ def main():
     rclpy.init()
     try:
         node = Motion_Controller("Motion_Controller")
-        # rclpy.spin(node)
+        rclpy.spin(node)
 
     except KeyboardInterrupt:
         pass

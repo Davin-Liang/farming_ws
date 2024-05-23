@@ -39,14 +39,14 @@ class Game_Controller(Node):
         self.angles_of_joints = Int16MultiArray()
         self.move_cmd = Twist()
 
-        self.ori_angle_pid = PID(0.51, 0.0, 0.126, 1.6, 0.0)
+        self.ori_angle_pid = PID(0.685, 0.0, 0.426, 1.4, 0.0)
         self.distance_pid = PID(0.42, 0.0, 0.08, 1.0, 0.0)
 
         
         self.distance = 0.0
         self.angle = 0.0
         self.angle = radians(self.angle)
-        self.deviation_angle = radians(0.85)
+        self.deviation_angle = radians(0.83)
         self.liear_speed = 0.5
         self.distance_tolerance = 0.03
         self.angle_tolerance = radians(2.0)
@@ -424,43 +424,43 @@ def main():
 
         # node.set_angle(90.0)
         # node.set_distance(0.5)
-        # node.start_car_and_lidar_controls_stopping(0.05, 0.4)
+        node.start_car_and_lidar_controls_stopping(0.05, 0.4)
         # node.set_distance(-0.4)
         # node.vision_choose_goal_in_A("a_left")
 
-        # A区
-        for i in range(3):
-            node.start_car_and_lidar_controls_stopping(0.05, 0.4)
-            # node.vision_choose_goal_in_A("a_left")
-            # node.vision_choose_goal_in_A("a_right")
-            print("1")
-        print("2")
-        node.set_distance(0.5)
-        print("3")
-        node.set_angle(-90.0)
-        time.sleep(1.0)
-        print("4")
-        node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
-        node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
-        node.set_distance(-0.32)
-        node.set_angle(0.0)
+        # # A区
+        # for i in range(3):
+        #     node.start_car_and_lidar_controls_stopping(0.05, 0.4)
+        #     # node.vision_choose_goal_in_A("a_left")
+        #     # node.vision_choose_goal_in_A("a_right")
+        #     print("1")
+        # print("2")
+        # node.set_distance(0.5)
+        # print("3")
+        # node.set_angle(-90.0)
+        # time.sleep(1.0)
+        # print("4")
+        # node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
+        # node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
+        # node.set_distance(-0.25)
+        # node.set_angle(0.0)
 
-        # B 区
-        node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
-        node.set_distance(0.2)
+        # # B 区
+        # node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
+        # node.set_distance(0.2)
         # node.vision_choose_goal_in_B("front")
         
-        for i in range(2):
-            # node.choose_arm_goal_in_task_alone("moving")
-            node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-            node.set_distance(0.1)
-            # node.vision_choose_goal_in_B("front")
-            # node.vision_choose_goal_in_B("back")
-            node.choose_arm_goal_in_task_alone("moving")
+        # for i in range(2):
+        #     # node.choose_arm_goal_in_task_alone("moving")
+        #     node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+        #     node.set_distance(0.1)
+        #     # node.vision_choose_goal_in_B("front")
+        #     # node.vision_choose_goal_in_B("back")
+        #     node.choose_arm_goal_in_task_alone("moving")
 
-        node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-        node.set_distance(0.1)
-        # node.vision_choose_goal_in_B("back")
+        # node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+        # node.set_distance(0.1)
+        # # node.vision_choose_goal_in_B("back")
 
 
         while 1:

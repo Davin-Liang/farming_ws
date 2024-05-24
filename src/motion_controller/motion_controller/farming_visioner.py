@@ -188,8 +188,9 @@ class Game_Controller(Node):
 
     def vision_choose_goal_in_A(self, pose_name):
         """ 传入视觉目标 """
+        self.place_name = "A"
         self.pose_name = pose_name
-        self.choose_arm_goal_in_task_alone(pose_name)
+        self.choose_arm_goal_alone(pose_name)
         self.open_vision_detect     = True
         # 堵塞函数直到完成任务
         # print("正在等待完成任务")
@@ -197,29 +198,43 @@ class Game_Controller(Node):
             pass
 
     def vision_choose_goal_in_B(self, pose_name):
+        self.place_name = "B"
         self.pose_name = pose_name
+        self.run_times = 0
         if pose_name == "front":
-            self.choose_arm_goal_in_task_alone("b_left_front_pre")
+            # 中间花
+            self.choose_arm_goal_alone("b_middle_front_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_in_task_alone("b_middle_front_pre")
+            
+            self.choose_arm_goal_alone("b_middle_front_pre")
+            self.choose_arm_goal_in_number(joint1=126)
+            self.choose_arm_goal_alone("b_right_front_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_in_task_alone("b_right_front_pre")
+            self.choose_arm_goal_alone("b_right_front_pre")
+            self.choose_arm_goal_alone("b_left_front_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_in_task_alone("a_left")
+            self.choose_arm_goal_alone("b_left_front_pre")
+            self.choose_arm_goal_in_number(joint2=107, joint3=124, joint4=93)
+            self.choose_arm_goal_alone("b_middle_front_pre")
         if pose_name == "back":
-            self.choose_arm_goal_in_task_alone("b_left_back_pre")
+            self.choose_arm_goal_alone("b_middle_back_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_in_task_alone("b_middle_back_pre")
+            self.choose_arm_goal_alone("b_middle_back_pre")
+            self.choose_arm_goal_in_number(joint1=97)
+            self.choose_arm_goal_alone("b_left_back_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_in_task_alone("b_right_back_pre")
+            self.choose_arm_goal_alone("b_left_back_pre")
+            self.choose_arm_goal_alone("b_right_back_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_in_task_alone("moving")
+            self.choose_arm_goal_alone("b_right_back_pre")
+            self.choose_arm_goal_in_number(joint2=107, joint3=124, joint4=93)
+            self.choose_arm_goal_alone("b_middle_back_pre")
 
         
 
@@ -263,91 +278,117 @@ class Game_Controller(Node):
         self.arm_move(flowers_lists)
 
     def arm_move(self, flowers_lists):
-            if len(flowers_lists) == 3:
+            # A 区识别
+            if self.place_name == "A":
                 sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][1])
+                goal_list = []
                 # 创建目标字典，并按排序后的结果填充值
-                goal_list = [
-                    sorted_data[0]['Type'],
-                    sorted_data[1]['Type'],
-                    sorted_data[2]['Type']
-                ]
+                for i in range(len(sorted_data)):
+                    goal_list.append(sorted_data[i]['Type'])
+
                 # print(goal_list)
-                male_num = 0
-                female_num = 0
-                for index, flower in enumerate(flowers_lists):
-                    if flower['Type'] == 'male':
-                        male_num += 1
-                    elif flower['Type'] == 'famale':
-                        female_num += 1
+                # male_num = 0
+                # female_num = 0
+                # for index, flower in enumerate(flowers_lists):
+                #     if flower['Type'] == 'male':
+                #         male_num += 1
+                #     elif flower['Type'] == 'famale':
+                #         female_num += 1
                 # 语音播报
-                self.voice_broadcast(male_num, female_num)
+                # self.voice_broadcast(male_num, female_num)
                 
                 for index, goal in enumerate(goal_list):
                     if index == 0:
+                        self.voice_broadcast('up')
                         if goal == 'famale':
-                            print("正在去目标1")
+                            self.voice_broadcast(type='female')
                             self.choose_arm_goal_in_task('middle')
                             self.choose_arm_goal_in_task('a_1')
-                            self.voice_broadcast(type="female")
-                            self.choose_arm_goal_in_task(self.pose_name)
+                        else:
+                            self.voice_broadcast(type="male")
+                        self.choose_arm_goal_in_task(self.pose_name)
                     if index == 1:
+                        self.voice_broadcast('middle')
                         if goal == 'famale':
-                            print("正在去目标2")
+                            self.voice_broadcast(type='female')
                             self.choose_arm_goal_in_task('middle')
                             self.choose_arm_goal_in_task('a_2')
-                            self.voice_broadcast(type="female")
-                            self.choose_arm_goal_in_task(self.pose_name)
+                        else:
+                            self.voice_broadcast(type="male")
+                        self.choose_arm_goal_in_task(self.pose_name)
                     if index == 2:
+                        self.voice_broadcast('down')
                         if goal == 'famale':
-                            print("正在去目标3")
+                            self.voice_broadcast(type='female')
+                            self.choose_arm_goal_in_task('down')
                             self.choose_arm_goal_in_task('a_3')
-                            self.voice_broadcast(type="female")
-                            self.choose_arm_goal_in_task(self.pose_name)
-                
+                        else:
+                            self.voice_broadcast(type="male")
+                        self.choose_arm_goal_in_task(self.pose_name)
+                # 授粉完关闭视觉检测
                 self.open_vision_detect = False
-            else:
+            elif self.place_name == "B":
                 for flower in flowers_lists:
-                    if flower['Type'] == 'famale':
-                        if self.pose_name == 'front':
-                            if self.run_times == 0:
-                                self.voice_broadcast(type="female")
-                                self.choose_arm_goal_in_task("b_left_front")
-                                self.run_times += 1
-                                self.open_vision_detect = False
-                                return
-                            if self.run_times == 1:
+                    if self.pose_name == 'front':
+                        if self.run_times == 0:
+                            self.voice_broadcast('middle')
+                            if flower['Type'] == 'famale':
                                 self.voice_broadcast(type="female")
                                 self.choose_arm_goal_in_task("b_middle_front")
-                                self.run_times += 1
-                                self.open_vision_detect = False
-                                return
-                            if self.run_times == 2:
+                            else:
+                                self.voice_broadcast(type="male")
+                            self.run_times += 1
+                            self.open_vision_detect = False
+                            return
+                        if self.run_times == 1:
+                            self.voice_broadcast('left')
+                            if flower['Type'] == 'famale':
                                 self.voice_broadcast(type="female")
                                 self.choose_arm_goal_in_task("b_right_front")
-                                self.run_times = 0
-                                self.open_vision_detect = False
-                                return
-                        if self.pose_name == 'back':
-                            if self.run_times == 0:
+                            else:
+                                self.voice_broadcast(type="male")
+                            self.run_times += 1
+                            self.open_vision_detect = False
+                            return
+                        if self.run_times == 2:
+                            self.voice_broadcast('right')
+                            if flower['Type'] == 'famale':
                                 self.voice_broadcast(type="female")
-                                self.choose_arm_goal_in_task("b_left_back")
-                                self.run_times += 1
-                                self.open_vision_detect = False
-                                return
-                            if self.run_times == 1:
+                                self.choose_arm_goal_in_task("b_left_front")
+                            else:
+                                self.voice_broadcast(type="male")
+                            self.run_times = 0
+                            return
+                    if self.pose_name == 'back':
+                        if self.run_times == 0:
+                            self.voice_broadcast('middle')
+                            if flower['Type'] == 'famale':
                                 self.voice_broadcast(type="female")
-                                self.choose_arm_goal_in_task("b_middle_back")
-                                self.run_times += 1
-                                self.open_vision_detect = False
-                                return
-                            if self.run_times == 2:
+                                self.choose_arm_goal_in_task("b_left_front")
+                            else:
+                                self.voice_broadcast(type="male")
+                            self.run_times += 1
+                            self.open_vision_detect = False
+                            return
+                        if self.run_times == 1:
+                            self.voice_broadcast('left')
+                            if flower['Type'] == 'famale':
                                 self.voice_broadcast(type="female")
-                                self.choose_arm_goal_in_task("b_left_back")
-                                self.run_times = 0
-                                self.open_vision_detect = False
-                                return
-                    else:                       
-                        self.voice_broadcast(type="male")
+                                self.choose_arm_goal_in_task("b_left_front")
+                            else:
+                                self.voice_broadcast(type="male")
+                            self.run_times += 1
+                            self.open_vision_detect = False
+                            return
+                        if self.run_times == 2:
+                            self.voice_broadcast('right')
+                            if flower['Type'] == 'famale':
+                                self.voice_broadcast(type="female")
+                                self.choose_arm_goal_in_task("b_right_front")
+                            else:
+                                self.voice_broadcast(type="male")
+                            self.run_times = 0
+                            return
                     break
                 
 
@@ -363,7 +404,7 @@ class Game_Controller(Node):
         self.joint_angles_publisher_.publish(self.angles_of_joints)
         time.sleep(1.5)
 
-    def choose_arm_goal_in_task_alone(self, pose_name):
+    def choose_arm_goal_alone(self, pose_name):
         self.arm_params['joint1'] = self.default_arm_params['joint1_'+pose_name]
         self.arm_params['joint2'] = self.default_arm_params['joint2_'+pose_name]
         self.arm_params['joint3'] = self.default_arm_params['joint3_'+pose_name]
@@ -375,28 +416,76 @@ class Game_Controller(Node):
         self.angles_of_joints.data.append(self.arm_params['joint4'])
         self.joint_angles_publisher_.publish(self.angles_of_joints)
         time.sleep(6.0)
+
+    def choose_arm_goal_in_number(self, joint1=0, joint2=0, joint3=0, joint4=0):
+        if joint1 != 0:
+            self.arm_params['joint1'] = joint1
+        if joint2 != 0:
+            self.arm_params['joint1'] = joint2
+        if joint3 != 0:
+            self.arm_params['joint1'] = joint3
+        if joint4 != 0:
+            self.arm_params['joint1'] = joint4
+        self.angles_of_joints.data = []
+        self.angles_of_joints.data.append(self.arm_params['joint1'])
+        self.angles_of_joints.data.append(self.arm_params['joint2'])
+        self.angles_of_joints.data.append(self.arm_params['joint3'])
+        self.angles_of_joints.data.append(self.arm_params['joint4'])
+        self.joint_angles_publisher_.publish(self.angles_of_joints)
+        time.sleep(2.0)
+
     
-    def voice_broadcast(self, male_num=0, female_num=0, type='male'):
+    def voice_broadcast(self, direction='', type=''):
         """ 语音播报 """
-        if male_num == 0 and female_num == 3:
-            print("雄花数量为 0 朵，雌花为 3 朵")
-            subprocess.Popen(['sudo', 'tinyplay', './voice/voice_0_3.wav', '-D', '1', '-d', '0'])
-        elif male_num == 1 and female_num == 2:
-            print("雄花数量为 1 朵，雌花为 2 朵")
-            subprocess.Popen(['sudo', 'tinyplay', './voice/voice_1_2.wav', '-D', '1', '-d', '0'])
-        elif male_num == 2 and female_num == 1:
-            print("雄花数量为 2 朵，雌花为 1 朵")
-            subprocess.Popen(['sudo', 'tinyplay', './voice/voice_2_1.wav', '-D', '1', '-d', '0'])
-        elif male_num == 3 and female_num == 0:
-            print("雄花数量为 3 朵，雌花为 0 朵")
-            subprocess.Popen(['sudo', 'tinyplay', './voice/voice_3_0.wav', '-D', '1', '-d', '0'])
-        elif male_num == 0 and female_num == 0:
-            if type == "male":
-                print("该授粉点为雄花，不可授粉")
+        if direction != '':
+            if direction == 'up':
+                print("上边的花为")
+                subprocess.Popen(['sudo', 'tinyplay', './voice/up.wav', '-D', '1', '-d', '0'])
+                time.sleep(2.0)
+            elif direction == 'middle':
+                print("中间的花为")
+                subprocess.Popen(['sudo', 'tinyplay', './voice/middle.wav', '-D', '1', '-d', '0'])
+                time.sleep(2.0)
+            elif direction == 'down':
+                print("下边的花为")
+                subprocess.Popen(['sudo', 'tinyplay', './voice/down.wav', '-D', '1', '-d', '0'])
+                time.sleep(2.0)
+            elif direction == 'left':
+                print("左边的花为")
+                subprocess.Popen(['sudo', 'tinyplay', './voice/left.wav', '-D', '1', '-d', '0'])
+                time.sleep(2.0)
+            elif direction == 'right':
+                print("右边的花为")
+                subprocess.Popen(['sudo', 'tinyplay', './voice/right.wav', '-D', '1', '-d', '0'])
+                time.sleep(2.0)
+        if type != '':
+            if type == 'male':
+                print("雄花")
                 subprocess.Popen(['sudo', 'tinyplay', './voice/male.wav', '-D', '1', '-d', '0'])
-            elif type == "female":
-                print("该授粉点为雌花，可授粉")
+                time.sleep(1.0)
+            elif type == 'female':
+                print("雌花")
                 subprocess.Popen(['sudo', 'tinyplay', './voice/female.wav', '-D', '1', '-d', '0'])
+                time.sleep(1.0)
+        # if male_num == 0 and female_num == 3:
+        #     print("雄花数量为 0 朵，雌花为 3 朵")
+        #     subprocess.Popen(['sudo', 'tinyplay', './voice/voice_0_3.wav', '-D', '1', '-d', '0'])
+        # elif male_num == 1 and female_num == 2:
+        #     print("雄花数量为 1 朵，雌花为 2 朵")
+        #     subprocess.Popen(['sudo', 'tinyplay', './voice/voice_1_2.wav', '-D', '1', '-d', '0'])
+        # elif male_num == 2 and female_num == 1:
+        #     print("雄花数量为 2 朵，雌花为 1 朵")
+        #     subprocess.Popen(['sudo', 'tinyplay', './voice/voice_2_1.wav', '-D', '1', '-d', '0'])
+        # elif male_num == 3 and female_num == 0:
+        #     print("雄花数量为 3 朵，雌花为 0 朵")
+        #     subprocess.Popen(['sudo', 'tinyplay', './voice/voice_3_0.wav', '-D', '1', '-d', '0'])
+        # elif male_num == 0 and female_num == 0:
+        #     if type == "male":
+        #         print("该授粉点为雄花，不可授粉")
+        #         subprocess.Popen(['sudo', 'tinyplay', './voice/male.wav', '-D', '1', '-d', '0'])
+        #     elif type == "female":
+        #         print("该授粉点为雌花，可授粉")
+        #         subprocess.Popen(['sudo', 'tinyplay', './voice/female.wav', '-D', '1', '-d', '0'])
 
     def calculate_O_distance(self, point1, point2):
         """ 计算两个坐标点之间的 O 式距离 """
@@ -496,7 +585,7 @@ def main():
         node = Game_Controller("Game_Controller")
 
         # node.set_angle(90.0)
-        # node.choose_arm_goal_in_task_alone("vision_patrol_1")
+        # node.choose_arm_goal_alone("vision_patrol_1")
         # time.sleep(2.0)
         # node.set_vision_patrol_mode(1)
         # node.set_distance(0.5)
@@ -505,42 +594,39 @@ def main():
         # node.vision_choose_goal_in_A("a_left")
 
         # # A区
-        # for i in range(3):
-            # node.start_car_and_lidar_controls_stopping(0.04, 0.4)
-            # node.vision_choose_goal_in_A("a_left")
-            # node.vision_choose_goal_in_A("a_right")
-        #     print("1")
-        # print("2")
-        # node.set_distance(0.5)                self.move_cmd.angular.z = float(err) / 1000
-
-        # print("3")
+        print("开始 A 区")
+        for i in range(3):
+            node.start_car_and_lidar_controls_stopping(0.04, 0.4)
+            node.vision_choose_goal_in_A("a_left")
+            node.vision_choose_goal_in_A("a_right")
+        print("完成 A 区")
+        print("正在前往 B 区")
+        node.set_distance(0.5)                
+        node.control_car_turn(0.5, 4.835)
         # node.set_angle(-90.0)
-        # time.sleep(1.0)
-        # print("4")
-        # node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
-        # node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
-        # node.set_distance(-0.25)
+        time.sleep(1.0)
+        node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
+        node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
+        node.set_distance(-0.25)
         # node.set_angle(0.0)
 
-        node.control_car_turn(0.5, 4.835)
-
-        # # # B 区
-        # node.choose_arm_goal_in_task_alone("moving")
-        # node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
-        # node.set_distance(0.25)
-        # node.vision_choose_goal_in_B("front")
+        node.control_car_turn(-0.5, 4.835)
+        print("开始 B 区")
+        node.choose_arm_goal_in_number(joint2=107, joint3=124, joint4=93)
+        node.choose_arm_goal_alone("b_middle_front")
+        node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
+        node.set_distance(0.25)
+        node.vision_choose_goal_in_B("front")
         
-        # # for i in range(2):
-        # node.choose_arm_goal_in_task_alone("b_right_front_pre")
-        # node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-        # node.set_distance(-0.25)
-        # node.vision_choose_goal_in_B("front")
-        # node.vision_choose_goal_in_B("back")
-        # node.choose_arm_goal_in_task_alone("b_right_front_pre")
+        for i in range(2):
+            node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+            node.set_distance(-0.25)
+            node.vision_choose_goal_in_B("front")
+            node.vision_choose_goal_in_B("back")
 
-        # node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-        # node.set_distance(0.1)
-        # node.vision_choose_goal_in_B("back")
+        node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+        node.set_distance(0.1)
+        node.vision_choose_goal_in_B("back")
 
 
         while 1:

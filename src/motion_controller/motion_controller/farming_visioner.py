@@ -44,8 +44,8 @@ class Game_Controller(Node):
         self.lidar_subcriber_ = self.create_subscription(Range, "laser", self.lidar_callback_, 10)
         self.angles_of_joints = Int16MultiArray()
 
-        self.image_sub = self.create_subscription(Image, '/image_raw', self.image_callback, 10)
-        self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.image_sub = self.create_subscription(Image, '/image', self.image_callback, 10)
+        # self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
         self.pub = self.create_publisher(Image, '/camera/process_image', 10)
 
         self.move_cmd = Twist()
@@ -57,7 +57,7 @@ class Game_Controller(Node):
         self.distance = 0.0
         self.angle = 0.0
         self.angle = radians(self.angle)
-        self.deviation_angle = radians(0.83)
+        self.deviation_angle = radians(0.65)
         self.liear_speed = 0.5
         self.distance_tolerance = 0.03
         self.angle_tolerance = radians(2.0)
@@ -91,7 +91,9 @@ class Game_Controller(Node):
         self.spin_thread.start()
 
     def image_callback(self, msg):
-        np_arr = np.fromstring(msg.data, np.uint8)
+        # print("正在进行巡线图像处理")
+        # np_arr = np.fromstring(msg.data, np.uint8)
+        np_arr = np.array(msg.data, dtype=np.uint8)
         # 使用 OpenCV 解码 JPEG 数据
         image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -120,13 +122,18 @@ class Game_Controller(Node):
             # 计算白色区域的质心
             cx = int(M['m10'] / M['m00'])
             cy = int(M['m01'] / M['m00'])
+            # print("cx = ", cx)
+            # print("cy = ", cy)
             # 在图像中绘制一个红色圆圈，标记出质心位置
             cv2.circle(image, (cx, cy), 20, (0, 0, 255), -1)
 
             # 基于检测的目标中心点，计算机器人的控制参数
             err = cx - w / 2
             if self.open_vision_patrol:
-                self.cmd_vel.angular.z = -float(err) / 400
+                self.move_cmd.angular.z = float(err) / 1000
+                if abs(self.move_cmd.angular.z) > 0.8:
+                    self.move_cmd.angular.z = math.copysign(1.4, self.move_cmd.angular.z)
+                print(self.move_cmd.angular.z)
 
         # 发布处理后的图像
         self.pub.publish(self.bridge.cv2_to_imgmsg(image, 'bgr8'))
@@ -137,12 +144,12 @@ class Game_Controller(Node):
             self.open_vision_patrol = True
         elif mode == 0:
             self.open_vision_patrol = False
-            self.cmd_vel.angular.z  = 0.0
+            self.move_cmd.angular.z  = 0.0
 
     def control_car_turn(self, turn_speed, turn_time):
-        self.cmd_vel.angular.z = turn_speed
+        self.move_cmd.angular.z = turn_speed
         time.sleep(turn_time)
-        self.cmd_vel.angular.z = 0.0
+        self.move_cmd.angular.z = 0.0
 
     def set_distance(self, distance):
         """ 设置车轮方向的行驶距离及以什么样的速度行驶 """
@@ -181,6 +188,7 @@ class Game_Controller(Node):
 
     def vision_choose_goal_in_A(self, pose_name):
         """ 传入视觉目标 """
+        self.pose_name = pose_name
         self.choose_arm_goal_in_task_alone(pose_name)
         self.open_vision_detect     = True
         # 堵塞函数直到完成任务
@@ -200,7 +208,7 @@ class Game_Controller(Node):
             self.choose_arm_goal_in_task_alone("b_right_front_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_in_task_alone("moving_pre")
+            self.choose_arm_goal_in_task_alone("a_left")
         if pose_name == "back":
             self.choose_arm_goal_in_task_alone("b_left_back_pre")
             while self.open_vision_detect:
@@ -235,12 +243,12 @@ class Game_Controller(Node):
 
                     flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
                     flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
-                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width * self.area_scaling_factor
+                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
                 elif msg.targets[i].type == "famale":
                     flower['Type'] = msg.targets[i].type
                     flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
                     flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
-                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width * self.area_scaling_factor
+                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
 
                 # 得到原始数据
 
@@ -366,7 +374,7 @@ class Game_Controller(Node):
         self.angles_of_joints.data.append(self.arm_params['joint3'])
         self.angles_of_joints.data.append(self.arm_params['joint4'])
         self.joint_angles_publisher_.publish(self.angles_of_joints)
-        time.sleep(1.5)
+        time.sleep(6.0)
     
     def voice_broadcast(self, male_num=0, female_num=0, type='male'):
         """ 语音播报 """
@@ -443,6 +451,7 @@ class Game_Controller(Node):
             self.move_cmd.linear.x = 0.0
             self.x_start = self.get_position_().transform.translation.x
             self.y_start = self.get_position_().transform.translation.y
+            # print(self.move_cmd)
             # print("正在停车状态......")
         self.cmd_vel.publish(self.move_cmd)
 
@@ -487,19 +496,23 @@ def main():
         node = Game_Controller("Game_Controller")
 
         # node.set_angle(90.0)
+        # node.choose_arm_goal_in_task_alone("vision_patrol_1")
+        # time.sleep(2.0)
+        # node.set_vision_patrol_mode(1)
         # node.set_distance(0.5)
-        node.start_car_and_lidar_controls_stopping(0.05, 0.4)
+        # node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
         # node.set_distance(-0.4)
         # node.vision_choose_goal_in_A("a_left")
 
         # # A区
         # for i in range(3):
-        #     node.start_car_and_lidar_controls_stopping(0.05, 0.4)
-        #     # node.vision_choose_goal_in_A("a_left")
-        #     # node.vision_choose_goal_in_A("a_right")
+            # node.start_car_and_lidar_controls_stopping(0.04, 0.4)
+            # node.vision_choose_goal_in_A("a_left")
+            # node.vision_choose_goal_in_A("a_right")
         #     print("1")
         # print("2")
-        # node.set_distance(0.5)
+        # node.set_distance(0.5)                self.move_cmd.angular.z = float(err) / 1000
+
         # print("3")
         # node.set_angle(-90.0)
         # time.sleep(1.0)
@@ -509,22 +522,25 @@ def main():
         # node.set_distance(-0.25)
         # node.set_angle(0.0)
 
-        # # B 区
+        node.control_car_turn(0.5, 4.835)
+
+        # # # B 区
+        # node.choose_arm_goal_in_task_alone("moving")
         # node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
-        # node.set_distance(0.2)
+        # node.set_distance(0.25)
         # node.vision_choose_goal_in_B("front")
         
-        # for i in range(2):
-        #     # node.choose_arm_goal_in_task_alone("moving")
-        #     node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-        #     node.set_distance(0.1)
-        #     # node.vision_choose_goal_in_B("front")
-        #     # node.vision_choose_goal_in_B("back")
-        #     node.choose_arm_goal_in_task_alone("moving")
+        # # for i in range(2):
+        # node.choose_arm_goal_in_task_alone("b_right_front_pre")
+        # node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+        # node.set_distance(-0.25)
+        # node.vision_choose_goal_in_B("front")
+        # node.vision_choose_goal_in_B("back")
+        # node.choose_arm_goal_in_task_alone("b_right_front_pre")
 
         # node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
         # node.set_distance(0.1)
-        # # node.vision_choose_goal_in_B("back")
+        # node.vision_choose_goal_in_B("back")
 
 
         while 1:

@@ -12,25 +12,25 @@ joint4_vision_patrol_2: 96
 # '_a_left' 指的是车在 A 区行驶时车的左边
 # '_a_left' 指的是车在 A 区行驶时车的左边
 joint1_a_left: 68
-joint2_a_left: 79
+joint2_a_left: 88
 joint3_a_left: 95
-joint4_a_left: 75
+joint4_a_left: 76
 joint1_a_right: 157
 joint2_a_right: 79
 joint3_a_right: 95
 joint4_a_right: 75
 
-joint2_a_1: 120
-joint3_a_1: 90
+joint2_a_1: 110
+joint3_a_1: 75
 joint4_a_1: 110
 
-joint2_a_2: 117
-joint3_a_2: 80
-joint4_a_2: 107
+joint2_a_2: 110
+joint3_a_2: 65
+joint4_a_2: 110
 
-joint2_a_3: 115
-joint3_a_3: 64
-joint4_a_3: 116
+joint2_a_3: 110
+joint3_a_3: 50
+joint4_a_3: 125
 
 # 过渡点
 joint2_middle: 110

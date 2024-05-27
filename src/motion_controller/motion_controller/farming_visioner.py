@@ -57,7 +57,7 @@ class Game_Controller(Node):
         self.distance = 0.0
         self.angle = 0.0
         self.angle = radians(self.angle)
-        self.deviation_angle = radians(0.65)
+        self.deviation_angle = radians(0.85)
         self.liear_speed = 0.5
         self.distance_tolerance = 0.03
         self.angle_tolerance = radians(2.0)
@@ -175,7 +175,7 @@ class Game_Controller(Node):
         self.start_for_lidar_distance = True
 
         # 等待 car 到位
-        time.sleep(2.0) # 保证 car 驶出激光遮挡区域
+        time.sleep(3.5) # 保证 car 驶出激光遮挡区域
         for i in range(ignore_num+1):
             print("正在检测中")
             print("激光", self.lidar_distance)
@@ -320,7 +320,7 @@ class Game_Controller(Node):
                         self.voice_broadcast('down')
                         if goal == 'famale':
                             self.voice_broadcast(type='female')
-                            self.choose_arm_goal_in_task('down')
+                            self.choose_arm_goal_in_task('middle')
                             self.choose_arm_goal_in_task('a_3')
                         else:
                             self.voice_broadcast(type="male")
@@ -440,32 +440,32 @@ class Game_Controller(Node):
         if direction != '':
             if direction == 'up':
                 print("上边的花为")
-                subprocess.Popen(['sudo', 'tinyplay', './voice/up.wav', '-D', '1', '-d', '0'])
+                subprocess.Popen(['sudo', 'tinyplay', './voice/up.wav', '-D', '0', '-d', '0'])
                 time.sleep(2.0)
             elif direction == 'middle':
                 print("中间的花为")
-                subprocess.Popen(['sudo', 'tinyplay', './voice/middle.wav', '-D', '1', '-d', '0'])
+                subprocess.Popen(['sudo', 'tinyplay', './voice/middle.wav', '-D', '0', '-d', '0'])
                 time.sleep(2.0)
             elif direction == 'down':
                 print("下边的花为")
-                subprocess.Popen(['sudo', 'tinyplay', './voice/down.wav', '-D', '1', '-d', '0'])
+                subprocess.Popen(['sudo', 'tinyplay', './voice/down.wav', '-D', '0', '-d', '0'])
                 time.sleep(2.0)
             elif direction == 'left':
                 print("左边的花为")
-                subprocess.Popen(['sudo', 'tinyplay', './voice/left.wav', '-D', '1', '-d', '0'])
+                subprocess.Popen(['sudo', 'tinyplay', './voice/left.wav', '-D', '0', '-d', '0'])
                 time.sleep(2.0)
             elif direction == 'right':
                 print("右边的花为")
-                subprocess.Popen(['sudo', 'tinyplay', './voice/right.wav', '-D', '1', '-d', '0'])
+                subprocess.Popen(['sudo', 'tinyplay', './voice/right.wav', '-D', '0', '-d', '0'])
                 time.sleep(2.0)
         if type != '':
             if type == 'male':
                 print("雄花")
-                subprocess.Popen(['sudo', 'tinyplay', './voice/male.wav', '-D', '1', '-d', '0'])
+                subprocess.Popen(['sudo', 'tinyplay', './voice/male.wav', '-D', '0', '-d', '0'])
                 time.sleep(1.0)
             elif type == 'female':
                 print("雌花")
-                subprocess.Popen(['sudo', 'tinyplay', './voice/female.wav', '-D', '1', '-d', '0'])
+                subprocess.Popen(['sudo', 'tinyplay', './voice/female.wav', '-D', '0', '-d', '0'])
                 time.sleep(1.0)
         # if male_num == 0 and female_num == 3:
         #     print("雄花数量为 0 朵，雌花为 3 朵")
@@ -608,25 +608,25 @@ def main():
         node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
         node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
         node.set_distance(-0.25)
-        # node.set_angle(0.0)
+        # # node.set_angle(0.0)
 
-        node.control_car_turn(-0.5, 4.835)
-        print("开始 B 区")
-        node.choose_arm_goal_in_number(joint2=107, joint3=124, joint4=93)
-        node.choose_arm_goal_alone("b_middle_front")
-        node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
-        node.set_distance(0.25)
-        node.vision_choose_goal_in_B("front")
+        # node.control_car_turn(-0.5, 4.835)
+        # print("开始 B 区")
+        # node.choose_arm_goal_in_number(joint2=107, joint3=124, joint4=93)
+        # node.choose_arm_goal_alone("b_middle_front")
+        # node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
+        # node.set_distance(0.25)
+        # node.vision_choose_goal_in_B("front")
         
-        for i in range(2):
-            node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-            node.set_distance(-0.25)
-            node.vision_choose_goal_in_B("front")
-            node.vision_choose_goal_in_B("back")
+        # for i in range(2):
+        #     node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+        #     node.set_distance(-0.25)
+        #     node.vision_choose_goal_in_B("front")
+        #     node.vision_choose_goal_in_B("back")
 
-        node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-        node.set_distance(0.1)
-        node.vision_choose_goal_in_B("back")
+        # node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+        # node.set_distance(0.1)
+        # node.vision_choose_goal_in_B("back")
 
 
         while 1:

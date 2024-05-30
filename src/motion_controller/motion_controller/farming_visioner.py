@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import math
 import rclpy
-import cv2, cv_bridge
-import numpy as np
 from rclpy.node import Node
 from ai_msgs.msg import PerceptionTargets # type: ignore
 import os
@@ -14,10 +12,10 @@ import copy
 from threading import Thread
 from rclpy.duration import Duration
 from geometry_msgs.msg import Twist, Point
-from sensor_msgs.msg import Range, Image
+from sensor_msgs.msg import Range
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
-from math import sqrt, pow, radians
+from math import copysign, sqrt, pow, radians
 from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
 import PyKDL
 from pid import PID
@@ -29,24 +27,31 @@ class Game_Controller(Node):
         # 加载 arm 参数
         self.file_path = os.path.expanduser('~/farming_ws/src/farming_vision/config/arm_params.yaml')
         self.load_config_file_()
-
-        self.bridge = cv_bridge.CvBridge()
     
         # 重要 BOOL 值
         self.open_vision_detect = False # 是否打开视觉检测
-        self.open_vision_patrol = False # 是否打开视觉寻线
+        self.pre_process = False # 是否打开数据预处理
+
         # 数据字典
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
+        self.flowers_with_tag = [] # 存储花属性
+        self.flowers_with_tag_again = [] # 存储花属性
+        # 可调参数
+        self.area_scaling_factor = 0.25 # 面积缩放系数
+        self.O_distance_threthold_of_judge_same_goal = 100 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
+        self.central_point_of_camera = [520, 480] # 相机中心点
+        self.area_of_polliating = 2000 # 识别框为多少时才进行授粉的面积阈值
+        self.joint_speed = 1 # 关节转动速度，将关节的转动的角度当作速度
+        self.threthold_of_x_error = 5.0
+        self.threthold_of_y_error = 5.0
+        self.threthold_of_area_error = 50.0
+
         # 使用到的订阅者和发布者
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
         self.joint_angles_publisher_ = self.create_publisher(Int16MultiArray, "joint_angles", 100)
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.lidar_subcriber_ = self.create_subscription(Range, "laser", self.lidar_callback_, 10)
         self.angles_of_joints = Int16MultiArray()
-
-        self.image_sub = self.create_subscription(Image, '/image', self.image_callback, 10)
-        # self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
-        self.pub = self.create_publisher(Image, '/camera/process_image', 10)
 
         self.move_cmd = Twist()
 
@@ -90,63 +95,33 @@ class Game_Controller(Node):
         self.spin_thread = Thread(target=self.spin_task_)
         self.spin_thread.start()
 
-    def image_callback(self, msg):
-        # print("正在进行巡线图像处理")
-        # np_arr = np.fromstring(msg.data, np.uint8)
-        np_arr = np.array(msg.data, dtype=np.uint8)
-        # 使用 OpenCV 解码 JPEG 数据
-        image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-
-        # 定义白色的HSV颜色范围
-        # 白色的HSV颜色范围的下界和上界
-        # 色调值从0到180（覆盖所有色调），饱和度值从0到25（低饱和度，即接近灰色），明度值从200到255（高亮度）
-        lower_white = np.array([0, 0, 200])
-        upper_white = np.array([180, 25, 255])
-        # 创建一个掩模，表示图像中白色部分的区域
-        # # 检查图像中的每个像素，如果像素值在 lower_white 和 upper_white 范围内，则该像素在掩模中对应的位置会被设置为255（白色），否则会被设置为0（黑色）。
-        mask = cv2.inRange(hsv, lower_white, upper_white)
-
-        # 获取图像的高度、宽度和深度
-        h, w, d = image.shape
-        # 定义搜索区域的上下边界
-        search_top = int(h / 2)
-        search_bot = int(h / 2 + 20)
-        # 将掩模的上半部分和下半部分设置为0，仅保留中间一条窄带的掩模
-        mask[0:search_top, 0:w] = 0
-        mask[search_bot:h, 0:w] = 0
-        # 计算掩模区域的图像矩（Moments），用于后续的质心计算
-        M = cv2.moments(mask)
-
-        if M['m00'] > 0:
-            # 计算白色区域的质心
-            cx = int(M['m10'] / M['m00'])
-            cy = int(M['m01'] / M['m00'])
-            # print("cx = ", cx)
-            # print("cy = ", cy)
-            # 在图像中绘制一个红色圆圈，标记出质心位置
-            cv2.circle(image, (cx, cy), 20, (0, 0, 255), -1)
-
-            # 基于检测的目标中心点，计算机器人的控制参数
-            err = cx - w / 2
-            if self.open_vision_patrol:
-                self.move_cmd.angular.z = float(err) / 1000
-                if abs(self.move_cmd.angular.z) > 0.8:
-                    self.move_cmd.angular.z = math.copysign(1.4, self.move_cmd.angular.z)
-                print(self.move_cmd.angular.z)
-
-        # 发布处理后的图像
-        self.pub.publish(self.bridge.cv2_to_imgmsg(image, 'bgr8'))
-
     # ---------------- 对外接口函数 -----------------
-    def set_vision_patrol_mode(self, mode):
-        if mode == 1:
-            self.open_vision_patrol = True
-        elif mode == 0:
-            self.open_vision_patrol = False
-            self.move_cmd.angular.z  = 0.0
+    def vision_control_arm(self, pose_name):
+        self.choose_arm_goal(pose_name)
+        self.open_vision_detect     = True
+        self.pre_process            = True
+        self.arm_moving = False
+        self.reset_vision_data()
+        # 堵塞函数直到完成任务
+        print("正在等待完成任务")
+        while self.open_vision_detect:
+            pass
 
+    def reset_vision_data(self):
+        self.flowers_with_tag.clear()
+        self.flowers_with_tag_again.clear()
+
+    def find_next_arm_goal_on_position(self):
+        self.open_vision_detect = True
+        self.reset_vision_detect = False
+        # 堵塞函数直到完成任务
+        while self.open_vision_detect:
+            pass
+    # ---------------
+
+    # 废弃
     def control_car_turn(self, turn_speed, turn_time):
+        """ 废弃 """
         self.move_cmd.angular.z = turn_speed
         time.sleep(turn_time)
         self.move_cmd.angular.z = 0.0
@@ -186,55 +161,57 @@ class Game_Controller(Node):
         self.start_for_lidar_distance = False
         time.sleep(2.0)
 
+    # 废弃
     def vision_choose_goal_in_A(self, pose_name):
         """ 传入视觉目标 """
         self.place_name = "A"
         self.pose_name = pose_name
-        self.choose_arm_goal_alone(pose_name)
+        self.choose_arm_goal(pose_name)
         self.open_vision_detect     = True
         # 堵塞函数直到完成任务
         # print("正在等待完成任务")
         while self.open_vision_detect:
             pass
 
+    # 废弃
     def vision_choose_goal_in_B(self, pose_name):
         self.place_name = "B"
         self.pose_name = pose_name
         self.run_times = 0
         if pose_name == "front":
             # 中间花
-            self.choose_arm_goal_alone("b_middle_front_pre")
+            self.choose_arm_goal("b_middle_front_pre")
             while self.open_vision_detect:
                 pass
             
-            self.choose_arm_goal_alone("b_middle_front_pre")
+            self.choose_arm_goal("b_middle_front_pre")
             self.choose_arm_goal_in_number(joint1=126)
-            self.choose_arm_goal_alone("b_right_front_pre")
+            self.choose_arm_goal("b_right_front_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_alone("b_right_front_pre")
-            self.choose_arm_goal_alone("b_left_front_pre")
+            self.choose_arm_goal("b_right_front_pre")
+            self.choose_arm_goal("b_left_front_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_alone("b_left_front_pre")
+            self.choose_arm_goal("b_left_front_pre")
             self.choose_arm_goal_in_number(joint2=107, joint3=124, joint4=93)
-            self.choose_arm_goal_alone("b_middle_front_pre")
+            self.choose_arm_goal("b_middle_front_pre")
         if pose_name == "back":
-            self.choose_arm_goal_alone("b_middle_back_pre")
+            self.choose_arm_goal("b_middle_back_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_alone("b_middle_back_pre")
+            self.choose_arm_goal("b_middle_back_pre")
             self.choose_arm_goal_in_number(joint1=97)
-            self.choose_arm_goal_alone("b_left_back_pre")
+            self.choose_arm_goal("b_left_back_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_alone("b_left_back_pre")
-            self.choose_arm_goal_alone("b_right_back_pre")
+            self.choose_arm_goal("b_left_back_pre")
+            self.choose_arm_goal("b_right_back_pre")
             while self.open_vision_detect:
                 pass
-            self.choose_arm_goal_alone("b_right_back_pre")
+            self.choose_arm_goal("b_right_back_pre")
             self.choose_arm_goal_in_number(joint2=107, joint3=124, joint4=93)
-            self.choose_arm_goal_alone("b_middle_back_pre")
+            self.choose_arm_goal("b_middle_back_pre")
 
         
 
@@ -250,8 +227,6 @@ class Game_Controller(Node):
         
         if 0 != len(msg.targets):
             for i in range(len(msg.targets)):
-                # print(msg.targets[i].type)
-                # print(msg.targets[i].rois[0])
                 flower['CentralPoint'].clear()
                 if msg.targets[i].type == "male": 
                     flower['Type'] = msg.targets[i].type
@@ -272,11 +247,117 @@ class Game_Controller(Node):
         if 0 != len(flowers_lists): # 预防处理空数据
             # print(flowers_lists)
             self.confrim_moving_goal_for_arm(flowers_lists)
+        time.sleep(0.4)
 
     def confrim_moving_goal_for_arm(self, flowers_lists):
         """ 确定 arm 的移动目标 """
-        self.arm_move(flowers_lists)
+        # 数据预处理并选择第一个处理的目标
+        self.data_pre_processing(flowers_lists)
+        # 更新数据
+        print("正在更新数据")
+        for flower in flowers_lists:
+            for index, flower_with_tag in enumerate(self.flowers_with_tag):
+                if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
+                    self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
+                    break # 跳出内层 for 循环
+        # 控制 arm
+        self.control_arm()
 
+    def data_pre_processing(self, flowers_lists):
+        """ 为存储花属性的字典添加花属性：是否正在操作、是否已授粉 """
+        # 类型、中心的坐标、面积、是否正在操作、是否已授粉
+        flower_with_tag = {'Type': '', 'CentralPoint': [], 'Area': 0, 'Moving': False, 'Pollinated': False}
+        if self.pre_process:
+            if len(self.flowers_with_tag) == 0:
+                print("正在进行数据预处理")
+                male_num = 0
+                female_num = 0
+                for index, flower in enumerate(flowers_lists):
+                    if flower['Type'] == 'male':
+                        flower_with_tag['Type'] = flower['Type']
+                        flower_with_tag['CentralPoint'] = flower['CentralPoint']
+                        flower_with_tag['Area'] = flower['Area']
+                        if self.arm_moving == False:
+                            flower_with_tag['Moving'] = True
+                            self.arm_moving = True
+                        self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
+
+                    if flower['Type'] == 'male':
+                        male_num += 1
+                    elif flower['Type'] == 'famale':
+                        female_num += 1
+                self.flowers_with_tag_again = self.flowers_with_tag
+            else:
+                print("正在授粉第二个目标点")
+                self.flowers_with_tag = self.flowers_with_tag_again
+                # 更新中心点坐标参数
+                for flower in flowers_lists:
+                    for index, flower_with_tag in enumerate(self.flowers_with_tag):
+                        if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
+                            self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
+                            break
+                # 寻找未“授粉”的花，找到的第一朵就设置为目标
+                for index, flower_with_tag in enumerate(self.flowers_with_tag):
+                    if flower_with_tag['Pollinated'] != True:
+                        self.flowers_with_tag[index]['Moving'] = True
+                        break
+        self.pre_process = False # 关闭数据预处理
+
+    def control_arm(self):
+        y_error = 0
+        x_error = 0
+        area_error = 0
+        print(self.flowers_with_tag)
+        for flower_with_tag in self.flowers_with_tag:
+            if flower_with_tag['Moving'] == True:
+                x_error = self.central_point_of_camera[0] - flower_with_tag['CentralPoint'][0]
+                y_error = self.central_point_of_camera[1] - flower_with_tag['CentralPoint'][1]
+                area_error = self.area_of_polliating - flower_with_tag['Area']
+                break
+        self.angles_of_joints.data = []
+        print(x_error)
+        if abs(x_error) > self.threthold_of_x_error:
+            print("关节速度为", self.joint_speed)
+            self.arm_params['joint1'] = int(self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
+            print("角度值为：", self.arm_params['joint1'])
+            self.angles_of_joints.data.append(self.arm_params['joint1'])
+        if abs(area_error) > self.threthold_of_area_error:
+            self.arm_params['joint2'] = int(self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, -area_error), self.default_arm_params['joint2_limiting']))
+            self.angles_of_joints.data.append(self.arm_params['joint2'])
+        self.angles_of_joints.data.append(self.arm_params['joint3'])
+        if abs(y_error) > self.threthold_of_y_error:
+            self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
+            self.angles_of_joints.data.append(self.arm_params['joint4'])
+        if (abs(x_error) < self.threthold_of_x_error and
+            abs(area_error) < self.threthold_of_area_error and
+            abs(y_error) < self.threthold_of_y_error):
+            print("已经完成授粉")
+            for index, flower_with_tag in enumerate(self.flowers_with_tag):
+                if flower_with_tag['Moving'] == True:
+                    self.flowers_with_tag_again[index]['Moving'] = False
+                    self.flowers_with_tag_again[index]['Pollinated'] = True
+            self.reset_arm_pose()
+            return
+        print("发送命令给机械臂")
+        print(self.angles_of_joints)
+        self.joint_angles_publisher_.publish(self.angles_of_joints)
+        # ros2 topic pub /joint_angles "data: [68, 80, 65, 110]"
+
+    def limit_num(self, num, num_range):
+        if num > num_range[1]:
+            num = num_range[1]
+        elif num < num_range[0]:
+            num = num_range[0]
+        return num
+
+    def reset_arm_pose(self):
+        """ 控制 arm 回到初始姿态 """
+        print("控制 arm 回到初始姿态")
+        self.open_vision_detect = False
+        self.pre_process = False
+        # self.choose_arm_goal("") TODO:
+
+    # 废弃
     def arm_move(self, flowers_lists):
             # A 区识别
             if self.place_name == "A":
@@ -391,7 +472,7 @@ class Game_Controller(Node):
                             return
                     break
                 
-
+    # 废弃
     def choose_arm_goal_in_task(self, pose_name):
         self.arm_params['joint2'] = self.default_arm_params['joint2_'+pose_name]
         self.arm_params['joint3'] = self.default_arm_params['joint3_'+pose_name]
@@ -404,7 +485,7 @@ class Game_Controller(Node):
         self.joint_angles_publisher_.publish(self.angles_of_joints)
         time.sleep(1.5)
 
-    def choose_arm_goal_alone(self, pose_name):
+    def choose_arm_goal(self, pose_name):
         self.arm_params['joint1'] = self.default_arm_params['joint1_'+pose_name]
         self.arm_params['joint2'] = self.default_arm_params['joint2_'+pose_name]
         self.arm_params['joint3'] = self.default_arm_params['joint3_'+pose_name]
@@ -467,25 +548,6 @@ class Game_Controller(Node):
                 print("雌花")
                 subprocess.Popen(['sudo', 'tinyplay', './voice/female.wav', '-D', '0', '-d', '0'])
                 time.sleep(1.0)
-        # if male_num == 0 and female_num == 3:
-        #     print("雄花数量为 0 朵，雌花为 3 朵")
-        #     subprocess.Popen(['sudo', 'tinyplay', './voice/voice_0_3.wav', '-D', '1', '-d', '0'])
-        # elif male_num == 1 and female_num == 2:
-        #     print("雄花数量为 1 朵，雌花为 2 朵")
-        #     subprocess.Popen(['sudo', 'tinyplay', './voice/voice_1_2.wav', '-D', '1', '-d', '0'])
-        # elif male_num == 2 and female_num == 1:
-        #     print("雄花数量为 2 朵，雌花为 1 朵")
-        #     subprocess.Popen(['sudo', 'tinyplay', './voice/voice_2_1.wav', '-D', '1', '-d', '0'])
-        # elif male_num == 3 and female_num == 0:
-        #     print("雄花数量为 3 朵，雌花为 0 朵")
-        #     subprocess.Popen(['sudo', 'tinyplay', './voice/voice_3_0.wav', '-D', '1', '-d', '0'])
-        # elif male_num == 0 and female_num == 0:
-        #     if type == "male":
-        #         print("该授粉点为雄花，不可授粉")
-        #         subprocess.Popen(['sudo', 'tinyplay', './voice/male.wav', '-D', '1', '-d', '0'])
-        #     elif type == "female":
-        #         print("该授粉点为雌花，可授粉")
-        #         subprocess.Popen(['sudo', 'tinyplay', './voice/female.wav', '-D', '1', '-d', '0'])
 
     def calculate_O_distance(self, point1, point2):
         """ 计算两个坐标点之间的 O 式距离 """
@@ -564,6 +626,7 @@ class Game_Controller(Node):
     def get_O_distance(self):
         return sqrt(pow((self.position.x - self.x_start), 2) + pow((self.position.y - self.y_start), 2))
 
+    # 废弃
     def get_odom_angle_(self):
         """ 得到目前的子坐标系相对夫坐标系转动的角度(弧度制)，父坐标系是不动的 """
         try:
@@ -584,51 +647,6 @@ def main():
     try:
         node = Game_Controller("Game_Controller")
 
-        # node.set_angle(90.0)
-        # node.choose_arm_goal_alone("vision_patrol_1")
-        # time.sleep(2.0)
-        # node.set_vision_patrol_mode(1)
-        # node.set_distance(0.5)
-        # node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-        # node.set_distance(-0.4)
-        # node.vision_choose_goal_in_A("a_left")
-
-        # # A区
-        print("开始 A 区")
-        for i in range(3):
-            node.start_car_and_lidar_controls_stopping(0.04, 0.4)
-            node.vision_choose_goal_in_A("a_left")
-            node.vision_choose_goal_in_A("a_right")
-        print("完成 A 区")
-        print("正在前往 B 区")
-        node.set_distance(0.5)                
-        node.control_car_turn(0.5, 4.835)
-        # node.set_angle(-90.0)
-        time.sleep(1.0)
-        node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
-        node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
-        node.set_distance(-0.25)
-        # # node.set_angle(0.0)
-
-        # node.control_car_turn(-0.5, 4.835)
-        # print("开始 B 区")
-        # node.choose_arm_goal_in_number(joint2=107, joint3=124, joint4=93)
-        # node.choose_arm_goal_alone("b_middle_front")
-        # node.start_car_and_lidar_controls_stopping(-0.05, 0.5)
-        # node.set_distance(0.25)
-        # node.vision_choose_goal_in_B("front")
-        
-        # for i in range(2):
-        #     node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-        #     node.set_distance(-0.25)
-        #     node.vision_choose_goal_in_B("front")
-        #     node.vision_choose_goal_in_B("back")
-
-        # node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-        # node.set_distance(0.1)
-        # node.vision_choose_goal_in_B("back")
-
-
         while 1:
             pass
     except KeyboardInterrupt:
@@ -639,6 +657,7 @@ def main():
         node.cmd_vel.publish(Twist())
         node.cmd_vel.publish(Twist())
         node.cmd_vel.publish(Twist())
+        time.sleep(2.0)
     finally:
         if node:
             node.destroy_node()

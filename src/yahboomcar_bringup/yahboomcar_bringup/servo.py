@@ -36,10 +36,6 @@ def setPWMServoMoveByArray(servos, servos_count, time):
 
     
 def servo_control_callback(msg):
-<<<<<<< HEAD
-    #servo_data = msg.data
-=======
->>>>>>> 9a2bba387580006ffea68c9c1b430a48ef6f3252
     servo_data = [1, 0, 2, 0, 3, 0, 4, 0]  # 初始化 servo_data
     if len(msg.data) == 5:  # 确保 msg.data 有5个数据(前4个依次为角度值，最后一个数据为时间)
         servo_data[1] = msg.data[0]  # 将第一个数据放在 servo_data[1]
@@ -48,15 +44,10 @@ def servo_control_callback(msg):
         servo_data[7] = msg.data[3]  # 将第四个数据放在 servo_data[7]
         time = msg.data[-1]  # 获取最后一个数据作为时间
     else:
-<<<<<<< HEAD
         print('error')
         servo_data = [1, 1500, 2, 1500, 3, 1500, 4, 1500]  #回到初始位置防止堵转
-    #setPWMServoMoveByArray(servo_data, len(servo_data) // 2, 2000)  # 假设时间为1000毫秒
-=======
-        servo_data = [1, 500, 2, 500, 3, 500, 4, 400]  #回到初始位置防止堵转
->>>>>>> 9a2bba387580006ffea68c9c1b430a48ef6f3252
     setPWMServoMoveByArray(servo_data, 4, time)  # 假设时间为1000毫秒
-    
+
 
 def main():
     rclpy.init()

@@ -325,23 +325,24 @@ class Game_Controller(Node):
             self.arm_params['joint1'] = int(self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
             print("角度值为：", self.arm_params['joint1'])
             self.angles_of_joints.data.append(self.arm_params['joint1'])
-        if abs(area_error) > self.threthold_of_area_error:
-            self.arm_params['joint2'] = int(self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, -area_error), self.default_arm_params['joint2_limiting']))
-            self.angles_of_joints.data.append(self.arm_params['joint2'])
+        # if abs(area_error) > self.threthold_of_area_error:
+            # self.arm_params['joint2'] = int(self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, -area_error), self.default_arm_params['joint2_limiting']))
+        self.angles_of_joints.data.append(self.arm_params['joint2'])
+        
         self.angles_of_joints.data.append(self.arm_params['joint3'])
-        if abs(y_error) > self.threthold_of_y_error:
-            self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
-            self.angles_of_joints.data.append(self.arm_params['joint4'])
-        if (abs(x_error) < self.threthold_of_x_error and
-            abs(area_error) < self.threthold_of_area_error and
-            abs(y_error) < self.threthold_of_y_error):
-            print("已经完成授粉")
-            for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                if flower_with_tag['Moving'] == True:
-                    self.flowers_with_tag_again[index]['Moving'] = False
-                    self.flowers_with_tag_again[index]['Pollinated'] = True
-            self.reset_arm_pose()
-            return
+        # if abs(y_error) > self.threthold_of_y_error:
+            # self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
+        self.angles_of_joints.data.append(self.arm_params['joint4'])
+        # if (abs(x_error) < self.threthold_of_x_error and
+            # abs(area_error) < self.threthold_of_area_error and
+            # abs(y_error) < self.threthold_of_y_error):
+            # print("已经完成授粉")
+            # for index, flower_with_tag in enumerate(self.flowers_with_tag):
+                # if flower_with_tag['Moving'] == True:
+                    # self.flowers_with_tag_again[index]['Moving'] = False
+                    # self.flowers_with_tag_again[index]['Pollinated'] = True
+            # self.reset_arm_pose()
+            # return
         print("发送命令给机械臂")
         print(self.angles_of_joints)
         self.joint_angles_publisher_.publish(self.angles_of_joints)

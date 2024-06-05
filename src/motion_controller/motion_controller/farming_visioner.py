@@ -49,7 +49,7 @@ class Game_Controller(Node):
 
         # 使用到的订阅者和发布者
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
-        self.joint_angles_publisher_ = self.create_publisher(Int16MultiArray, "servo_commands", 100)
+        self.joint_angles_publisher_ = self.create_publisher(Int16MultiArray, "servo_commands", 10)
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.lidar_subcriber_ = self.create_subscription(Range, "laser", self.lidar_callback_, 10)
         self.angles_of_joints = Int16MultiArray()
@@ -247,7 +247,7 @@ class Game_Controller(Node):
                 flowers_lists.append(copy.deepcopy(flower)) # 深拷贝
 
         if 0 != len(flowers_lists): # 预防处理空数据
-            # print(flowers_lists)
+            print(flowers_lists)
             self.confrim_moving_goal_for_arm(flowers_lists)
         time.sleep(0.5)
 

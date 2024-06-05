@@ -21,11 +21,22 @@ class ServoPublisher(Node):
         self.get_logger().info('Publishing servo commands')
         print('Current angle of servo 4:', self.msg.data[3])
 
+<<<<<<< HEAD
 def main(args=None):
     rclpy.init(args=args)
     servo_publisher = ServoPublisher()
     rclpy.spin(servo_publisher)
     servo_publisher.destroy_node()
+=======
+    msg.data = [500,500,500,500,2000]  #前四位为舵机对应角度，最后一位为时间
+
+    while rclpy.ok():
+        publisher.publish(msg)
+        node.get_logger().info('Publishing servo commands')
+        rclpy.spin_once(node)
+
+    node.destroy_node()
+>>>>>>> 9a2bba387580006ffea68c9c1b430a48ef6f3252
     rclpy.shutdown()
 
 if __name__ == '__main__':

@@ -96,7 +96,8 @@ class Game_Controller(Node):
         self.spin_thread.start()
 
     # ---------------- 对外接口函数 -----------------
-    def vision_control_arm(self, pose_name):
+    def vision_control_arm(self, place_name, pose_name):
+        self.place_name = place_name
         self.choose_arm_goal(pose_name)
         self.open_vision_detect     = True
         self.pre_process            = True
@@ -254,13 +255,13 @@ class Game_Controller(Node):
         # 数据预处理并选择第一个处理的目标
         self.data_pre_processing(flowers_lists)
         # 更新数据
-        print("正在更新数据")
-        for flower in flowers_lists:
-            for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
-                    self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
-                    break # 跳出内层 for 循环
-        # 控制 arm
+        # print("正在更新数据")
+        # for flower in flowers_lists:
+        #     for index, flower_with_tag in enumerate(self.flowers_with_tag):
+        #         if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
+        #             self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
+        #             break # 跳出内层 for 循环
+        # # 控制 arm
         self.control_arm()
 
     def data_pre_processing(self, flowers_lists):
@@ -282,11 +283,13 @@ class Game_Controller(Node):
                             self.arm_moving = True
                         self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
 
-                    if flower['Type'] == 'male':
-                        male_num += 1
-                    elif flower['Type'] == 'famale':
-                        female_num += 1
+                    # if flower['Type'] == 'male':
+                    #     male_num += 1
+                    # elif flower['Type'] == 'famale':
+                    #     female_num += 1
                 self.flowers_with_tag_again = self.flowers_with_tag
+                #添加语音播报
+                self.voice(flowers_lists)
             else:
                 print("正在授粉第二个目标点")
                 self.flowers_with_tag = self.flowers_with_tag_again
@@ -296,6 +299,7 @@ class Game_Controller(Node):
                         if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
                             self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
                             break
+                self.flowers_with_tag_again = self.flowers_with_tag    #更新again数据
                 # 寻找未“授粉”的花，找到的第一朵就设置为目标
                 for index, flower_with_tag in enumerate(self.flowers_with_tag):
                     if flower_with_tag['Pollinated'] != True:
@@ -357,6 +361,46 @@ class Game_Controller(Node):
         self.pre_process = False
         # self.choose_arm_goal("") TODO:
 
+    def voice(self, flowers_lists):
+        sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][1])
+        goal_list = []
+        # 创建目标字典，并按排序后的结果填充值
+        for i in range(len(sorted_data)):
+            goal_list.append(sorted_data[i]['Type'])
+        #语音播报'A'
+        if self.place_name == 'A':
+            self.voice_broadcast('up')
+            if goal_list[0] == 'female':
+                self.voice_broadcast(type='female')
+            else:
+                self.voice_broadcast(type='male')
+            self.voice_broadcast('middle')
+            if goal_list[1] == 'female':
+                self.voice_broadcast(type='female')
+            else:
+                self.voice_broadcast(type='male')
+            self.voice_broadcast('down')
+            if goal_list[2] == 'female':
+                self.voice_broadcast(type='female')
+            else:
+                self.voice_broadcast(type='male')
+        #语音播报'B'
+        if self.place_name == 'B':
+            self.voice_broadcast('left')
+            if goal_list[0] == 'female':
+                self.voice_broadcast(type='female')
+            else:
+                self.voice_broadcast(type='male')
+            self.voice_broadcast('middle')
+            if goal_list[1] == 'female':
+                self.voice_broadcast(type='female')
+            else:
+                self.voice_broadcast(type='male')
+            self.voice_broadcast('right')
+            if goal_list[2] == 'female':
+                self.voice_broadcast(type='female')
+            else:
+                self.voice_broadcast(type='male')
     # 废弃
     def arm_move(self, flowers_lists):
             # A 区识别

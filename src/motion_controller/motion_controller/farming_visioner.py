@@ -542,6 +542,7 @@ class Game_Controller(Node):
         self.angles_of_joints.data.append(self.arm_params['joint2'])
         self.angles_of_joints.data.append(self.arm_params['joint3'])
         self.angles_of_joints.data.append(self.arm_params['joint4'])
+        self.angles_of_joints.data.append(self.servo_time)
         self.joint_angles_publisher_.publish(self.angles_of_joints)
         time.sleep(6.0)
 
@@ -693,7 +694,7 @@ def main():
     rclpy.init()
     try:
         node = Game_Controller("Game_Controller")
-
+        node.vision_control_arm("A","a_left")
         while 1:
             pass
     except KeyboardInterrupt:

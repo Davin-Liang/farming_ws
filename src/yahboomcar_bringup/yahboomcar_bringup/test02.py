@@ -10,7 +10,7 @@ class ServoPublisher(Node):
         self.publisher_ = self.create_publisher(Int32MultiArray, 'servo_commands', 10)
         self.msg = Int32MultiArray()
         #self.msg.data = [1240,1700,1700,1500,5000]
-        self.msg.data = [133,162,162,135,5000]    #度数
+        self.msg.data = [132,130,160,135,5000]    #度数
         self.timer_ = self.create_timer(1.0, self.timer_callback)
 
     def timer_callback(self):

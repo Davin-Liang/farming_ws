@@ -219,10 +219,10 @@ class Game_Controller(Node):
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """
-        # print("正在等待开启视觉")
+        print("正在等待开启视觉")
         if not self.open_vision_detect:
             return
-        # print("正在通过视觉控制机械臂")
+        print("正在通过视觉控制机械臂")
 
         flowers_lists = []
         flower = {'Type': '', 'CentralPoint': [], 'Area': 0} # 类型、中心点坐标、面积

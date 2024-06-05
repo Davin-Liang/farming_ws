@@ -8,7 +8,7 @@ def main():
     publisher = node.create_publisher(Int32MultiArray, 'servo_commands', 10)
     msg = Int32MultiArray()
 
-    msg.data = [1, 2000]
+    msg.data = [500,500,500,500,2000]  #前四位为舵机对应角度，最后一位为时间
 
     while rclpy.ok():
         publisher.publish(msg)

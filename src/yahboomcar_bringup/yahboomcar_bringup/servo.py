@@ -46,7 +46,7 @@ def servo_control_callback(msg):
     else:
         servo_data = [1, 500, 2, 500, 3, 500, 4, 400]  #回到初始位置防止堵转
     setPWMServoMoveByArray(servo_data, 4, time)  # 假设时间为1000毫秒
-
+    
 
 def main():
     rclpy.init()

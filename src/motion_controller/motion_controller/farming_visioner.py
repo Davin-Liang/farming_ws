@@ -248,7 +248,7 @@ class Game_Controller(Node):
         if 0 != len(flowers_lists): # 预防处理空数据
             # print(flowers_lists)
             self.confrim_moving_goal_for_arm(flowers_lists)
-        time.sleep(0.4)
+        time.sleep(0.5)
 
     def confrim_moving_goal_for_arm(self, flowers_lists):
         """ 确定 arm 的移动目标 """

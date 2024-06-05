@@ -5,7 +5,7 @@ from rclpy.node import Node
 from ai_msgs.msg import PerceptionTargets # type: ignore
 import os
 import yaml
-from std_msgs.msg import Int16MultiArray
+from std_msgs.msg import Int32MultiArray
 import time
 import subprocess
 import copy
@@ -49,10 +49,10 @@ class Game_Controller(Node):
 
         # 使用到的订阅者和发布者
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
-        self.joint_angles_publisher_ = self.create_publisher(Int16MultiArray, "servo_commands", 10)
+        self.joint_angles_publisher_ = self.create_publisher(Int32MultiArray, "servo_commands", 10)
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.lidar_subcriber_ = self.create_subscription(Range, "laser", self.lidar_callback_, 10)
-        self.angles_of_joints = Int16MultiArray()
+        self.angles_of_joints = Int32MultiArray()
 
         self.move_cmd = Twist()
 

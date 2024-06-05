@@ -38,14 +38,15 @@ def setPWMServoMoveByArray(servos, servos_count, time):
 def servo_control_callback(msg):
     servo_data = [1, 0, 2, 0, 3, 0, 4, 0]  # 初始化 servo_data
     if len(msg.data) == 5:  # 确保 msg.data 有5个数据(前4个依次为角度值，最后一个数据为时间)
-        servo_data[1] = msg.data[0]  # 将第一个数据放在 servo_data[1]
-        servo_data[3] = msg.data[1]  # 将第二个数据放在 servo_data[3]
-        servo_data[5] = msg.data[2]  # 将第三个数据放在 servo_data[5]
-        servo_data[7] = msg.data[3]  # 将第四个数据放在 servo_data[7]
+        servo_data[1] = int((2500 - 500) / 360 * msg.data[0] + 500)  # 映射第一个数据到 servo_data[1]
+        servo_data[3] = int((2500 - 500) / 270 * msg.data[1] + 500)  # 映射第二个数据到 servo_data[3]
+        servo_data[5] = int((2500 - 500) / 270 * msg.data[2] + 500)  # 映射第三个数据到 servo_data[5]
+        servo_data[7] = int((2500 - 500) / 270 * msg.data[3] + 500)  # 映射第四个数据到 servo_data[7]
         time = msg.data[-1]  # 获取最后一个数据作为时间
     else:
         print('error')
         servo_data = [1, 1500, 2, 1500, 3, 1500, 4, 1500]  #回到初始位置防止堵转
+    print(servo_data)
     setPWMServoMoveByArray(servo_data, 4, time)  # 假设时间为1000毫秒
 
 

@@ -45,6 +45,7 @@ class Game_Controller(Node):
         self.threthold_of_x_error = 5.0
         self.threthold_of_y_error = 5.0
         self.threthold_of_area_error = 50.0
+        self.servo_time = 2000  #机械臂运动时间，单位mm
 
         # 使用到的订阅者和发布者
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
@@ -343,6 +344,7 @@ class Game_Controller(Node):
                     # self.flowers_with_tag_again[index]['Pollinated'] = True
             # self.reset_arm_pose()
             # return
+        self.angles_of_joints.data.append(self.servo_time)
         print("发送命令给机械臂")
         print(self.angles_of_joints)
         self.joint_angles_publisher_.publish(self.angles_of_joints)

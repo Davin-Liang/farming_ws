@@ -14,10 +14,10 @@ class ServoPublisher(Node):
         self.timer_ = self.create_timer(1.0, self.timer_callback)
 
     def timer_callback(self):
-        if self.msg.data[3] < 225:
-            self.msg.data[3] += 5
-        else:
-            self.msg.data[3] = 135
+        #if self.msg.data[3] < 225:
+            #self.msg.data[3] += 5
+        #else:
+            #self.msg.data[3] = 135
         self.publisher_.publish(self.msg)
         self.get_logger().info('Publishing servo commands')
         print('Current angle of servo 4:', self.msg.data[3])

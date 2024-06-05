@@ -126,7 +126,7 @@ joint4_c_left: 90
 joint4_c_right: 90
 
 #从下至上
-joint1_limiting: [500, 2500]     #激光雷达方向增大
-joint2_limiting: [1100, 2350]    #激光方向增大
-joint3_limiting: [1000, 2200]    #激光方向减小
-joint4_limiting: [900, 2200]    #激光方向减小
+joint1_limiting: [0, 360]     #对应值为度数，激光雷达方向增大
+joint2_limiting: [81, 245]    #激光方向增大
+joint3_limiting: [70, 225]    #激光方向减小
+joint4_limiting: [55, 225]    #激光方向减小

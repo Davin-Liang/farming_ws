@@ -75,6 +75,8 @@ class Game_Controller(Node):
         self.odom_frame = 'odom'
 
         self.lidar_threthold = 0.1
+
+        self.flowers_lists = []
         
         #init the tf listener
         self.tf_buffer = Buffer()
@@ -92,9 +94,20 @@ class Game_Controller(Node):
 
         # 创建定时器
         self.work_timer = self.create_timer(0.04, self.timer_work_)
+        self.arm_timer = self.create_timer(0.5, self.arm_timer_callback_)
 
         self.spin_thread = Thread(target=self.spin_task_)
         self.spin_thread.start()
+
+    def arm_timer_callback_(self):
+        print("正在等待开启视觉")
+        if not self.open_vision_detect:
+            return
+        print("正在通过视觉控制机械臂")
+
+        if 0 != len(self.flowers_lists): # 预防处理空数据
+            print(self.flowers_lists)
+            self.confrim_moving_goal_for_arm(self.flowers_lists)
 
     # ---------------- 对外接口函数 -----------------
     def vision_control_arm(self, place_name, pose_name):
@@ -219,11 +232,6 @@ class Game_Controller(Node):
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """
-        print("正在等待开启视觉")
-        if not self.open_vision_detect:
-            return
-        print("正在通过视觉控制机械臂")
-
         flowers_lists = []
         flower = {'Type': '', 'CentralPoint': [], 'Area': 0} # 类型、中心点坐标、面积
         
@@ -246,10 +254,8 @@ class Game_Controller(Node):
 
                 flowers_lists.append(copy.deepcopy(flower)) # 深拷贝
 
-        if 0 != len(flowers_lists): # 预防处理空数据
-            print(flowers_lists)
-            self.confrim_moving_goal_for_arm(flowers_lists)
-        time.sleep(0.5)
+        self.flowers_lists.clear()
+        self.flowers_lists = copy.deepcopy(flowers_lists)
 
     def confrim_moving_goal_for_arm(self, flowers_lists):
         """ 确定 arm 的移动目标 """

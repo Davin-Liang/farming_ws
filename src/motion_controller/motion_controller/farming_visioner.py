@@ -39,13 +39,13 @@ class Game_Controller(Node):
         # 可调参数
         self.area_scaling_factor = 0.25 # 面积缩放系数
         self.O_distance_threthold_of_judge_same_goal = 100 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
-        self.central_point_of_camera = [520, 480] # 相机中心点
+        self.central_point_of_camera = [480, 480] # 相机中心点
         self.area_of_polliating = 2000 # 识别框为多少时才进行授粉的面积阈值
         self.joint_speed = 1 # 关节转动速度，将关节的转动的角度当作速度
         self.threthold_of_x_error = 5.0
         self.threthold_of_y_error = 5.0
         self.threthold_of_area_error = 50.0
-        self.servo_time = 2000  #机械臂运动时间，单位mm
+        self.servo_time = 1000  #机械臂运动时间，单位mm
 
         # 使用到的订阅者和发布者
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
@@ -325,7 +325,7 @@ class Game_Controller(Node):
             print("关节速度为", self.joint_speed)
             self.arm_params['joint1'] = int(self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
             print("角度值为：", self.arm_params['joint1'])
-            self.angles_of_joints.data.append(self.arm_params['joint1'])
+        self.angles_of_joints.data.append(self.arm_params['joint1'])
         # if abs(area_error) > self.threthold_of_area_error:
             # self.arm_params['joint2'] = int(self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, -area_error), self.default_arm_params['joint2_limiting']))
         self.angles_of_joints.data.append(self.arm_params['joint2'])

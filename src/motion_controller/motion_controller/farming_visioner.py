@@ -39,13 +39,13 @@ class Game_Controller(Node):
         # 可调参数
         self.area_scaling_factor = 0.25 # 面积缩放系数
         self.O_distance_threthold_of_judge_same_goal = 100 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
-        self.central_point_of_camera = [480, 480] # 相机中心点
+        self.central_point_of_camera = [320, 240] # 相机中心点
         self.area_of_polliating = 2000 # 识别框为多少时才进行授粉的面积阈值
-        self.joint_speed = 1 # 关节转动速度，将关节的转动的角度当作速度
-        self.threthold_of_x_error = 5.0
-        self.threthold_of_y_error = 5.0
+        self.joint_speed = 0.5 # 关节转动速度，将关节的转动的角度当作速度
+        self.threthold_of_x_error = 10.0
+        self.threthold_of_y_error = 10.0
         self.threthold_of_area_error = 50.0
-        self.servo_time = 1000  #机械臂运动时间，单位mm
+        self.servo_time = 200  #机械臂运动时间，单位mm
 
         # 使用到的订阅者和发布者
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
@@ -94,7 +94,7 @@ class Game_Controller(Node):
 
         # 创建定时器
         self.work_timer = self.create_timer(0.04, self.timer_work_)
-        self.arm_timer = self.create_timer(0.5, self.arm_timer_callback_)
+        self.arm_timer = self.create_timer(0.3, self.arm_timer_callback_)
 
         self.spin_thread = Thread(target=self.spin_task_)
         self.spin_thread.start()
@@ -263,11 +263,13 @@ class Game_Controller(Node):
         self.data_pre_processing(flowers_lists)
         # 更新数据
         # print("正在更新数据")
-        # for flower in flowers_lists:
-        #     for index, flower_with_tag in enumerate(self.flowers_with_tag):
-        #         if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
-        #             self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
-        #             break # 跳出内层 for 循环
+        for flower in flowers_lists:
+            for index, flower_with_tag in enumerate(self.flowers_with_tag):
+                if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
+                    self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
+                    self.flowers_with_tag[index]['Area'] = flower['Area']
+                    #print(self.flowers_with_tag)
+                    break # 跳出内层 for 循环
         # # 控制 arm
         self.control_arm()
 
@@ -326,16 +328,18 @@ class Game_Controller(Node):
                 area_error = self.area_of_polliating - flower_with_tag['Area']
                 break
         self.angles_of_joints.data = []
-        print(x_error)
-        if abs(x_error) > self.threthold_of_x_error:
-            print("关节速度为", self.joint_speed)
-            self.arm_params['joint1'] = int(self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
-            print("角度值为：", self.arm_params['joint1'])
+        print(y_error)
+        # if abs(x_error) > self.threthold_of_x_error:
+            # print("关节速度为", self.joint_speed)
+            # self.arm_params['joint1'] = int(self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
+            #print("角度值为：", self.arm_params['joint1'])
         self.angles_of_joints.data.append(self.arm_params['joint1'])
         # if abs(area_error) > self.threthold_of_area_error:
             # self.arm_params['joint2'] = int(self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, -area_error), self.default_arm_params['joint2_limiting']))
         self.angles_of_joints.data.append(self.arm_params['joint2'])
         
+        if abs(y_error) > self.threthold_of_y_error:
+            self.arm_params['joint3'] = int(self.limit_num(self.arm_params['joint3'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint3_limiting']))
         self.angles_of_joints.data.append(self.arm_params['joint3'])
         # if abs(y_error) > self.threthold_of_y_error:
             # self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))

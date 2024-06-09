@@ -18,6 +18,7 @@ from tf2_ros.transform_listener import TransformListener
 from math import copysign, sqrt, pow, radians
 from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
 import PyKDL
+from geometry_msgs.msg import Vector3
 from pid import PID
 
 class Game_Controller(Node):
@@ -54,6 +55,8 @@ class Game_Controller(Node):
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.lidar_subcriber_ = self.create_subscription(Range, "laser", self.lidar_callback_, 10)
         self.angles_of_joints = Int32MultiArray()
+        self.euler_angles_subscriber_ = self.create_subscription(Vector3, "euler_angles", self.euler_angles_callback_, 10)
+        self.yaw_angle = 0.0
 
         self.move_cmd = Twist()
 
@@ -100,15 +103,6 @@ class Game_Controller(Node):
         self.spin_thread = Thread(target=self.spin_task_)
         self.spin_thread.start()
 
-    def arm_timer_callback_(self):
-        print("正在等待开启视觉")
-        if not self.open_vision_detect:
-            return
-        print("正在通过视觉控制机械臂")
-
-        if 0 != len(self.flowers_lists): # 预防处理空数据
-            print(self.flowers_lists)
-            self.confrim_moving_goal_for_arm(self.flowers_lists)
 
     # ---------------- 对外接口函数 -----------------
     def vision_control_arm(self, place_name, pose_name):
@@ -229,7 +223,18 @@ class Game_Controller(Node):
             self.choose_arm_goal_in_number(joint2=107, joint3=124, joint4=93)
             self.choose_arm_goal("b_middle_back_pre")
 
-        
+    def arm_timer_callback_(self):
+        print("正在等待开启视觉")
+        if not self.open_vision_detect:
+            return
+        print("正在通过视觉控制机械臂")
+
+        if 0 != len(self.flowers_lists): # 预防处理空数据
+            print(self.flowers_lists)
+            self.confrim_moving_goal_for_arm(self.flowers_lists)
+
+    def euler_angles_callback_(self, msg):
+        self.yaw_angle = msg.z        
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """

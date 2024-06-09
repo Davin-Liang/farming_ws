@@ -38,7 +38,7 @@ class Game_Controller(Node):
         self.flowers_with_tag_again = [] # 存储花属性
         # 可调参数
         self.area_scaling_factor = 0.25 # 面积缩放系数
-        self.O_distance_threthold_of_judge_same_goal = 100 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
+        self.O_distance_threthold_of_judge_same_goal = 300 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
         self.central_point_of_camera = [320, 240] # 相机中心点
         self.area_of_polliating = 70000 # 识别框为多少时才进行授粉的面积阈值
         self.joint_speed = 1.0 # 关节转动速度，将关节的转动的角度当作速度
@@ -129,6 +129,7 @@ class Game_Controller(Node):
 
     def find_next_arm_goal_on_position(self):
         self.open_vision_detect = True
+        self.pre_process = True
         # 堵塞函数直到完成任务
         while self.open_vision_detect:
             pass
@@ -253,7 +254,7 @@ class Game_Controller(Node):
                 # 得到原始数据
 
                 flowers_lists.append(copy.deepcopy(flower)) # 深拷贝
-
+        #print(flowers_lists)
         self.flowers_lists.clear()
         self.flowers_lists = copy.deepcopy(flowers_lists)
 
@@ -290,6 +291,8 @@ class Game_Controller(Node):
                         if self.arm_moving == False:
                             flower_with_tag['Moving'] = True
                             self.arm_moving = True
+                        else:
+                            flower_with_tag['Moving'] = False
                         self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
 
                     # if flower['Type'] == 'male':
@@ -307,8 +310,9 @@ class Game_Controller(Node):
                     for index, flower_with_tag in enumerate(self.flowers_with_tag):
                         if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
                             self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
+                            self.flowers_with_tag[index]['Area'] = flower['Area']
                             break
-                self.flowers_with_tag_again = self.flowers_with_tag    #更新again数据
+                #self.flowers_with_tag_again = self.flowers_with_tag    #更新again数据
                 # 寻找未“授粉”的花，找到的第一朵就设置为目标
                 for index, flower_with_tag in enumerate(self.flowers_with_tag):
                     if flower_with_tag['Pollinated'] != True:
@@ -323,6 +327,7 @@ class Game_Controller(Node):
         print(self.flowers_with_tag)
         for flower_with_tag in self.flowers_with_tag:
             if flower_with_tag['Moving'] == True:
+                print("正在获取 x 轴误差")
                 x_error = self.central_point_of_camera[0] - flower_with_tag['CentralPoint'][0]
                 y_error = self.central_point_of_camera[1] - flower_with_tag['CentralPoint'][1]
                 area_error = self.area_of_polliating - flower_with_tag['Area']

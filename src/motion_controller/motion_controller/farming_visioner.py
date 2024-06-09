@@ -129,7 +129,6 @@ class Game_Controller(Node):
 
     def find_next_arm_goal_on_position(self):
         self.open_vision_detect = True
-        self.reset_vision_detect = False
         # 堵塞函数直到完成任务
         while self.open_vision_detect:
             pass
@@ -346,16 +345,16 @@ class Game_Controller(Node):
         # if abs(y_error) > self.threthold_of_y_error:
             # self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
         self.angles_of_joints.data.append(self.arm_params['joint4'])
-        # if (abs(x_error) < self.threthold_of_x_error and
-            # abs(area_error) < self.threthold_of_area_error and
+        if (abs(x_error) < self.threthold_of_x_error and
+            abs(area_error) < self.threthold_of_area_error): # and
             # abs(y_error) < self.threthold_of_y_error):
-            # print("已经完成授粉")
-            # for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                # if flower_with_tag['Moving'] == True:
-                    # self.flowers_with_tag_again[index]['Moving'] = False
-                    # self.flowers_with_tag_again[index]['Pollinated'] = True
-            # self.reset_arm_pose()
-            # return
+            print("已经完成授粉")
+            for index, flower_with_tag in enumerate(self.flowers_with_tag):
+                if flower_with_tag['Moving'] == True:
+                    self.flowers_with_tag_again[index]['Moving'] = False
+                    self.flowers_with_tag_again[index]['Pollinated'] = True
+            self.reset_arm_pose()
+            return
         self.angles_of_joints.data.append(self.servo_time)
         print("发送命令给机械臂")
         print(self.angles_of_joints)
@@ -374,7 +373,7 @@ class Game_Controller(Node):
         print("控制 arm 回到初始姿态")
         self.open_vision_detect = False
         self.pre_process = False
-        # self.choose_arm_goal("") TODO:
+        self.choose_arm_goal("a_left")
 
     def voice(self, flowers_lists):
         sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][1])
@@ -384,38 +383,33 @@ class Game_Controller(Node):
             goal_list.append(sorted_data[i]['Type'])
         #语音播报'A'
         if self.place_name == 'A':
-            self.voice_broadcast('up')
-            if goal_list[0] == 'female':
-                self.voice_broadcast(type='female')
-            else:
-                self.voice_broadcast(type='male')
-            self.voice_broadcast('middle')
-            if goal_list[1] == 'female':
-                self.voice_broadcast(type='female')
-            else:
-                self.voice_broadcast(type='male')
-            self.voice_broadcast('down')
-            if goal_list[2] == 'female':
-                self.voice_broadcast(type='female')
-            else:
-                self.voice_broadcast(type='male')
-        #语音播报'B'
+            for index, goal in enumerate(goal_list):
+                if index == 0:
+                    self.voice_broadcast('up')
+                    if goal == 'famale':
+                        self.voice_broadcast(type='female')
+                    else:
+                        self.voice_broadcast(type="male")
+                if index == 1:
+                    self.voice_broadcast('middle')
+                    if goal == 'famale':
+                        self.voice_broadcast(type='female')
+                    else:
+                        self.voice_broadcast(type="male")
+                if index == 2:
+                    self.voice_broadcast('down')
+                    if goal == 'famale':
+                        self.voice_broadcast(type='female')
+                    else:
+                        self.voice_broadcast(type="male")
+        #语音播报"B"
         if self.place_name == 'B':
-            self.voice_broadcast('left')
-            if goal_list[0] == 'female':
-                self.voice_broadcast(type='female')
-            else:
-                self.voice_broadcast(type='male')
-            self.voice_broadcast('middle')
-            if goal_list[1] == 'female':
-                self.voice_broadcast(type='female')
-            else:
-                self.voice_broadcast(type='male')
-            self.voice_broadcast('right')
-            if goal_list[2] == 'female':
-                self.voice_broadcast(type='female')
-            else:
-                self.voice_broadcast(type='male')
+            for index, goal in enumerate(goal_list):
+                if index == 0:
+                    if goal == 'famale':
+                        self.voice_broadcast(type='female')
+                    else:
+                        self.voice_broadcast(type="male")
     # 废弃
     def arm_move(self, flowers_lists):
             # A 区识别
@@ -707,6 +701,7 @@ def main():
     try:
         node = Game_Controller("Game_Controller")
         node.vision_control_arm("A","a_left")
+        node.find_next_arm_goal_on_position()
         while 1:
             pass
     except KeyboardInterrupt:

@@ -94,7 +94,7 @@ class Game_Controller(Node):
         self.angle_error    = 0
         self.run_times = 0
 
-        time.sleep(5.0)
+        time.sleep(3.0)
 
         # 创建定时器
         self.work_timer = self.create_timer(0.04, self.timer_work_)
@@ -563,7 +563,7 @@ class Game_Controller(Node):
         self.angles_of_joints.data.append(self.arm_params['joint4'])
         self.angles_of_joints.data.append(self.servo_reset_time)
         self.joint_angles_publisher_.publish(self.angles_of_joints)
-        time.sleep(6.0)
+        time.sleep(3.0)
 
     def choose_arm_goal_in_number(self, joint1=0, joint2=0, joint3=0, joint4=0):
         if joint1 != 0:

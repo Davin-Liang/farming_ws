@@ -98,7 +98,7 @@ class Game_Controller(Node):
 
         # 创建定时器
         self.work_timer = self.create_timer(0.04, self.timer_work_)
-        #self.arm_timer = self.create_timer(0.3, self.arm_timer_callback_)
+        self.arm_timer = self.create_timer(0.3, self.arm_timer_callback_)
 
         self.spin_thread = Thread(target=self.spin_task_)
         self.spin_thread.start()
@@ -238,35 +238,30 @@ class Game_Controller(Node):
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """
-        if self.open_vision_detect:
-            flowers_lists = []
-            flower = {'Type': '', 'CentralPoint': [], 'Area': 0} # 类型、中心点坐标、面积
-            
-            if 0 != len(msg.targets):
-                for i in range(len(msg.targets)):
-                    flower['CentralPoint'].clear()
-                    if msg.targets[i].type == "male": 
-                        flower['Type'] = msg.targets[i].type
+        flowers_lists = []
+        flower = {'Type': '', 'CentralPoint': [], 'Area': 0} # 类型、中心点坐标、面积
+        
+        if 0 != len(msg.targets):
+            for i in range(len(msg.targets)):
+                flower['CentralPoint'].clear()
+                if msg.targets[i].type == "male": 
+                    flower['Type'] = msg.targets[i].type
 
-                        flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
-                        flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
-                        flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
-                    elif msg.targets[i].type == "famale":
-                        flower['Type'] = msg.targets[i].type
-                        flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
-                        flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
-                        flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
+                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
+                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
+                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
+                elif msg.targets[i].type == "famale":
+                    flower['Type'] = msg.targets[i].type
+                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
+                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
+                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
 
-                    # 得到原始数据
+                # 得到原始数据
 
-                    flowers_lists.append(copy.deepcopy(flower)) # 深拷贝
-            #print(flowers_lists)
-            self.flowers_lists.clear()
-            self.flowers_lists = copy.deepcopy(flowers_lists)
-            #语音播报
-            self.voice(flowers_lists)
-        #关闭视觉检测
-        self.open_vision_detect == False
+                flowers_lists.append(copy.deepcopy(flower)) # 深拷贝
+        #print(flowers_lists)
+        self.flowers_lists.clear()
+        self.flowers_lists = copy.deepcopy(flowers_lists)
 
     def confrim_moving_goal_for_arm(self, flowers_lists):
         """ 确定 arm 的移动目标 """
@@ -281,8 +276,9 @@ class Game_Controller(Node):
                     self.flowers_with_tag[index]['Area'] = flower['Area']
                     #print(self.flowers_with_tag)
                     break # 跳出内层 for 循环
+
         # # 控制 arm
-        self.control_arm()
+        #self.control_arm()
 
     def data_pre_processing(self, flowers_lists):
         """ 为存储花属性的字典添加花属性：是否正在操作、是否已授粉 """
@@ -312,6 +308,7 @@ class Game_Controller(Node):
                 self.flowers_with_tag_again = self.flowers_with_tag
                 #添加语音播报
                 self.voice(flowers_lists)
+
             else:
                 print("正在授粉第二个目标点")
                 self.flowers_with_tag = self.flowers_with_tag_again
@@ -417,6 +414,7 @@ class Game_Controller(Node):
                         self.voice_broadcast(type='female')
                     else:
                         self.voice_broadcast(type="male")
+        self.open_vision_detect = False
         #语音播报"B"
         if self.place_name == 'B':
             for index, goal in enumerate(goal_list):

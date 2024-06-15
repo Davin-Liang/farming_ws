@@ -98,7 +98,7 @@ class Game_Controller(Node):
 
         # 创建定时器
         self.work_timer = self.create_timer(0.04, self.timer_work_)
-        self.arm_timer = self.create_timer(0.3, self.arm_timer_callback_)
+        #self.arm_timer = self.create_timer(0.3, self.arm_timer_callback_)
 
         self.spin_thread = Thread(target=self.spin_task_)
         self.spin_thread.start()
@@ -238,30 +238,35 @@ class Game_Controller(Node):
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """
-        flowers_lists = []
-        flower = {'Type': '', 'CentralPoint': [], 'Area': 0} # 类型、中心点坐标、面积
-        
-        if 0 != len(msg.targets):
-            for i in range(len(msg.targets)):
-                flower['CentralPoint'].clear()
-                if msg.targets[i].type == "male": 
-                    flower['Type'] = msg.targets[i].type
+        if self.open_vision_detect:
+            flowers_lists = []
+            flower = {'Type': '', 'CentralPoint': [], 'Area': 0} # 类型、中心点坐标、面积
+            
+            if 0 != len(msg.targets):
+                for i in range(len(msg.targets)):
+                    flower['CentralPoint'].clear()
+                    if msg.targets[i].type == "male": 
+                        flower['Type'] = msg.targets[i].type
 
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
-                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
-                elif msg.targets[i].type == "famale":
-                    flower['Type'] = msg.targets[i].type
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
-                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
+                        flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
+                        flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
+                        flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
+                    elif msg.targets[i].type == "famale":
+                        flower['Type'] = msg.targets[i].type
+                        flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
+                        flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
+                        flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
 
-                # 得到原始数据
+                    # 得到原始数据
 
-                flowers_lists.append(copy.deepcopy(flower)) # 深拷贝
-        #print(flowers_lists)
-        self.flowers_lists.clear()
-        self.flowers_lists = copy.deepcopy(flowers_lists)
+                    flowers_lists.append(copy.deepcopy(flower)) # 深拷贝
+            #print(flowers_lists)
+            self.flowers_lists.clear()
+            self.flowers_lists = copy.deepcopy(flowers_lists)
+            #语音播报
+            self.voice(flowers_lists)
+        #关闭视觉检测
+        self.open_vision_detect == False
 
     def confrim_moving_goal_for_arm(self, flowers_lists):
         """ 确定 arm 的移动目标 """
@@ -710,8 +715,19 @@ def main():
     rclpy.init()
     try:
         node = Game_Controller("Game_Controller")
+        node.start_car_and_lidar_controls_stopping()
         node.vision_control_arm("A","a_left")
-        node.find_next_arm_goal_on_position()
+        node.vision_control_arm("A","a_right")
+        print("第一个点位已授粉完成")
+        node.start_car_and_lidar_controls_stopping()
+        node.vision_control_arm("A","a_right")
+        node.vision_control_arm("A","a_left")
+        print("第二个点位已授粉完成")
+        node.start_car_and_lidar_controls_stopping()
+        node.vision_control_arm("A","a_left")
+        node.vision_control_arm("A","a_right")
+        print("第三个点位已授粉完成")
+        #node.find_next_arm_goal_on_position()
         while 1:
             pass
     except KeyboardInterrupt:

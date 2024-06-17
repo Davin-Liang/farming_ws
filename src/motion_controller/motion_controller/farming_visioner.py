@@ -6,6 +6,7 @@ from ai_msgs.msg import PerceptionTargets # type: ignore
 import os
 import yaml
 from std_msgs.msg import Int32MultiArray
+from nav_msgs.msg import Odometry
 import time
 import subprocess
 import copy
@@ -30,57 +31,56 @@ class Game_Controller(Node):
         self.load_config_file_()
     
         # 重要 BOOL 值
-        self.open_vision_detect = False # 是否打开视觉检测
-        self.pre_process = False # 是否打开数据预处理
+        self.open_vision_detect         = False # 是否打开视觉检测
+        self.pre_process                = False # 是否打开数据预处理
+        self.start_for_lidar_distance   = False
+        self.start_for_pid_distance     = False
 
         # 数据字典
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
         self.flowers_with_tag = [] # 存储花属性
         self.flowers_with_tag_again = [] # 存储花属性
+        self.flowers_lists = [] # primitive flower data
+
         # 可调参数
-        self.area_scaling_factor = 0.25 # 面积缩放系数
-        self.O_distance_threthold_of_judge_same_goal = 300 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
-        self.central_point_of_camera = [320, 240] # 相机中心点
-        self.area_of_polliating = 70000 # 识别框为多少时才进行授粉的面积阈值
-        self.joint_speed = 1.0 # 关节转动速度，将关节的转动的角度当作速度
-        self.threthold_of_x_error = 10.0
-        self.threthold_of_y_error = 5.0
-        self.threthold_of_area_error = 5000.0
-        self.servo_time = 200  #机械臂运动时间，单位mm
-        self.servo_reset_time = 1000  #机械臂初始位置运动时间
+        self.area_scaling_factor                        = 0.25 # 面积缩放系数
+        self.O_distance_threthold_of_judge_same_goal    = 300 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
+        self.central_point_of_camera                    = [320, 240] # 相机中心点
+        self.area_of_polliating                         = 70000 # 识别框为多少时才进行授粉的面积阈值
+        self.joint_speed                                = 1.0 # 关节转动速度，将关节的转动的角度当作速度
+        self.threthold_of_x_error                       = 10.0
+        self.threthold_of_y_error                       = 5.0
+        self.threthold_of_area_error                    = 5000.0
+        self.servo_time                                 = 200  #机械臂运动时间，单位mm
+        self.servo_reset_time                           = 1000  #机械臂初始位置运动时间
+        self.distance_tolerance                         = 0.03
+        self.angle_tolerance                            = radians(2.0)
+        self.odom_linear_scale_correction               = 1.0
+        self.odom_angular_scale_correction              = 1.0
+        self.base_frame                                 = 'base_footprint'
+        self.odom_frame                                 = 'odom'
 
         # 使用到的订阅者和发布者
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
         self.joint_angles_publisher_ = self.create_publisher(Int32MultiArray, "servo_commands", 10)
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.lidar_subcriber_ = self.create_subscription(Range, "laser", self.lidar_callback_, 10)
-        self.angles_of_joints = Int32MultiArray()
         self.euler_angles_subscriber_ = self.create_subscription(Vector3, "euler_angles", self.euler_angles_callback_, 10)
-        self.yaw_angle = 0.0
+        self.odom_subcriber_ = self.create_subscription(Odometry, "odom", self.odom_callback_, 10)
 
-        self.move_cmd = Twist()
+        self.move_cmd           = Twist()
+        self.angles_of_joints   = Int32MultiArray()
 
-        self.ori_angle_pid = PID(0.685, 0.0, 0.426, 1.4, 0.0)
-        self.distance_pid = PID(0.42, 0.0, 0.08, 1.0, 0.0)
+        self.ori_angle_pid = PID(Kp=0.685, Ki=0.0, Kd=0.426, max_out=1.4, max_iout=0.0)
+        self.distance_pid  = PID(Kp=0.42, Ki=0.0, Kd=0.08, max_out=1.0, max_iout=0.0)
 
-        
         self.distance = 0.0
         self.angle = 0.0
+        self.yaw_angle = 0.0 # testing
+        self.lidar_threthold = 0.1
         self.angle = radians(self.angle)
         self.deviation_angle = radians(0.85)
         self.liear_speed = 0.5
-        self.distance_tolerance = 0.03
-        self.angle_tolerance = radians(2.0)
-        self.odom_linear_scale_correction = 1.0
-        self.odom_angular_scale_correction = 1.0
-        self.start_for_lidar_distance = False
-        self.start_for_pid_distance = False
-        self.base_frame = 'base_footprint'
-        self.odom_frame = 'odom'
-
-        self.lidar_threthold = 0.1
-
-        self.flowers_lists = []
         
         #init the tf listener
         self.tf_buffer = Buffer()
@@ -92,7 +92,6 @@ class Game_Controller(Node):
 
         self.distance_error = 0
         self.angle_error    = 0
-        self.run_times = 0
 
         time.sleep(3.0)
 
@@ -110,7 +109,7 @@ class Game_Controller(Node):
         self.choose_arm_goal(pose_name)
         self.open_vision_detect     = True
         self.pre_process            = True
-        self.arm_moving = False
+        self.arm_moving             = False
         self.reset_vision_data()
         # 堵塞函数直到完成任务
         print("正在等待完成任务")
@@ -125,16 +124,10 @@ class Game_Controller(Node):
         self.open_vision_detect = True
         self.pre_process = True
         # 堵塞函数直到完成任务
+        print("Finding next female flower......")
         while self.open_vision_detect:
             pass
     # ---------------
-
-    # 废弃
-    def control_car_turn(self, turn_speed, turn_time):
-        """ 废弃 """
-        self.move_cmd.angular.z = turn_speed
-        time.sleep(turn_time)
-        self.move_cmd.angular.z = 0.0
 
     def set_distance(self, distance):
         """ 设置车轮方向的行驶距离及以什么样的速度行驶 """
@@ -161,73 +154,24 @@ class Game_Controller(Node):
 
         # 等待 car 到位
         time.sleep(3.5) # 保证 car 驶出激光遮挡区域
+        print("激光未受到目标的遮挡......")
         for i in range(ignore_num+1):
-            print("正在检测中")
-            print("激光", self.lidar_distance)
-            print("阈值", self.lidar_threthold)
             while self.lidar_distance > self.lidar_threthold:
                 pass
-        print("激光已经到达下一个激光遮挡区域")
+        print("已经到达激光遮挡区域!!!")
         self.start_for_lidar_distance = False
         time.sleep(2.0)
 
-    # 废弃
-    def vision_choose_goal_in_A(self, pose_name):
-        """ 传入视觉目标 """
-        self.place_name = "A"
-        self.pose_name = pose_name
-        self.choose_arm_goal(pose_name)
-        self.open_vision_detect     = True
-        # 堵塞函数直到完成任务
-        # print("正在等待完成任务")
-        while self.open_vision_detect:
-            pass
+    # ----------------------------------------------------------
 
-    # 废弃
-    def vision_choose_goal_in_B(self, pose_name):
-        self.place_name = "B"
-        self.pose_name = pose_name
-        self.run_times = 0
-        if pose_name == "front":
-            # 中间花
-            self.choose_arm_goal("b_middle_front_pre")
-            while self.open_vision_detect:
-                pass
-            
-            self.choose_arm_goal("b_middle_front_pre")
-            self.choose_arm_goal_in_number(joint1=126)
-            self.choose_arm_goal("b_right_front_pre")
-            while self.open_vision_detect:
-                pass
-            self.choose_arm_goal("b_right_front_pre")
-            self.choose_arm_goal("b_left_front_pre")
-            while self.open_vision_detect:
-                pass
-            self.choose_arm_goal("b_left_front_pre")
-            self.choose_arm_goal_in_number(joint2=107, joint3=124, joint4=93)
-            self.choose_arm_goal("b_middle_front_pre")
-        if pose_name == "back":
-            self.choose_arm_goal("b_middle_back_pre")
-            while self.open_vision_detect:
-                pass
-            self.choose_arm_goal("b_middle_back_pre")
-            self.choose_arm_goal_in_number(joint1=97)
-            self.choose_arm_goal("b_left_back_pre")
-            while self.open_vision_detect:
-                pass
-            self.choose_arm_goal("b_left_back_pre")
-            self.choose_arm_goal("b_right_back_pre")
-            while self.open_vision_detect:
-                pass
-            self.choose_arm_goal("b_right_back_pre")
-            self.choose_arm_goal_in_number(joint2=107, joint3=124, joint4=93)
-            self.choose_arm_goal("b_middle_back_pre")
+    def odom_callback_(self, msg):
+        self.position.x = msg.pose.pose.position.x
+        self.position.y = msg.pose.pose.position.x
 
     def arm_timer_callback_(self):
         print("正在等待开启视觉")
         if not self.open_vision_detect:
             return
-        print("正在通过视觉控制机械臂")
 
         if 0 != len(self.flowers_lists): # 预防处理空数据
             print(self.flowers_lists)
@@ -257,7 +201,6 @@ class Game_Controller(Node):
                     flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
 
                 # 得到原始数据
-
                 flowers_lists.append(copy.deepcopy(flower)) # 深拷贝
         #print(flowers_lists)
         self.flowers_lists.clear()
@@ -278,7 +221,7 @@ class Game_Controller(Node):
                     break # 跳出内层 for 循环
 
         # # 控制 arm
-        #self.control_arm()
+        self.control_arm()
 
     def data_pre_processing(self, flowers_lists):
         """ 为存储花属性的字典添加花属性：是否正在操作、是否已授粉 """
@@ -300,17 +243,11 @@ class Game_Controller(Node):
                         else:
                             flower_with_tag['Moving'] = False
                         self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
-
-                    # if flower['Type'] == 'male':
-                    #     male_num += 1
-                    # elif flower['Type'] == 'famale':
-                    #     female_num += 1
                 self.flowers_with_tag_again = self.flowers_with_tag
                 #添加语音播报
                 self.voice(flowers_lists)
-
             else:
-                print("正在授粉第二个目标点")
+                print("正在授粉下一个目标点")
                 self.flowers_with_tag = self.flowers_with_tag_again
                 # 更新中心点坐标参数
                 for flower in flowers_lists:
@@ -380,12 +317,12 @@ class Game_Controller(Node):
             num = num_range[0]
         return num
 
-    def reset_arm_pose(self):
+    def reset_arm_pose(self, pose="a_left"):
         """ 控制 arm 回到初始姿态 """
         print("控制 arm 回到初始姿态")
         self.open_vision_detect = False
         self.pre_process = False
-        self.choose_arm_goal("a_left")
+        self.choose_arm_goal(pose)
 
     def voice(self, flowers_lists):
         sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][1])
@@ -423,135 +360,9 @@ class Game_Controller(Node):
                         self.voice_broadcast(type='female')
                     else:
                         self.voice_broadcast(type="male")
-    # 废弃
-    def arm_move(self, flowers_lists):
-            # A 区识别
-            if self.place_name == "A":
-                sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][1])
-                goal_list = []
-                # 创建目标字典，并按排序后的结果填充值
-                for i in range(len(sorted_data)):
-                    goal_list.append(sorted_data[i]['Type'])
-
-                # print(goal_list)
-                # male_num = 0
-                # female_num = 0
-                # for index, flower in enumerate(flowers_lists):
-                #     if flower['Type'] == 'male':
-                #         male_num += 1
-                #     elif flower['Type'] == 'famale':
-                #         female_num += 1
-                # 语音播报
-                # self.voice_broadcast(male_num, female_num)
-                
-                for index, goal in enumerate(goal_list):
-                    if index == 0:
-                        self.voice_broadcast('up')
-                        if goal == 'famale':
-                            self.voice_broadcast(type='female')
-                            self.choose_arm_goal_in_task('middle')
-                            self.choose_arm_goal_in_task('a_1')
-                        else:
-                            self.voice_broadcast(type="male")
-                        self.choose_arm_goal_in_task(self.pose_name)
-                    if index == 1:
-                        self.voice_broadcast('middle')
-                        if goal == 'famale':
-                            self.voice_broadcast(type='female')
-                            self.choose_arm_goal_in_task('middle')
-                            self.choose_arm_goal_in_task('a_2')
-                        else:
-                            self.voice_broadcast(type="male")
-                        self.choose_arm_goal_in_task(self.pose_name)
-                    if index == 2:
-                        self.voice_broadcast('down')
-                        if goal == 'famale':
-                            self.voice_broadcast(type='female')
-                            self.choose_arm_goal_in_task('middle')
-                            self.choose_arm_goal_in_task('a_3')
-                        else:
-                            self.voice_broadcast(type="male")
-                        self.choose_arm_goal_in_task(self.pose_name)
-                # 授粉完关闭视觉检测
-                self.open_vision_detect = False
-            elif self.place_name == "B":
-                for flower in flowers_lists:
-                    if self.pose_name == 'front':
-                        if self.run_times == 0:
-                            self.voice_broadcast('middle')
-                            if flower['Type'] == 'famale':
-                                self.voice_broadcast(type="female")
-                                self.choose_arm_goal_in_task("b_middle_front")
-                            else:
-                                self.voice_broadcast(type="male")
-                            self.run_times += 1
-                            self.open_vision_detect = False
-                            return
-                        if self.run_times == 1:
-                            self.voice_broadcast('left')
-                            if flower['Type'] == 'famale':
-                                self.voice_broadcast(type="female")
-                                self.choose_arm_goal_in_task("b_right_front")
-                            else:
-                                self.voice_broadcast(type="male")
-                            self.run_times += 1
-                            self.open_vision_detect = False
-                            return
-                        if self.run_times == 2:
-                            self.voice_broadcast('right')
-                            if flower['Type'] == 'famale':
-                                self.voice_broadcast(type="female")
-                                self.choose_arm_goal_in_task("b_left_front")
-                            else:
-                                self.voice_broadcast(type="male")
-                            self.run_times = 0
-                            return
-                    if self.pose_name == 'back':
-                        if self.run_times == 0:
-                            self.voice_broadcast('middle')
-                            if flower['Type'] == 'famale':
-                                self.voice_broadcast(type="female")
-                                self.choose_arm_goal_in_task("b_left_front")
-                            else:
-                                self.voice_broadcast(type="male")
-                            self.run_times += 1
-                            self.open_vision_detect = False
-                            return
-                        if self.run_times == 1:
-                            self.voice_broadcast('left')
-                            if flower['Type'] == 'famale':
-                                self.voice_broadcast(type="female")
-                                self.choose_arm_goal_in_task("b_left_front")
-                            else:
-                                self.voice_broadcast(type="male")
-                            self.run_times += 1
-                            self.open_vision_detect = False
-                            return
-                        if self.run_times == 2:
-                            self.voice_broadcast('right')
-                            if flower['Type'] == 'famale':
-                                self.voice_broadcast(type="female")
-                                self.choose_arm_goal_in_task("b_right_front")
-                            else:
-                                self.voice_broadcast(type="male")
-                            self.run_times = 0
-                            return
-                    break
-                
-    # 废弃
-    def choose_arm_goal_in_task(self, pose_name):
-        self.arm_params['joint2'] = self.default_arm_params['joint2_'+pose_name]
-        self.arm_params['joint3'] = self.default_arm_params['joint3_'+pose_name]
-        self.arm_params['joint4'] = self.default_arm_params['joint4_'+pose_name]
-        self.angles_of_joints.data = []
-        self.angles_of_joints.data.append(self.arm_params['joint1'])
-        self.angles_of_joints.data.append(self.arm_params['joint2'])
-        self.angles_of_joints.data.append(self.arm_params['joint3'])
-        self.angles_of_joints.data.append(self.arm_params['joint4'])
-        self.joint_angles_publisher_.publish(self.angles_of_joints)
-        time.sleep(1.5)
 
     def choose_arm_goal(self, pose_name):
+        """ Use arm goals in YAML file. """
         self.arm_params['joint1'] = self.default_arm_params['joint1_'+pose_name]
         self.arm_params['joint2'] = self.default_arm_params['joint2_'+pose_name]
         self.arm_params['joint3'] = self.default_arm_params['joint3_'+pose_name]
@@ -566,6 +377,7 @@ class Game_Controller(Node):
         time.sleep(3.0)
 
     def choose_arm_goal_in_number(self, joint1=0, joint2=0, joint3=0, joint4=0):
+        """ Use own numbers to control arm instead of arm goals in YAML file. """
         if joint1 != 0:
             self.arm_params['joint1'] = joint1
         if joint2 != 0:
@@ -582,7 +394,6 @@ class Game_Controller(Node):
         self.joint_angles_publisher_.publish(self.angles_of_joints)
         time.sleep(2.0)
 
-    
     def voice_broadcast(self, direction='', type=''):
         """ 语音播报 """
         if direction != '':
@@ -643,8 +454,7 @@ class Game_Controller(Node):
 
         # 距离控制
         if self.start_for_pid_distance:
-            self.position = self.get_coordinate_value_()
-
+            # self.position = self.get_coordinate_value_()
             o_distance = self.get_O_distance()
             o_distance *= self.odom_linear_scale_correction # 修正
             # print("在上一次停下后已经行驶的距离: ", o_distance)
@@ -731,10 +541,6 @@ def main():
             pass
     except KeyboardInterrupt:
         print("退出暂停小车！！！！！！！！！")
-        node.cmd_vel.publish(Twist())
-        node.cmd_vel.publish(Twist())
-        node.cmd_vel.publish(Twist())
-        node.cmd_vel.publish(Twist())
         node.cmd_vel.publish(Twist())
         node.cmd_vel.publish(Twist())
         time.sleep(2.0)

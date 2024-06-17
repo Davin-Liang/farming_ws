@@ -6,6 +6,7 @@ from ai_msgs.msg import PerceptionTargets # type: ignore
 import os
 import yaml
 from std_msgs.msg import Int32MultiArray
+from std_msgs.msg import Float64
 from nav_msgs.msg import Odometry
 import time
 import subprocess
@@ -43,30 +44,31 @@ class Game_Controller(Node):
         self.flowers_lists = [] # primitive flower data
 
         # 可调参数
-        self.area_scaling_factor                        = 0.25 # 面积缩放系数
-        self.O_distance_threthold_of_judge_same_goal    = 300 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
-        self.central_point_of_camera                    = [320, 240] # 相机中心点
-        self.area_of_polliating                         = 70000 # 识别框为多少时才进行授粉的面积阈值
-        self.joint_speed                                = 1.0 # 关节转动速度，将关节的转动的角度当作速度
-        self.threthold_of_x_error                       = 10.0
-        self.threthold_of_y_error                       = 5.0
-        self.threthold_of_area_error                    = 5000.0
-        self.servo_time                                 = 200  #机械臂运动时间，单位mm
-        self.servo_reset_time                           = 1000  #机械臂初始位置运动时间
-        self.distance_tolerance                         = 0.03
-        self.angle_tolerance                            = radians(2.0)
-        self.odom_linear_scale_correction               = 1.0
-        self.odom_angular_scale_correction              = 1.0
-        self.base_frame                                 = 'base_footprint'
-        self.odom_frame                                 = 'odom'
+        self.area_scaling_factor                     = 0.25 # 面积缩放系数
+        self.O_distance_threthold_of_judge_same_goal = 300 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
+        self.central_point_of_camera                 = [320, 240] # 相机中心点
+        self.area_of_polliating                      = 70000 # 识别框为多少时才进行授粉的面积阈值
+        self.joint_speed                             = 1.0 # 关节转动速度，将关节的转动的角度当作速度
+        self.threthold_of_x_error                    = 10.0
+        self.threthold_of_y_error                    = 5.0
+        self.threthold_of_area_error                 = 5000.0
+        self.servo_time                              = 200  #机械臂运动时间，单位mm
+        self.servo_reset_time                        = 1000  #机械臂初始位置运动时间
+        self.distance_tolerance                      = 0.03
+        self.angle_tolerance                         = radians(2.0)
+        self.odom_linear_scale_correction            = 1.0
+        self.odom_angular_scale_correction           = 1.0
+        self.base_frame                              = 'base_footprint'
+        self.odom_frame                              = 'odom'
 
         # 使用到的订阅者和发布者
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
         self.joint_angles_publisher_ = self.create_publisher(Int32MultiArray, "servo_commands", 10)
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.lidar_subcriber_ = self.create_subscription(Range, "laser", self.lidar_callback_, 10)
-        self.euler_angles_subscriber_ = self.create_subscription(Vector3, "euler_angles", self.euler_angles_callback_, 10)
+        # self.euler_angles_subscriber_ = self.create_subscription(Vector3, "euler_angles", self.euler_angles_callback_, 10)
         self.odom_subcriber_ = self.create_subscription(Odometry, "odom", self.odom_callback_, 10)
+        self.yaw_angle_subcriber_ = self.create_subscription(Float64, "yaw_angle", self.yaw_angle_callback_, 10)
 
         self.move_cmd           = Twist()
         self.angles_of_joints   = Int32MultiArray()
@@ -74,13 +76,13 @@ class Game_Controller(Node):
         self.ori_angle_pid = PID(Kp=0.685, Ki=0.0, Kd=0.426, max_out=1.4, max_iout=0.0)
         self.distance_pid  = PID(Kp=0.42, Ki=0.0, Kd=0.08, max_out=1.0, max_iout=0.0)
 
-        self.distance = 0.0
-        self.angle = 0.0
-        self.yaw_angle = 0.0 # testing
+        self.distance        = 0.0
+        self.angle           = 0.0
+        self.yaw_angle       = 0.0 # testing
         self.lidar_threthold = 0.1
+        self.liear_speed     = 0.5
         self.angle = radians(self.angle)
         self.deviation_angle = radians(0.85)
-        self.liear_speed = 0.5
         
         #init the tf listener
         self.tf_buffer = Buffer()
@@ -107,14 +109,15 @@ class Game_Controller(Node):
     def vision_control_arm(self, place_name, pose_name):
         self.place_name = place_name
         self.choose_arm_goal(pose_name)
-        self.open_vision_detect     = True
-        self.pre_process            = True
-        self.arm_moving             = False
+        self.open_vision_detect = True
+        self.pre_process        = True
+        self.arm_moving         = False
         self.reset_vision_data()
         # 堵塞函数直到完成任务
-        print("正在等待完成任务")
+        print("正在等待完成任务......")
         while self.open_vision_detect:
             pass
+        print("已经完成任务！！！！！！")
 
     def reset_vision_data(self):
         self.flowers_with_tag.clear()
@@ -124,9 +127,10 @@ class Game_Controller(Node):
         self.open_vision_detect = True
         self.pre_process = True
         # 堵塞函数直到完成任务
-        print("Finding next female flower......")
+        print("正在等待完成任务......")
         while self.open_vision_detect:
             pass
+        print("已经完成任务！！！！！！")
     # ---------------
 
     def set_distance(self, distance):
@@ -164,6 +168,9 @@ class Game_Controller(Node):
 
     # ----------------------------------------------------------
 
+    def yaw_angle_callback_(self, msg):
+        self.yaw_angle = msg.data
+
     def odom_callback_(self, msg):
         self.position.x = msg.pose.pose.position.x
         self.position.y = msg.pose.pose.position.x
@@ -178,7 +185,8 @@ class Game_Controller(Node):
             self.confrim_moving_goal_for_arm(self.flowers_lists)
 
     def euler_angles_callback_(self, msg):
-        self.yaw_angle = msg.z        
+        # self.yaw_angle = msg.z      
+        pass  
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """
@@ -206,6 +214,8 @@ class Game_Controller(Node):
         self.flowers_lists.clear()
         self.flowers_lists = copy.deepcopy(flowers_lists)
 
+    # ----------------------------------------------------------
+
     def confrim_moving_goal_for_arm(self, flowers_lists):
         """ 确定 arm 的移动目标 """
         # 数据预处理并选择第一个处理的目标
@@ -230,8 +240,6 @@ class Game_Controller(Node):
         if self.pre_process:
             if len(self.flowers_with_tag) == 0:
                 print("正在进行数据预处理")
-                male_num = 0
-                female_num = 0
                 for index, flower in enumerate(flowers_lists):
                     if flower['Type'] == 'male':
                         flower_with_tag['Type'] = flower['Type']
@@ -477,8 +485,10 @@ class Game_Controller(Node):
             self.move_cmd.linear.x = self.liear_speed
         else: # 未设定目标的情况
             self.move_cmd.linear.x = 0.0
-            self.x_start = self.get_position_().transform.translation.x
-            self.y_start = self.get_position_().transform.translation.y
+            # self.x_start = self.get_position_().transform.translation.x
+            # self.y_start = self.get_position_().transform.translation.y
+            self.x_start = self.position.x
+            self.y_start = self.position.y
             # print(self.move_cmd)
             # print("正在停车状态......")
         self.cmd_vel.publish(self.move_cmd)

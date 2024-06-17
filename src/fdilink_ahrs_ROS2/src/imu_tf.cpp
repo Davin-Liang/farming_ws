@@ -6,7 +6,9 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2/LinearMath/Transform.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
 #include <string>
+#include <std_msgs/msg/float64.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <rclcpp/time.hpp>
 using std::placeholders::_1;
@@ -54,10 +56,11 @@ class imu_data_to_tf : public rclcpp::Node
             this->get_parameter("position_z", position_z);
             br =std::make_shared<tf2_ros::TransformBroadcaster>(this);
             sub_ = this->create_subscription<sensor_msgs::msg::Imu>(imu_topic.c_str(), 10, std::bind(&imu_data_to_tf::ImuCallback,this,_1));
-
+            yaw_pub_ = this->create_publisher<std_msgs::msg::Float64>("yaw_angle", 10);
         }
     private:
         rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_;
+        rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr yaw_pub_;
 
         //rclcpp::Subscriber sub = node.subscribe(imu_topic.c_str(), 10, &ImuCallback);
 
@@ -76,6 +79,18 @@ class imu_data_to_tf : public rclcpp::Node
             q.setZ(imu_data->orientation.z);
             q.setW(imu_data->orientation.w);
             q.normalized();//归一化
+
+            // 将四元数转换为欧拉角
+            double roll, pitch, yaw;
+            tf2::Matrix3x3 m(q);
+            m.getRPY(roll, pitch, yaw);
+
+            // 创建一个 Float64 消息来存储 yaw 值
+            auto yaw_msg = std::make_shared<std_msgs::msg::Float64>();
+            yaw_msg->data = yaw;
+
+            // 发布 yaw 消息
+            yaw_pub_->publish(*yaw_msg);
 
             // transform.setRotation(q);//设置旋转部分
             //广播出去

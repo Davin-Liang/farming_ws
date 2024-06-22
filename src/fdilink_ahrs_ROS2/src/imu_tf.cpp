@@ -97,8 +97,8 @@ class imu_data_to_tf : public rclcpp::Node
             //br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "imu"));
             geometry_msgs::msg::TransformStamped tfs;
             tfs.header.stamp=rclcpp::Node::now();
-            tfs.header.frame_id ="world";
-            tfs.child_frame_id="imu";
+            tfs.header.frame_id ="odom";
+            tfs.child_frame_id="imu_link";
             tfs.transform.translation.x=position_x;
             tfs.transform.translation.y=position_y;
             tfs.transform.translation.z=position_z;

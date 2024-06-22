@@ -14,11 +14,11 @@ joint4_vision_patrol_2: 96
 joint1_a_left: 132
 joint2_a_left: 130
 joint3_a_left: 160
-joint4_a_left: 135     #角度待定
+joint4_a_left: 101     #角度待定
 joint1_a_right: 312
 joint2_a_right: 130
 joint3_a_right: 160
-joint4_a_right: 135
+joint4_a_right: 101
 
 joint2_a_1: 110
 joint3_a_1: 75

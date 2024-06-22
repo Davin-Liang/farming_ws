@@ -135,7 +135,7 @@ ekf_filter_node:
         odom0_pose_rejection_threshold: 20.0
         odom0_twist_rejection_threshold: 1.542
 
-        imu0: /imu/data_raw
+        imu0: /imu
         imu0_config: [false, false, false,
                       false, false, true ,
                       false, false, false,

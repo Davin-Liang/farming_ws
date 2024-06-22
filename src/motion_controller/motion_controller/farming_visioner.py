@@ -45,12 +45,12 @@ class Game_Controller(Node):
 
         # 可调参数
         self.area_scaling_factor                     = 0.25 # 面积缩放系数
-        self.O_distance_threthold_of_judge_same_goal = 300 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
+        self.O_distance_threthold_of_judge_same_goal = 100 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
         self.central_point_of_camera                 = [320, 240] # 相机中心点
         self.area_of_polliating                      = 70000 # 识别框为多少时才进行授粉的面积阈值
         self.joint_speed                             = 1.0 # 关节转动速度，将关节的转动的角度当作速度
         self.threthold_of_x_error                    = 10.0
-        self.threthold_of_y_error                    = 5.0
+        self.threthold_of_y_error                    = 10.0
         self.threthold_of_area_error                 = 5000.0
         self.servo_time                              = 200  #机械臂运动时间，单位mm
         self.servo_reset_time                        = 1000  #机械臂初始位置运动时间
@@ -98,7 +98,7 @@ class Game_Controller(Node):
         time.sleep(3.0)
 
         # 创建定时器
-        self.work_timer = self.create_timer(0.04, self.timer_work_)
+        self.work_timer = self.create_timer(0.004, self.timer_work_)
         self.arm_timer = self.create_timer(0.3, self.arm_timer_callback_)
 
         self.spin_thread = Thread(target=self.spin_task_)
@@ -148,7 +148,7 @@ class Game_Controller(Node):
         # 等待转完角度
         while abs(self.angle-self.get_odom_angle_())>self.angle_tolerance:
             pass
-        time.sleep(2.0)
+        time.sleep(4.0)
 
     def start_car_and_lidar_controls_stopping(self, speed, threthold=0.1, ignore_num=0):
         """ 开动车并使用单线激光控制小车停止 """
@@ -169,11 +169,13 @@ class Game_Controller(Node):
     # ----------------------------------------------------------
 
     def yaw_angle_callback_(self, msg):
-        self.yaw_angle = msg.data
+        self.yaw_angle = -msg.data
+        print(self.yaw_angle)
 
     def odom_callback_(self, msg):
         self.position.x = msg.pose.pose.position.x
-        self.position.y = msg.pose.pose.position.x
+        self.position.y = msg.pose.pose.position.y
+        # print(self.position)
 
     def arm_timer_callback_(self):
         print("正在等待开启视觉")
@@ -223,12 +225,14 @@ class Game_Controller(Node):
         # 更新数据
         # print("正在更新数据")
         for flower in flowers_lists:
-            for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
-                    self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
-                    self.flowers_with_tag[index]['Area'] = flower['Area']
-                    #print(self.flowers_with_tag)
-                    break # 跳出内层 for 循环
+            if flower['Type'] == "male":
+                for index, flower_with_tag in enumerate(self.flowers_with_tag):
+                    if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
+                        print("小于阈值")
+                        self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
+                        self.flowers_with_tag[index]['Area'] = flower['Area']
+                        #print(self.flowers_with_tag)
+                        break # 跳出内层 for 循环
 
         # # 控制 arm
         self.control_arm()
@@ -251,12 +255,15 @@ class Game_Controller(Node):
                         else:
                             flower_with_tag['Moving'] = False
                         self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
-                self.flowers_with_tag_again = self.flowers_with_tag
+                self.flowers_with_tag_again = copy.deepcopy(self.flowers_with_tag)
                 #添加语音播报
-                self.voice(flowers_lists)
+                # self.voice(flowers_lists)
             else:
                 print("正在授粉下一个目标点")
-                self.flowers_with_tag = self.flowers_with_tag_again
+                self.flowers_with_tag = copy.deepcopy(self.flowers_with_tag_again)
+                print("预处理第二次")
+                print(self.flowers_with_tag_again)
+                print(self.flowers_with_tag)
                 # 更新中心点坐标参数
                 for flower in flowers_lists:
                     for index, flower_with_tag in enumerate(self.flowers_with_tag):
@@ -299,8 +306,8 @@ class Game_Controller(Node):
        # if abs(y_error) > self.threthold_of_y_error:
            # self.arm_params['joint3'] = int(self.limit_num(self.arm_params['joint3'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint3_limiting']))
         self.angles_of_joints.data.append(self.arm_params['joint3'])
-        # if abs(y_error) > self.threthold_of_y_error:
-            # self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
+        if abs(y_error) > self.threthold_of_y_error:
+            self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
         self.angles_of_joints.data.append(self.arm_params['joint4'])
         if (abs(x_error) < self.threthold_of_x_error and
             abs(area_error) < self.threthold_of_area_error): # and
@@ -328,9 +335,10 @@ class Game_Controller(Node):
     def reset_arm_pose(self, pose="a_left"):
         """ 控制 arm 回到初始姿态 """
         print("控制 arm 回到初始姿态")
+        self.choose_arm_goal(pose)
         self.open_vision_detect = False
         self.pre_process = False
-        self.choose_arm_goal(pose)
+        time.sleep(2.0)
 
     def voice(self, flowers_lists):
         sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][1])
@@ -359,7 +367,7 @@ class Game_Controller(Node):
                         self.voice_broadcast(type='female')
                     else:
                         self.voice_broadcast(type="male")
-        self.open_vision_detect = False
+        #self.open_vision_detect = False
         #语音播报"B"
         if self.place_name == 'B':
             for index, goal in enumerate(goal_list):
@@ -457,8 +465,8 @@ class Game_Controller(Node):
         # self.get_param_()
         # ref = self.get_odom_angle_()
         # 姿态控制
-        # self.ori_angle_pid.pid_calculate(ref=ref+self.deviation_angle, goal=self.angle)
-        # self.move_cmd.angular.z = self.ori_angle_pid.out
+        self.ori_angle_pid.pid_calculate(ref=self.yaw_angle, goal=self.angle)
+        self.move_cmd.angular.z = self.ori_angle_pid.out
 
         # 距离控制
         if self.start_for_pid_distance:
@@ -533,19 +541,35 @@ def main():
     rclpy.init()
     try:
         node = Game_Controller("Game_Controller")
-        node.choose_arm_goal("a_left")
-        node.start_car_and_lidar_controls_stopping(0.05, 0.4)
-        node.vision_control_arm("A","a_left")
-        node.vision_control_arm("A","a_right")
-        print("第一个点位已授粉完成")
-        node.start_car_and_lidar_controls_stopping(0.05, 0.4)
-        node.vision_control_arm("A","a_right")
-        node.vision_control_arm("A","a_left")
-        print("第二个点位已授粉完成")
-        node.start_car_and_lidar_controls_stopping(0.05, 0.4)
-        node.vision_control_arm("A","a_left")
-        node.vision_control_arm("A","a_right")
-        print("第三个点位已授粉完成")
+        # node.choose_arm_goal("a_left")
+        # node.start_car_and_lidar_controls_stopping(0.05, 0.4)
+        # node.vision_control_arm("A","a_left")
+        # node.find_next_arm_goal_on_position()
+        # node.fin
+        #node.vision_control_arm("A","a_right")
+        #print("第一个点位已授粉完成")
+        # node.start_car_and_lidar_controls_stopping(0.05, 0.4)
+        node.set_distance(1.0)
+        #node.vision_control_arm("A","a_right")
+        #node.vision_control_arm("A","a_left")
+        #print("第二个点位已授粉完成")
+        # node.start_car_and_lidar_controls_stopping(0.05, 0.4)
+        # node.start_car_and_lidar_controls_stopping(0.05, 0.4)
+        # node.set_angle(-90.0)
+        # node.start_car_and_lidar_controls_stopping(-0.05, 0.6)
+        # node.start_car_and_lidar_controls_stopping(-0.05, 0.6)
+        # node.set_angle(0.0)
+        # time.sleep(5.0)
+        # node.start_car_and_lidar_controls_stopping(-0.05, 0.6)
+        # node.start_car_and_lidar_controls_stopping(-0.05, 0.6)
+        # node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+        # node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+        # node.set_angle(90.0)
+        # node.start_car_and_lidar_controls_stopping(0.05, 0.8)
+        # node.set_angle(0.0)
+        #node.vision_control_arm("A","a_left")
+        #node.vision_control_arm("A","a_right")
+        #print("第三个点位已授粉完成")
         #node.find_next_arm_goal_on_position()
         while 1:
             pass

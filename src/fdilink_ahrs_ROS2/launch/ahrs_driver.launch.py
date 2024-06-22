@@ -6,6 +6,7 @@ from launch.actions import (DeclareLaunchArgument, GroupAction,
                             IncludeLaunchDescription, SetEnvironmentVariable)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
+from launch.actions import TimerAction
 # bringup_dir = get_package_share_directory('fdilink_ahrs')
 # launch_dir = os.path.join(bringup_dir, 'launch')
 # imu_tf = IncludeLaunchDescription(
@@ -30,7 +31,18 @@ def generate_launch_description():
         output="screen"
     )
 
+    imu_tf = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory('fdilink_ahrs'), 'launch'),
+            '/imu_tf.launch.py'])
+    )
+
+    delayed_imu_tf = TimerAction(
+        period=2.0,
+        actions=[imu_tf]
+    )
+
     launch_description =LaunchDescription()
     launch_description.add_action(ahrs_driver)
-#    launch_description.add_action(imu_tf)
+    launch_description.add_action(delayed_imu_tf)
     return launch_description

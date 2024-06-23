@@ -18,7 +18,6 @@ print("---------------------robot_type = x1---------------------")
 def generate_launch_description():
     urdf_tutorial_path = get_package_share_path('yahboomcar_description')
     default_model_path = urdf_tutorial_path / 'urdf/yahboomcar_X3.urdf'
-    default_rviz_config_path = urdf_tutorial_path / 'rviz/yahboomcar.rviz'
 
     gui_arg = DeclareLaunchArgument(name='gui', 
                                     default_value='false', 
@@ -27,9 +26,6 @@ def generate_launch_description():
     model_arg = DeclareLaunchArgument(name='model', 
                                       default_value=str(default_model_path),
                                       description='Absolute path to robot urdf file')
-    rviz_arg = DeclareLaunchArgument(name='rvizconfig', 
-                                     default_value=str(default_rviz_config_path),
-                                     description='Absolute path to rviz config file')
     pub_odom_tf_arg = DeclareLaunchArgument('pub_odom_tf', 
                                             default_value='false',
                                             description='Whether to publish the tf from the original odom to the base_footprint')
@@ -130,7 +126,6 @@ def generate_launch_description():
     return LaunchDescription([
         gui_arg,
         model_arg,
-        rviz_arg,
         pub_odom_tf_arg,
         fdilink_ahrs_node,
         

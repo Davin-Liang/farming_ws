@@ -15,12 +15,9 @@ from threading import Thread
 from rclpy.duration import Duration
 from geometry_msgs.msg import Twist, Point
 from sensor_msgs.msg import Range
-from tf2_ros.buffer import Buffer
-from tf2_ros.transform_listener import TransformListener
 from math import copysign, sqrt, pow, radians
 from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
 import PyKDL
-from geometry_msgs.msg import Vector3
 from pid import PID
 
 class Game_Controller(Node):
@@ -83,10 +80,6 @@ class Game_Controller(Node):
         self.liear_speed     = 0.5
         self.angle = radians(self.angle)
         self.deviation_angle = radians(0.85)
-        
-        #init the tf listener
-        self.tf_buffer = Buffer()
-        self.tf_listener = TransformListener(self.tf_buffer, self)
 
         self.position = Point()
         self.x_start = self.position.x

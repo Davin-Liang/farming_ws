@@ -12,12 +12,9 @@ import time
 import subprocess
 import copy
 from threading import Thread
-from rclpy.duration import Duration
 from geometry_msgs.msg import Twist, Point
 from sensor_msgs.msg import Range
 from math import copysign, sqrt, pow, radians
-from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
-import PyKDL
 from pid import PID
 
 class Game_Controller(Node):
@@ -33,6 +30,12 @@ class Game_Controller(Node):
         self.pre_process                = False # 是否打开数据预处理
         self.start_for_lidar_distance   = False
         self.start_for_pid_distance     = False
+        # 调试开关
+        self.voice_switch               = False
+        self.A_switch                   = False
+        self.B_switch                   = False
+        self.C_switch                   = False
+        self.Home_switch                = False
 
         # 数据字典
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
@@ -55,15 +58,12 @@ class Game_Controller(Node):
         self.angle_tolerance                         = radians(2.0)
         self.odom_linear_scale_correction            = 1.0
         self.odom_angular_scale_correction           = 1.0
-        self.base_frame                              = 'base_footprint'
-        self.odom_frame                              = 'odom'
 
         # 使用到的订阅者和发布者
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
         self.joint_angles_publisher_ = self.create_publisher(Int32MultiArray, "servo_commands", 10)
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.lidar_subcriber_ = self.create_subscription(Range, "laser", self.lidar_callback_, 10)
-        # self.euler_angles_subscriber_ = self.create_subscription(Vector3, "euler_angles", self.euler_angles_callback_, 10)
         self.odom_subcriber_ = self.create_subscription(Odometry, "odom", self.odom_callback_, 10)
         self.yaw_angle_subcriber_ = self.create_subscription(Float64, "yaw_angle", self.yaw_angle_callback_, 10)
 
@@ -73,6 +73,7 @@ class Game_Controller(Node):
         self.ori_angle_pid = PID(Kp=0.685, Ki=0.0, Kd=0.426, max_out=1.4, max_iout=0.0)
         self.distance_pid  = PID(Kp=0.42, Ki=0.0, Kd=0.08, max_out=1.0, max_iout=0.0)
 
+        self.female_num      = 0
         self.distance        = 0.0
         self.angle           = 0.0
         self.yaw_angle       = 0.0 # testing
@@ -115,6 +116,7 @@ class Game_Controller(Node):
     def reset_vision_data(self):
         self.flowers_with_tag.clear()
         self.flowers_with_tag_again.clear()
+        self.female_num = 0
 
     def find_next_arm_goal_on_position(self):
         self.open_vision_detect = True
@@ -139,11 +141,11 @@ class Game_Controller(Node):
         """ 设置底盘转动角度 """
         self.angle = radians(angle)
         # 等待转完角度
-        while abs(self.angle-self.get_odom_angle_())>self.angle_tolerance:
+        while abs(self.angle-self.yaw_angle)>self.angle_tolerance:
             pass
         time.sleep(4.0)
 
-    def start_car_and_lidar_controls_stopping(self, speed, threthold=0.1, ignore_num=0):
+    def start_car_and_lidar_controls_stopping(self, speed, threthold=0.1, mode=1):
         """ 开动车并使用单线激光控制小车停止 """
         self.liear_speed = speed
         self.lidar_threthold = threthold
@@ -152,7 +154,10 @@ class Game_Controller(Node):
         # 等待 car 到位
         time.sleep(3.5) # 保证 car 驶出激光遮挡区域
         print("激光未受到目标的遮挡......")
-        for i in range(ignore_num+1):
+        if mode == 1:
+            while self.lidar_distance > self.lidar_threthold:
+                pass
+        elif mode == 0:
             while self.lidar_distance > self.lidar_threthold:
                 pass
         print("已经到达激光遮挡区域!!!")
@@ -177,11 +182,7 @@ class Game_Controller(Node):
 
         if 0 != len(self.flowers_lists): # 预防处理空数据
             print(self.flowers_lists)
-            self.confrim_moving_goal_for_arm(self.flowers_lists)
-
-    def euler_angles_callback_(self, msg):
-        # self.yaw_angle = msg.z      
-        pass  
+            self.confrim_moving_goal_for_arm(self.flowers_lists) 
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """
@@ -238,6 +239,7 @@ class Game_Controller(Node):
             if len(self.flowers_with_tag) == 0:
                 print("正在进行数据预处理")
                 for index, flower in enumerate(flowers_lists):
+                    self.female_num += 1
                     if flower['Type'] == 'male':
                         flower_with_tag['Type'] = flower['Type']
                         flower_with_tag['CentralPoint'] = flower['CentralPoint']
@@ -250,7 +252,8 @@ class Game_Controller(Node):
                         self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
                 self.flowers_with_tag_again = copy.deepcopy(self.flowers_with_tag)
                 #添加语音播报
-                # self.voice(flowers_lists)
+                if self.voice_switch:
+                    self.voice(flowers_lists)
             else:
                 print("正在授粉下一个目标点")
                 self.flowers_with_tag = copy.deepcopy(self.flowers_with_tag_again)
@@ -264,7 +267,6 @@ class Game_Controller(Node):
                             self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
                             self.flowers_with_tag[index]['Area'] = flower['Area']
                             break
-                #self.flowers_with_tag_again = self.flowers_with_tag    #更新again数据
                 # 寻找未“授粉”的花，找到的第一朵就设置为目标
                 for index, flower_with_tag in enumerate(self.flowers_with_tag):
                     if flower_with_tag['Pollinated'] != True:
@@ -288,16 +290,11 @@ class Game_Controller(Node):
         print(x_error)
         print(area_error)
         if abs(x_error) > self.threthold_of_x_error:
-           # print("关节速度为", self.joint_speed)
             self.arm_params['joint1'] = int(self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
-            #print("角度值为：", self.arm_params['joint1'])
         self.angles_of_joints.data.append(self.arm_params['joint1'])
         if abs(area_error) > self.threthold_of_area_error:
             self.arm_params['joint2'] = int(self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, area_error), self.default_arm_params['joint2_limiting']))
         self.angles_of_joints.data.append(self.arm_params['joint2'])
-        
-       # if abs(y_error) > self.threthold_of_y_error:
-           # self.arm_params['joint3'] = int(self.limit_num(self.arm_params['joint3'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint3_limiting']))
         self.angles_of_joints.data.append(self.arm_params['joint3'])
         if abs(y_error) > self.threthold_of_y_error:
             self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
@@ -454,29 +451,22 @@ class Game_Controller(Node):
         self.lidar_distance = msg.range
 
     def timer_work_(self):
-        # 更新参数
-        # self.get_param_()
-        # ref = self.get_odom_angle_()
         # 姿态控制
         self.ori_angle_pid.pid_calculate(ref=self.yaw_angle, goal=self.angle)
         self.move_cmd.angular.z = self.ori_angle_pid.out
 
         # 距离控制
         if self.start_for_pid_distance:
-            # self.position = self.get_coordinate_value_()
             o_distance = self.get_O_distance()
             o_distance *= self.odom_linear_scale_correction # 修正
-            # print("在上一次停下后已经行驶的距离: ", o_distance)
 
             # 计算误差
             self.distance_error = o_distance - abs(self.distance) # 负值控制车向前，正值控制车向后
-            # print("误差当前值为: ", self.distance_error)
 
             self.distance_pid.pid_calculate(o_distance, abs(self.distance))
             if self.distance >= 0:
                 self.move_cmd.linear.x = self.distance_pid.out
             else:
-                # print("distance 为负值")
                 self.move_cmd.linear.x = -self.distance_pid.out
             print(self.move_cmd.linear.x)
             if abs(self.distance_error) < self.distance_tolerance: # 达到目标的情况
@@ -486,84 +476,91 @@ class Game_Controller(Node):
             self.move_cmd.linear.x = self.liear_speed
         else: # 未设定目标的情况
             self.move_cmd.linear.x = 0.0
-            # self.x_start = self.get_position_().transform.translation.x
-            # self.y_start = self.get_position_().transform.translation.y
             self.x_start = self.position.x
             self.y_start = self.position.y
-            # print(self.move_cmd)
-            # print("正在停车状态......")
         self.cmd_vel.publish(self.move_cmd)
-
-    def get_coordinate_value_(self):
-        position = Point()
-        position.x = self.get_position_().transform.translation.x
-        position.y = self.get_position_().transform.translation.y
-        return position
-     
-    def get_position_(self):
-        try:
-            now = rclpy.time.Time()
-            # 从 self.tf_buffer 中查询从 self.odom_frame 到 self.base_frame 之间的坐标变换信息，并且在当前时间 now 进行查询
-            trans = self.tf_buffer.lookup_transform(self.odom_frame, self.base_frame, now, Duration(seconds=5))   
-            return trans       
-        except (LookupException, ConnectivityException, ExtrapolationException):
-            self.get_logger().info('transform not ready.')
-            raise
-            return
          
     def get_O_distance(self):
         return sqrt(pow((self.position.x - self.x_start), 2) + pow((self.position.y - self.y_start), 2))
-
-    # 废弃
-    def get_odom_angle_(self):
-        """ 得到目前的子坐标系相对夫坐标系转动的角度(弧度制)，父坐标系是不动的 """
-        try:
-            now = rclpy.time.Time()
-            rot = self.tf_buffer.lookup_transform(self.odom_frame, self.base_frame, now, Duration(seconds=5))
-            # 创建了一个四元数对象   
-            cacl_rot = PyKDL.Rotation.Quaternion(rot.transform.rotation.x, rot.transform.rotation.y, rot.transform.rotation.z, rot.transform.rotation.w)
-            """ 获取旋转矩阵的欧拉角。GetRPY()返回的是一个长度为3的列表, 包含了旋转矩阵的roll、pitch和yaw角度。
-                    在这里, [2]索引表示取得yaw角度, 也就是绕z轴的旋转角度 """
-            angle_rot = cacl_rot.GetRPY()[2]
-            return angle_rot
-        except (LookupException, ConnectivityException, ExtrapolationException):
-            self.get_logger().info('transform not ready')
-            return   
 
 def main():
     rclpy.init()
     try:
         node = Game_Controller("Game_Controller")
-        # node.choose_arm_goal("a_left")
-        # node.start_car_and_lidar_controls_stopping(0.05, 0.4)
-        # node.vision_control_arm("A","a_left")
-        # node.find_next_arm_goal_on_position()
-        # node.fin
-        #node.vision_control_arm("A","a_right")
-        #print("第一个点位已授粉完成")
-        # node.start_car_and_lidar_controls_stopping(0.05, 0.4)
-        node.set_distance(1.0)
-        #node.vision_control_arm("A","a_right")
-        #node.vision_control_arm("A","a_left")
-        #print("第二个点位已授粉完成")
-        # node.start_car_and_lidar_controls_stopping(0.05, 0.4)
-        # node.start_car_and_lidar_controls_stopping(0.05, 0.4)
-        # node.set_angle(-90.0)
-        # node.start_car_and_lidar_controls_stopping(-0.05, 0.6)
-        # node.start_car_and_lidar_controls_stopping(-0.05, 0.6)
-        # node.set_angle(0.0)
-        # time.sleep(5.0)
-        # node.start_car_and_lidar_controls_stopping(-0.05, 0.6)
-        # node.start_car_and_lidar_controls_stopping(-0.05, 0.6)
-        # node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-        # node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
-        # node.set_angle(90.0)
-        # node.start_car_and_lidar_controls_stopping(0.05, 0.8)
-        # node.set_angle(0.0)
-        #node.vision_control_arm("A","a_left")
-        #node.vision_control_arm("A","a_right")
-        #print("第三个点位已授粉完成")
-        #node.find_next_arm_goal_on_position()
+
+# ---------------------------------------------------------------------------------------------------------------
+# ----------------AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA--------------------
+# ---------------------------------------------------------------------------------------------------------------
+        if node.A_switch:
+            for i in range(3):
+                node.start_car_and_lidar_controls_stopping(0.05, 0.4)
+                node.vision_control_arm("A","a_left")
+                for i in range(node.female_num-1):
+                    node.find_next_arm_goal_on_position()
+                node.vision_control_arm("A","a_right")
+                for i in range(node.female_num-1):
+                    node.find_next_arm_goal_on_position()
+            node.set_distance(0.8) # TODO: 距离未确定
+            node.set_angle(-90.0)
+            node.start_car_and_lidar_controls_stopping(-0.05, 0.6)
+            node.start_car_and_lidar_controls_stopping(-0.05, 0.6)
+            node.set_distance(-0.35) #TODO: 距离未确定
+            node.set_angle(0.0)
+# ---------------------------------------------------------------------------------------------------------------
+# ----------------BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB--------------------
+# ---------------------------------------------------------------------------------------------------------------
+        if node.B_switch:
+            node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+            node.set_distance(0.15) #TODO: 距离未确定
+            # TODO:机械臂序号未确定
+            node.vision_control_arm("A","a_left") 
+            node.vision_control_arm("A","a_left")
+            node.vision_control_arm("A","a_left")
+
+            for i in range(3):
+                node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+                node.set_distance(-0.15) #TODO: 距离未确定
+                # arm action
+                # TODO:机械臂序号未确定
+                node.vision_control_arm("A","a_left") 
+                node.vision_control_arm("A","a_left")
+                node.vision_control_arm("A","a_left")
+                
+                if i == 2:
+                    break
+                # TODO:机械臂序号未确定 
+                node.vision_control_arm("A","a_left") 
+                node.vision_control_arm("A","a_left")
+                node.vision_control_arm("A","a_left")
+            node.set_distance(-0.2) #TODO: 距离未确定
+            node.set_angle(90.0)
+            node.start_car_and_lidar_controls_stopping(0.05, 0.6)
+            node.start_car_and_lidar_controls_stopping(0.05, 0.6)
+            node.set_distance(0.25) #TODO: 距离未确定
+            node.set_angle(0.0)
+# ---------------------------------------------------------------------------------------------------------------
+# ----------------CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC--------------------
+# ---------------------------------------------------------------------------------------------------------------
+        if node.C_switch:
+            for i in range(3):
+                node.start_car_and_lidar_controls_stopping(0.05, 0.4)
+                node.set_distance(0.1) #TODO: 距离未确定
+                node.vision_control_arm("A","a_left")
+                for i in range(node.female_num-1):
+                    node.find_next_arm_goal_on_position()
+                node.vision_control_arm("A","a_right")
+                for i in range(node.female_num-1):
+                    node.find_next_arm_goal_on_position()
+                node.start_car_and_lidar_controls_stopping(0.05, 0.4, 0)
+# ---------------------------------------------------------------------------------------------------------------
+# ----------------HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH--------------------
+# ---------------------------------------------------------------------------------------------------------------
+        if node.Home_switch:
+            pass
+# ---------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------
+
         while 1:
             pass
     except KeyboardInterrupt:

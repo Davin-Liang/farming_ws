@@ -1,0 +1,67 @@
+# A 区
+## '_a_left' 指的是车在 A 区行驶时车的左边
+## '_a_left' 指的是车在 A 区行驶时车的左边
+joint1_a_left: 132
+joint2_a_left: 130
+joint3_a_left: 160
+joint4_a_left: 101     #角度待定
+
+joint1_a_right: 312
+joint2_a_right: 130
+joint3_a_right: 160
+joint4_a_right: 101
+
+# B 区
+## '_b_front' 指的是车在 A 区行驶时车的前方
+## '_b_back' 指的是车在 A 区行驶时车的后方
+joint1_moving: 68
+joint2_moving: 79
+joint3_moving: 95
+joint4_moving: 75
+# -----------------------
+joint1_b_left_front: 97
+joint2_b_left_front: 111
+joint3_b_left_front: 124
+joint4_b_left_front: 99
+
+joint1_b_middle_front: 111
+joint2_b_middle_front: 107
+joint3_b_middle_front: 124
+joint4_b_middle_front: 93
+
+joint1_b_right_front: 126
+joint2_b_right_front: 111
+joint3_b_right_front: 124
+joint4_b_right_front: 99
+# ---------------------
+joint1_b_left_back: 37
+joint2_b_left_back: 111
+joint3_b_left_back: 124
+joint4_b_left_back: 100
+
+joint1_b_middle_back: 21
+joint2_b_middle_back: 107
+joint3_b_middle_back: 124
+joint4_b_middle_back: 93
+
+joint1_b_right_back: 7
+joint2_b_right_back: 111
+joint3_b_right_back: 124
+joint4_b_right_back: 100
+
+# C 区
+joint1_c_left: 132
+joint2_c_left: 130
+joint3_c_left: 160
+joint4_c_left: 101     #角度待定
+
+joint1_c_right: 312
+joint2_c_right: 130
+joint3_c_right: 160
+joint4_c_right: 101
+
+#从下至上
+joint1_limiting: [0, 360]     #对应值为度数，激光雷达方向增大
+joint2_limiting: [81, 245]    #激光方向增大
+joint3_limiting: [70, 225]    #激光方向减小
+joint4_limiting: [55, 225]    #激光方向减小

@@ -22,7 +22,7 @@ class Game_Controller(Node):
         super().__init__(name)
         self.get_logger().info("Wassup, bro, I am %s, M3!" % name)
         # 加载 arm 参数
-        self.file_path = os.path.expanduser('~/farming_ws/src/farming_vision/config/arm_params.yaml')
+        self.file_path = os.path.expanduser('~/farming_ws/src/motion_controller/config/arm_params.yaml')
         self.load_config_file_()
     
         # 重要 BOOL 值

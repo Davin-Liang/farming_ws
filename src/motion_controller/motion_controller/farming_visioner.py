@@ -331,13 +331,14 @@ class Game_Controller(Node):
         time.sleep(2.0)
 
     def voice(self, flowers_lists):
-        sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][1])
-        goal_list = []
-        # 创建目标字典，并按排序后的结果填充值
-        for i in range(len(sorted_data)):
-            goal_list.append(sorted_data[i]['Type'])
         #语音播报'A'
         if self.place_name == 'A':
+            sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][1])
+            goal_list = []
+            # 创建目标字典，并按排序后的结果填充值
+            for i in range(len(sorted_data)):
+                goal_list.append(sorted_data[i]['Type'])
+                
             for index, goal in enumerate(goal_list):
                 if index == 0:
                     self.voice_broadcast('up')
@@ -357,15 +358,50 @@ class Game_Controller(Node):
                         self.voice_broadcast(type='female')
                     else:
                         self.voice_broadcast(type="male")
+            return
         #self.open_vision_detect = False
         #语音播报"B"
         if self.place_name == 'B':
+            sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][1])
+            goal_list = []
+            # 创建目标字典，并按排序后的结果填充值
+            for i in range(len(sorted_data)):
+                goal_list.append(sorted_data[i]['Type'])
+
             for index, goal in enumerate(goal_list):
                 if index == 0:
                     if goal == 'famale':
                         self.voice_broadcast(type='female')
                     else:
                         self.voice_broadcast(type="male")
+            return
+        if self.place_name == "C":
+            sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][0])
+            goal_list = []
+            for i in range(len(sorted_data)):
+                goal_list.append(sorted_data[i]['Type'])
+
+            for index, goal in enumerate(goal_list):
+                if index == 0:
+                    self.voice_broadcast('left')
+                    if goal == 'famale':
+                        self.voice_broadcast(type='female')
+                    else:
+                        self.voice_broadcast(type="male")
+                if index == 1:
+                    self.voice_broadcast('middle')
+                    if goal == 'famale':
+                        self.voice_broadcast(type='female')
+                    else:
+                        self.voice_broadcast(type="male")
+                if index == 2:
+                    self.voice_broadcast('right')
+                    if goal == 'famale':
+                        self.voice_broadcast(type='female')
+                    else:
+                        self.voice_broadcast(type="male")
+            return
+            
 
     def choose_arm_goal(self, pose_name):
         """ Use arm goals in YAML file. """
@@ -513,25 +549,27 @@ def main():
             node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
             node.set_distance(0.15) #TODO: 距离未确定
             # TODO:机械臂序号未确定
-            node.vision_control_arm("A","a_left") 
-            node.vision_control_arm("A","a_left")
-            node.vision_control_arm("A","a_left")
-
+            node.vision_control_arm("B","a_left") 
+            node.vision_control_arm("B","a_left")
+            node.vision_control_arm("B","a_left")
+            node.choose_arm_goal("a_left")
             for i in range(3):
                 node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
                 node.set_distance(-0.15) #TODO: 距离未确定
                 # arm action
                 # TODO:机械臂序号未确定
-                node.vision_control_arm("A","a_left") 
-                node.vision_control_arm("A","a_left")
-                node.vision_control_arm("A","a_left")
+                node.vision_control_arm("B","a_left") 
+                node.vision_control_arm("B","a_left")
+                node.vision_control_arm("B","a_left")
                 
                 if i == 2:
                     break
                 # TODO:机械臂序号未确定 
-                node.vision_control_arm("A","a_left") 
-                node.vision_control_arm("A","a_left")
-                node.vision_control_arm("A","a_left")
+                node.vision_control_arm("B","a_left") 
+                node.vision_control_arm("B","a_left")
+                node.vision_control_arm("B","a_left")
+                node.choose_arm_goal("a_left")
+
             node.set_distance(-0.2) #TODO: 距离未确定
             node.set_angle(90.0)
             node.start_car_and_lidar_controls_stopping(0.05, 0.6)
@@ -545,10 +583,10 @@ def main():
             for i in range(3):
                 node.start_car_and_lidar_controls_stopping(0.05, 0.4)
                 node.set_distance(0.1) #TODO: 距离未确定
-                node.vision_control_arm("A","a_left")
+                node.vision_control_arm("C","a_left")
                 for i in range(node.female_num-1):
                     node.find_next_arm_goal_on_position()
-                node.vision_control_arm("A","a_right")
+                node.vision_control_arm("C","a_right")
                 for i in range(node.female_num-1):
                     node.find_next_arm_goal_on_position()
                 node.start_car_and_lidar_controls_stopping(0.05, 0.4, 0)

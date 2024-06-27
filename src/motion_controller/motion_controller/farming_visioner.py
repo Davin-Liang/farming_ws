@@ -30,12 +30,7 @@ class Game_Controller(Node):
         self.pre_process                = False # 是否打开数据预处理
         self.start_for_lidar_distance   = False
         self.start_for_pid_distance     = False
-        # 调试开关
         self.voice_switch               = False
-        self.A_switch                   = False
-        self.B_switch                   = False
-        self.C_switch                   = False
-        self.Home_switch                = False
 
         # 数据字典
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
@@ -98,8 +93,9 @@ class Game_Controller(Node):
         self.spin_thread = Thread(target=self.spin_task_)
         self.spin_thread.start()
 
-
-    # ---------------- 对外接口函数 -----------------
+# -----------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------对外接口函数------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------------
     def vision_control_arm(self, place_name, pose_name):
         self.place_name = place_name
         self.choose_arm_goal(pose_name)
@@ -126,7 +122,6 @@ class Game_Controller(Node):
         while self.open_vision_detect:
             pass
         print("已经完成任务！！！！！！")
-    # ---------------
 
     def set_distance(self, distance):
         """ 设置车轮方向的行驶距离及以什么样的速度行驶 """
@@ -164,245 +159,6 @@ class Game_Controller(Node):
         self.start_for_lidar_distance = False
         time.sleep(2.0)
 
-    # ----------------------------------------------------------
-
-    def yaw_angle_callback_(self, msg):
-        self.yaw_angle = -msg.data
-        print(self.yaw_angle)
-
-    def odom_callback_(self, msg):
-        self.position.x = msg.pose.pose.position.x
-        self.position.y = msg.pose.pose.position.y
-        # print(self.position)
-
-    def arm_timer_callback_(self):
-        print("正在等待开启视觉")
-        if not self.open_vision_detect:
-            return
-
-        if 0 != len(self.flowers_lists): # 预防处理空数据
-            print(self.flowers_lists)
-            self.confrim_moving_goal_for_arm(self.flowers_lists) 
-
-    def vision_callback_(self, msg):
-        """ 视觉回调函数 """
-        flowers_lists = []
-        flower = {'Type': '', 'CentralPoint': [], 'Area': 0} # 类型、中心点坐标、面积
-        
-        if 0 != len(msg.targets):
-            for i in range(len(msg.targets)):
-                flower['CentralPoint'].clear()
-                if msg.targets[i].type == "male": 
-                    flower['Type'] = msg.targets[i].type
-
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
-                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
-                elif msg.targets[i].type == "famale":
-                    flower['Type'] = msg.targets[i].type
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
-                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
-
-                # 得到原始数据
-                flowers_lists.append(copy.deepcopy(flower)) # 深拷贝
-        #print(flowers_lists)
-        self.flowers_lists.clear()
-        self.flowers_lists = copy.deepcopy(flowers_lists)
-
-    # ----------------------------------------------------------
-
-    def confrim_moving_goal_for_arm(self, flowers_lists):
-        """ 确定 arm 的移动目标 """
-        # 数据预处理并选择第一个处理的目标
-        self.data_pre_processing(flowers_lists)
-        # 更新数据
-        # print("正在更新数据")
-        for flower in flowers_lists:
-            if flower['Type'] == "male":
-                for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                    if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
-                        print("小于阈值")
-                        self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
-                        self.flowers_with_tag[index]['Area'] = flower['Area']
-                        #print(self.flowers_with_tag)
-                        break # 跳出内层 for 循环
-
-        # # 控制 arm
-        self.control_arm()
-
-    def data_pre_processing(self, flowers_lists):
-        """ 为存储花属性的字典添加花属性：是否正在操作、是否已授粉 """
-        # 类型、中心的坐标、面积、是否正在操作、是否已授粉
-        flower_with_tag = {'Type': '', 'CentralPoint': [], 'Area': 0, 'Moving': False, 'Pollinated': False}
-        if self.pre_process:
-            if len(self.flowers_with_tag) == 0:
-                print("正在进行数据预处理")
-                for index, flower in enumerate(flowers_lists):
-                    self.female_num += 1
-                    if flower['Type'] == 'male':
-                        flower_with_tag['Type'] = flower['Type']
-                        flower_with_tag['CentralPoint'] = flower['CentralPoint']
-                        flower_with_tag['Area'] = flower['Area']
-                        if self.arm_moving == False:
-                            flower_with_tag['Moving'] = True
-                            self.arm_moving = True
-                        else:
-                            flower_with_tag['Moving'] = False
-                        self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
-                self.flowers_with_tag_again = copy.deepcopy(self.flowers_with_tag)
-                #添加语音播报
-                if self.voice_switch:
-                    self.voice(flowers_lists)
-            else:
-                print("正在授粉下一个目标点")
-                self.flowers_with_tag = copy.deepcopy(self.flowers_with_tag_again)
-                print("预处理第二次")
-                print(self.flowers_with_tag_again)
-                print(self.flowers_with_tag)
-                # 更新中心点坐标参数
-                for flower in flowers_lists:
-                    for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                        if self.calculate_O_distance(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
-                            self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
-                            self.flowers_with_tag[index]['Area'] = flower['Area']
-                            break
-                # 寻找未“授粉”的花，找到的第一朵就设置为目标
-                for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                    if flower_with_tag['Pollinated'] != True:
-                        self.flowers_with_tag[index]['Moving'] = True
-                        break
-        self.pre_process = False # 关闭数据预处理
-
-    def control_arm(self):
-        y_error = 0
-        x_error = 0
-        area_error = 0
-        print(self.flowers_with_tag)
-        for flower_with_tag in self.flowers_with_tag:
-            if flower_with_tag['Moving'] == True:
-                print("正在获取 x 轴误差")
-                x_error = self.central_point_of_camera[0] - flower_with_tag['CentralPoint'][0]
-                y_error = self.central_point_of_camera[1] - flower_with_tag['CentralPoint'][1]
-                area_error = self.area_of_polliating - flower_with_tag['Area']
-                break
-        self.angles_of_joints.data = []
-        print(x_error)
-        print(area_error)
-        if abs(x_error) > self.threthold_of_x_error:
-            self.arm_params['joint1'] = int(self.limit_num(self.arm_params['joint1'] + copysign(self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
-        self.angles_of_joints.data.append(self.arm_params['joint1'])
-        if abs(area_error) > self.threthold_of_area_error:
-            self.arm_params['joint2'] = int(self.limit_num(self.arm_params['joint2'] + copysign(self.joint_speed, area_error), self.default_arm_params['joint2_limiting']))
-        self.angles_of_joints.data.append(self.arm_params['joint2'])
-        self.angles_of_joints.data.append(self.arm_params['joint3'])
-        if abs(y_error) > self.threthold_of_y_error:
-            self.arm_params['joint4'] = int(self.limit_num(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
-        self.angles_of_joints.data.append(self.arm_params['joint4'])
-        if (abs(x_error) < self.threthold_of_x_error and
-            abs(area_error) < self.threthold_of_area_error): # and
-            # abs(y_error) < self.threthold_of_y_error):
-            print("已经完成授粉")
-            for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                if flower_with_tag['Moving'] == True:
-                    self.flowers_with_tag_again[index]['Moving'] = False
-                    self.flowers_with_tag_again[index]['Pollinated'] = True
-            self.reset_arm_pose()
-            return
-        self.angles_of_joints.data.append(self.servo_time)
-        print("发送命令给机械臂")
-        print(self.angles_of_joints)
-        self.joint_angles_publisher_.publish(self.angles_of_joints)
-        # ros2 topic pub /joint_angles "data: [68, 80, 65, 110]"
-
-    def limit_num(self, num, num_range):
-        if num > num_range[1]:
-            num = num_range[1]
-        elif num < num_range[0]:
-            num = num_range[0]
-        return num
-
-    def reset_arm_pose(self, pose="a_left"):
-        """ 控制 arm 回到初始姿态 """
-        print("控制 arm 回到初始姿态")
-        self.choose_arm_goal(pose)
-        self.open_vision_detect = False
-        self.pre_process = False
-        time.sleep(2.0)
-
-    def voice(self, flowers_lists):
-        #语音播报'A'
-        if self.place_name == 'A':
-            sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][1])
-            goal_list = []
-            # 创建目标字典，并按排序后的结果填充值
-            for i in range(len(sorted_data)):
-                goal_list.append(sorted_data[i]['Type'])
-                
-            for index, goal in enumerate(goal_list):
-                if index == 0:
-                    self.voice_broadcast('up')
-                    if goal == 'famale':
-                        self.voice_broadcast(type='female')
-                    else:
-                        self.voice_broadcast(type="male")
-                if index == 1:
-                    self.voice_broadcast('middle')
-                    if goal == 'famale':
-                        self.voice_broadcast(type='female')
-                    else:
-                        self.voice_broadcast(type="male")
-                if index == 2:
-                    self.voice_broadcast('down')
-                    if goal == 'famale':
-                        self.voice_broadcast(type='female')
-                    else:
-                        self.voice_broadcast(type="male")
-            return
-        #self.open_vision_detect = False
-        #语音播报"B"
-        if self.place_name == 'B':
-            sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][1])
-            goal_list = []
-            # 创建目标字典，并按排序后的结果填充值
-            for i in range(len(sorted_data)):
-                goal_list.append(sorted_data[i]['Type'])
-
-            for index, goal in enumerate(goal_list):
-                if index == 0:
-                    if goal == 'famale':
-                        self.voice_broadcast(type='female')
-                    else:
-                        self.voice_broadcast(type="male")
-            return
-        if self.place_name == "C":
-            sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][0])
-            goal_list = []
-            for i in range(len(sorted_data)):
-                goal_list.append(sorted_data[i]['Type'])
-
-            for index, goal in enumerate(goal_list):
-                if index == 0:
-                    self.voice_broadcast('left')
-                    if goal == 'famale':
-                        self.voice_broadcast(type='female')
-                    else:
-                        self.voice_broadcast(type="male")
-                if index == 1:
-                    self.voice_broadcast('middle')
-                    if goal == 'famale':
-                        self.voice_broadcast(type='female')
-                    else:
-                        self.voice_broadcast(type="male")
-                if index == 2:
-                    self.voice_broadcast('right')
-                    if goal == 'famale':
-                        self.voice_broadcast(type='female')
-                    else:
-                        self.voice_broadcast(type="male")
-            return
-            
-
     def choose_arm_goal(self, pose_name):
         """ Use arm goals in YAML file. """
         self.arm_params['joint1'] = self.default_arm_params['joint1_'+pose_name]
@@ -435,6 +191,203 @@ class Game_Controller(Node):
         self.angles_of_joints.data.append(self.arm_params['joint4'])
         self.joint_angles_publisher_.publish(self.angles_of_joints)
         time.sleep(2.0)
+
+# -----------------------------------------------------------------------------------------------------------------------------
+# --------------------------------------------------------END------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------------
+
+    def confrim_moving_goal_for_arm_(self, flowers_lists):
+        """ 确定 arm 的移动目标 """
+        # 数据预处理并选择第一个处理的目标
+        self.data_pre_processing_(flowers_lists)
+        # 更新数据
+        # print("正在更新数据")
+        for flower in flowers_lists:
+            if flower['Type'] == "male":
+                for index, flower_with_tag in enumerate(self.flowers_with_tag):
+                    if self.calculate_O_distance_(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
+                        print("小于阈值")
+                        self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
+                        self.flowers_with_tag[index]['Area'] = flower['Area']
+                        #print(self.flowers_with_tag)
+                        break # 跳出内层 for 循环
+
+        # # 控制 arm
+        self.control_arm_()
+
+    def data_pre_processing_(self, flowers_lists):
+        """ 为存储花属性的字典添加花属性：是否正在操作、是否已授粉 """
+        # 类型、中心的坐标、面积、是否正在操作、是否已授粉
+        flower_with_tag = {'Type': '', 'CentralPoint': [], 'Area': 0, 'Moving': False, 'Pollinated': False}
+        if self.pre_process:
+            if len(self.flowers_with_tag) == 0:
+                print("正在进行数据预处理")
+                for index, flower in enumerate(flowers_lists):
+                    self.female_num += 1
+                    if flower['Type'] == 'male':
+                        flower_with_tag['Type'] = flower['Type']
+                        flower_with_tag['CentralPoint'] = flower['CentralPoint']
+                        flower_with_tag['Area'] = flower['Area']
+                        if self.arm_moving == False:
+                            flower_with_tag['Moving'] = True
+                            self.arm_moving = True
+                        else:
+                            flower_with_tag['Moving'] = False
+                        self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
+                self.flowers_with_tag_again = copy.deepcopy(self.flowers_with_tag)
+                #添加语音播报
+                if self.voice_switch:
+                    self.voice_(flowers_lists)
+            else:
+                print("正在授粉下一个目标点")
+                self.flowers_with_tag = copy.deepcopy(self.flowers_with_tag_again)
+                print("预处理第二次")
+                print(self.flowers_with_tag_again)
+                print(self.flowers_with_tag)
+                # 更新中心点坐标参数
+                for flower in flowers_lists:
+                    for index, flower_with_tag in enumerate(self.flowers_with_tag):
+                        if self.calculate_O_distance_(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
+                            self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
+                            self.flowers_with_tag[index]['Area'] = flower['Area']
+                            break
+                # 寻找未“授粉”的花，找到的第一朵就设置为目标
+                for index, flower_with_tag in enumerate(self.flowers_with_tag):
+                    if flower_with_tag['Pollinated'] != True:
+                        self.flowers_with_tag[index]['Moving'] = True
+                        break
+        self.pre_process = False # 关闭数据预处理
+
+    def control_arm_(self):
+        y_error = 0
+        x_error = 0
+        area_error = 0
+        print(self.flowers_with_tag)
+        for flower_with_tag in self.flowers_with_tag:
+            if flower_with_tag['Moving'] == True:
+                print("正在获取 x 轴误差")
+                x_error = self.central_point_of_camera[0] - flower_with_tag['CentralPoint'][0]
+                y_error = self.central_point_of_camera[1] - flower_with_tag['CentralPoint'][1]
+                area_error = self.area_of_polliating - flower_with_tag['Area']
+                break
+        self.angles_of_joints.data = []
+        print(x_error)
+        print(area_error)
+        if abs(x_error) > self.threthold_of_x_error:
+            self.arm_params['joint1'] = int(self.limit_num_(self.arm_params['joint1'] + copysign(self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
+        self.angles_of_joints.data.append(self.arm_params['joint1'])
+        if abs(area_error) > self.threthold_of_area_error:
+            self.arm_params['joint2'] = int(self.limit_num_(self.arm_params['joint2'] + copysign(self.joint_speed, area_error), self.default_arm_params['joint2_limiting']))
+        self.angles_of_joints.data.append(self.arm_params['joint2'])
+        self.angles_of_joints.data.append(self.arm_params['joint3'])
+        if abs(y_error) > self.threthold_of_y_error:
+            self.arm_params['joint4'] = int(self.limit_num_(self.arm_params['joint4'] + copysign(self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
+        self.angles_of_joints.data.append(self.arm_params['joint4'])
+        if (abs(x_error) < self.threthold_of_x_error and
+            abs(area_error) < self.threthold_of_area_error): # and
+            # abs(y_error) < self.threthold_of_y_error):
+            print("已经完成授粉")
+            for index, flower_with_tag in enumerate(self.flowers_with_tag):
+                if flower_with_tag['Moving'] == True:
+                    self.flowers_with_tag_again[index]['Moving'] = False
+                    self.flowers_with_tag_again[index]['Pollinated'] = True
+            self.reset_arm_pose_()
+            return
+        self.angles_of_joints.data.append(self.servo_time)
+        print("发送命令给机械臂")
+        print(self.angles_of_joints)
+        self.joint_angles_publisher_.publish(self.angles_of_joints)
+        # ros2 topic pub /joint_angles "data: [68, 80, 65, 110]"
+
+    def limit_num_(self, num, num_range):
+        if num > num_range[1]:
+            num = num_range[1]
+        elif num < num_range[0]:
+            num = num_range[0]
+        return num
+
+    def reset_arm_pose_(self, pose="a_left"):
+        """ 控制 arm 回到初始姿态 """
+        print("控制 arm 回到初始姿态")
+        self.choose_arm_goal(pose)
+        self.open_vision_detect = False
+        self.pre_process = False
+        time.sleep(2.0)
+
+    def voice_(self, flowers_lists):
+        #语音播报'A'
+        if self.place_name == 'A':
+            goal_list = self.data_sort_(flowers_lists, prior_axis='v')
+                
+            for index, goal in enumerate(goal_list):
+                if index == 0:
+                    self.voice_broadcast('up')
+                    if goal == 'famale':
+                        self.voice_broadcast(type='female')
+                    else:
+                        self.voice_broadcast(type="male")
+                if index == 1:
+                    self.voice_broadcast('middle')
+                    if goal == 'famale':
+                        self.voice_broadcast(type='female')
+                    else:
+                        self.voice_broadcast(type="male")
+                if index == 2:
+                    self.voice_broadcast('down')
+                    if goal == 'famale':
+                        self.voice_broadcast(type='female')
+                    else:
+                        self.voice_broadcast(type="male")
+            return
+        #self.open_vision_detect = False
+        #语音播报"B"
+        if self.place_name == 'B':
+            goal_list = self.data_sort_(flowers_lists, prior_axis='v')
+
+            for index, goal in enumerate(goal_list):
+                if index == 0:
+                    if goal == 'famale':
+                        self.voice_broadcast(type='female')
+                    else:
+                        self.voice_broadcast(type="male")
+            return
+        if self.place_name == "C":
+            goal_list = self.data_sort_(flowers_lists, prior_axis='h')
+
+            for index, goal in enumerate(goal_list):
+                if index == 0:
+                    self.voice_broadcast('left')
+                    if goal == 'famale':
+                        self.voice_broadcast(type='female')
+                    else:
+                        self.voice_broadcast(type="male")
+                if index == 1:
+                    self.voice_broadcast('middle')
+                    if goal == 'famale':
+                        self.voice_broadcast(type='female')
+                    else:
+                        self.voice_broadcast(type="male")
+                if index == 2:
+                    self.voice_broadcast('right')
+                    if goal == 'famale':
+                        self.voice_broadcast(type='female')
+                    else:
+                        self.voice_broadcast(type="male")
+            return
+
+    def data_sort_(self, flowers_lists, prior_axis='h'):
+        """ 'h' represents horizontal, 'v' represents vertical. """
+        goal_list = []
+        if prior_axis == 'h':
+            sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][0])
+            for i in range(len(sorted_data)):
+                goal_list.append(sorted_data[i]['Type'])
+        elif prior_axis == 'v':
+            sorted_data = sorted(flowers_lists, key=lambda x: x['CentralPoint'][1])
+            for i in range(len(sorted_data)):
+                goal_list.append(sorted_data[i]['Type'])
+
+        return goal_list
 
     def voice_broadcast(self, direction='', type=''):
         """ 语音播报 """
@@ -469,7 +422,7 @@ class Game_Controller(Node):
                 subprocess.Popen(['sudo', 'tinyplay', './voice/female.wav', '-D', '0', '-d', '0'])
                 time.sleep(1.0)
 
-    def calculate_O_distance(self, point1, point2):
+    def calculate_O_distance_(self, point1, point2):
         """ 计算两个坐标点之间的 O 式距离 """
         return math.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
     
@@ -477,6 +430,53 @@ class Game_Controller(Node):
         """ 读取 YAML 文件 """
         with open(self.file_path, 'r') as file:
             self.default_arm_params = yaml.safe_load(file)
+
+    def get_O_distance_(self):
+        return sqrt(pow((self.position.x - self.x_start), 2) + pow((self.position.y - self.y_start), 2))
+
+
+    def yaw_angle_callback_(self, msg):
+        self.yaw_angle = -msg.data
+        print(self.yaw_angle)
+
+    def odom_callback_(self, msg):
+        self.position.x = msg.pose.pose.position.x
+        self.position.y = msg.pose.pose.position.y
+
+    def arm_timer_callback_(self):
+        print("正在等待开启视觉")
+        if not self.open_vision_detect:
+            return
+
+        if 0 != len(self.flowers_lists): # 预防处理空数据
+            print(self.flowers_lists)
+            self.confrim_moving_goal_for_arm_(self.flowers_lists) 
+
+    def vision_callback_(self, msg):
+        """ 视觉回调函数 """
+        flowers_lists = []
+        flower = {'Type': '', 'CentralPoint': [], 'Area': 0} # 类型、中心点坐标、面积
+        
+        if 0 != len(msg.targets):
+            for i in range(len(msg.targets)):
+                flower['CentralPoint'].clear()
+                if msg.targets[i].type == "male": 
+                    flower['Type'] = msg.targets[i].type
+
+                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
+                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
+                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
+                elif msg.targets[i].type == "famale":
+                    flower['Type'] = msg.targets[i].type
+                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
+                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
+                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
+
+                # 得到原始数据
+                flowers_lists.append(copy.deepcopy(flower)) # 深拷贝
+        #print(flowers_lists)
+        self.flowers_lists.clear()
+        self.flowers_lists = copy.deepcopy(flowers_lists)
 
     def spin_task_(self):
         rclpy.spin(self)
@@ -493,7 +493,7 @@ class Game_Controller(Node):
 
         # 距离控制
         if self.start_for_pid_distance:
-            o_distance = self.get_O_distance()
+            o_distance = self.get_O_distance_()
             o_distance *= self.odom_linear_scale_correction # 修正
 
             # 计算误差
@@ -515,9 +515,12 @@ class Game_Controller(Node):
             self.x_start = self.position.x
             self.y_start = self.position.y
         self.cmd_vel.publish(self.move_cmd)
-         
-    def get_O_distance(self):
-        return sqrt(pow((self.position.x - self.x_start), 2) + pow((self.position.y - self.y_start), 2))
+        
+
+
+
+
+
 
 def main():
     rclpy.init()

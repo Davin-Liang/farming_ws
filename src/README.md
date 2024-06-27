@@ -19,5 +19,13 @@ ros2 launch yahboomcar_bringup upupup.launch
 ```
 6. 在确保 launch 正常运行后，运行 farming_visioner.py
 ```
-python3 farming_visioner.py
+python3 game_process.py
 ```
+
+## Jun 29 调试流程
+1. 更换 dnn_node_exmaple 节点读取模型的地址
+2. 测试新训练模型的精度
+3. PID 参数优化
+4. 测试比赛逻辑代码
+5. 规范场地标准
+

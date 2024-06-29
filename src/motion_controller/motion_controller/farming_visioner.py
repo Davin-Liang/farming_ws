@@ -6,7 +6,7 @@ from ai_msgs.msg import PerceptionTargets # type: ignore
 import os
 import yaml
 from std_msgs.msg import Int32MultiArray
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 from nav_msgs.msg import Odometry
 import time
 import subprocess
@@ -30,7 +30,7 @@ class Game_Controller(Node):
         self.pre_process                = False # 是否打开数据预处理
         self.start_for_lidar_distance   = False
         self.start_for_pid_distance     = False
-        self.voice_switch               = False
+        self.voice_switch               = True
 
         # 数据字典
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
@@ -48,7 +48,7 @@ class Game_Controller(Node):
         self.threthold_of_y_error                    = 10.0
         self.threthold_of_area_error                 = 5000.0
         self.servo_time                              = 200  #机械臂运动时间，单位mm
-        self.servo_reset_time                        = 1000  #机械臂初始位置运动时间
+        self.servo_reset_time                        = 2000  #机械臂初始位置运动时间
         self.distance_tolerance                      = 0.03
         self.angle_tolerance                         = radians(2.0)
         self.odom_linear_scale_correction            = 1.0
@@ -58,12 +58,14 @@ class Game_Controller(Node):
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
         self.joint_angles_publisher_ = self.create_publisher(Int32MultiArray, "servo_commands", 10)
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
+        self.buzzer_publisher_ = self.create_publisher(Bool, "/Buzzer", 5)
         self.lidar_subcriber_ = self.create_subscription(Range, "laser", self.lidar_callback_, 10)
         self.odom_subcriber_ = self.create_subscription(Odometry, "odom", self.odom_callback_, 10)
         self.yaw_angle_subcriber_ = self.create_subscription(Float64, "yaw_angle", self.yaw_angle_callback_, 10)
 
         self.move_cmd           = Twist()
         self.angles_of_joints   = Int32MultiArray()
+        self.buzzer_cmd         = Bool()
 
         self.ori_angle_pid = PID(Kp=0.685, Ki=0.0, Kd=0.426, max_out=1.4, max_iout=0.0)
         self.distance_pid  = PID(Kp=0.42, Ki=0.0, Kd=0.08, max_out=1.0, max_iout=0.0)
@@ -96,6 +98,16 @@ class Game_Controller(Node):
 # -----------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------对外接口函数------------------------------------------------------------------
 # -----------------------------------------------------------------------------------------------------------------------------
+    def buzzer_tips(self, times=1.0):
+        pass
+        self.buzzer_cmd.data = True
+        self.buzzer_publisher_.publish(self.buzzer_cmd)
+        time.sleep(times)
+        self.buzzer_cmd.data = False
+        self.buzzer_publisher_.publish(self.buzzer_cmd)
+
+
+
     def vision_control_arm(self, place_name, pose_name):
         self.place_name = place_name
         self.choose_arm_goal(pose_name)
@@ -147,7 +159,7 @@ class Game_Controller(Node):
         self.start_for_lidar_distance = True
 
         # 等待 car 到位
-        time.sleep(3.5) # 保证 car 驶出激光遮挡区域
+        time.sleep(2.0) # 保证 car 驶出激光遮挡区域
         print("激光未受到目标的遮挡......")
         if mode == 1:
             while self.lidar_distance > self.lidar_threthold:
@@ -161,6 +173,7 @@ class Game_Controller(Node):
 
     def choose_arm_goal(self, pose_name):
         """ Use arm goals in YAML file. """
+        self.pose_name = pose_name
         self.arm_params['joint1'] = self.default_arm_params['joint1_'+pose_name]
         self.arm_params['joint2'] = self.default_arm_params['joint2_'+pose_name]
         self.arm_params['joint3'] = self.default_arm_params['joint3_'+pose_name]
@@ -203,7 +216,7 @@ class Game_Controller(Node):
         # 更新数据
         # print("正在更新数据")
         for flower in flowers_lists:
-            if flower['Type'] == "male":
+            if flower['Type'] == "famale":
                 for index, flower_with_tag in enumerate(self.flowers_with_tag):
                     if self.calculate_O_distance_(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
                         print("小于阈值")
@@ -224,7 +237,7 @@ class Game_Controller(Node):
                 print("正在进行数据预处理")
                 for index, flower in enumerate(flowers_lists):
                     self.female_num += 1
-                    if flower['Type'] == 'male':
+                    if flower['Type'] == 'famale':
                         flower_with_tag['Type'] = flower['Type']
                         flower_with_tag['CentralPoint'] = flower['CentralPoint']
                         flower_with_tag['Area'] = flower['Area']
@@ -291,7 +304,7 @@ class Game_Controller(Node):
                 if flower_with_tag['Moving'] == True:
                     self.flowers_with_tag_again[index]['Moving'] = False
                     self.flowers_with_tag_again[index]['Pollinated'] = True
-            self.reset_arm_pose_()
+            self.reset_arm_pose_(self.pose_name)
             return
         self.angles_of_joints.data.append(self.servo_time)
         print("发送命令给机械臂")

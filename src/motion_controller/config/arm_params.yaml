@@ -14,10 +14,10 @@ joint4_a_right: 101
 # B 区
 ## '_b_front' 指的是车在 A 区行驶时车的前方
 ## '_b_back' 指的是车在 A 区行驶时车的后方
-joint1_moving: 68
-joint2_moving: 79
-joint3_moving: 95
-joint4_moving: 75
+joint1_moving: 132
+joint2_moving: 135
+joint3_moving: 115
+joint4_moving: 101
 # -----------------------
 joint1_b_left_front: 97
 joint2_b_left_front: 111

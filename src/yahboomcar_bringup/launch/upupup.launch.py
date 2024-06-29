@@ -1,7 +1,9 @@
 from ament_index_python.packages import get_package_share_path
 
-from launch import LaunchDescription, EmitEvent, TimerAction, OpaqueFunction
-from launch import Shutdown
+from launch import LaunchDescription
+from launch.actions import TimerAction, OpaqueFunction
+# from launch import EmitEvent
+# from launch import Shutdown
 from launch.actions import DeclareLaunchArgument, RegisterEventHandler, LogInfo
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -74,7 +76,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource([os.path.join(
             get_package_share_directory('dnn_node_example'), 'launch'),
             '/dnn_node_example.launch.py']),
-        output='screen'
+        # output='screen'
     )
 
     fdilink_ahrs_node = IncludeLaunchDescription(
@@ -90,19 +92,19 @@ def generate_launch_description():
 
     critical_nodes = [driver_node, base_node, lidar_node, vision_node]
 
-    event_handlers = [
-        RegisterEventHandler(
-            OnStateTransition(
-                target_lifecycle_node=node,
-                goal_state='inactive',
-                entities=[
-                    LogInfo(msg=f"A critical node [{node.executable}] has stopped. Shutting down..."),
-                    EmitEvent(event=Shutdown())
-                ]
-            )
-        )
-        for node in critical_nodes
-    ]
+    # event_handlers = [
+    #     RegisterEventHandler(
+    #         OnStateTransition(
+    #             target_lifecycle_node=node,
+    #             goal_state='inactive',
+    #             entities=[
+    #                 LogInfo(msg=f"A critical node [{node.executable}] has stopped. Shutting down..."),
+    #                 EmitEvent(event=Shutdown())
+    #             ]
+    #         )
+    #     )
+    #     for node in critical_nodes
+    # ]
 
     def launch_other_nodes(context):
         return [
@@ -115,7 +117,7 @@ def generate_launch_description():
             lidar_node,
             vision_node,
             servo_node,
-            *event_handlers,
+            # *event_handlers,
         ]
 
     delayed_start = TimerAction(

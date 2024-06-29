@@ -219,28 +219,23 @@ class Game_Controller(Node):
         # 数据预处理并选择第一个处理的目标
         self.data_pre_processing_(flowers_lists)
         # 更新数据
-        # print("正在更新数据")
         for flower in flowers_lists:
             print("有数据")
             if flower['Type'] == "famale":
                 print("满足条件 0")
                 for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                    if self.calculate_O_distance_(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
-                        print("满足条件 1")
-                        if abs(flower_with_tag['Area'] - flower['Area']) <= self.area_difference:
-                            print("满足条件 2")
-                            print(flower_with_tag)
-                            if flower_with_tag['Moving'] == True:
-                                print("全部满足")
+                    if flower_with_tag['Moving'] == True:
+                        if self.calculate_O_distance_(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
+                            print("满足条件 1")
+                            if abs(flower_with_tag['Area']-flower['Area']) <= self.area_difference:
+                                print("满足条件 2")
                                 self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
                                 self.flowers_with_tag[index]['Area'] = flower['Area']
-
-                                # self.control_arm_()
-                                #print(self.flowers_with_tag)
+                                self.control_arm_()
                                 break # 跳出内层 for 循环
 
         # # 控制 arm
-        self.control_arm_()
+        # self.control_arm_()
 
     def data_pre_processing_(self, flowers_lists):
         """ 为存储花属性的字典添加花属性：是否正在操作、是否已授粉 """

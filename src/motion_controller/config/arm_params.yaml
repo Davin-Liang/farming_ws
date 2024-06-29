@@ -51,9 +51,9 @@ joint4_b_right_back: 100
 
 # C 区
 joint1_c_left: 132
-joint2_c_left: 130
-joint3_c_left: 160
-joint4_c_left: 101     #角度待定
+joint2_c_left: 170
+joint3_c_left: 165
+joint4_c_left: 97     #角度待定
 
 joint1_c_right: 312
 joint2_c_right: 170

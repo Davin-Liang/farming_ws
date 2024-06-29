@@ -23,9 +23,16 @@ def main():
                 node.vision_control_arm("A", "a_left")
                 for i in range(node.female_num-1):
                     node.find_next_arm_goal_on_position()
+                    if node.error:
+                        print('重新给次机会')
+                        node.find_next_arm_goal_on_position()
+                        node.error = False
                 node.vision_control_arm("A", "a_right")
                 for i in range(node.female_num-1):
                     node.find_next_arm_goal_on_position()
+                    if node.error:
+                        node.find_next_arm_goal_on_position()
+                        node.error = False
             node.set_distance(0.53)
             node.set_angle(-90.0)
             node.start_car_and_lidar_controls_stopping(-0.06, 0.7)

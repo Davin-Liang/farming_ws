@@ -31,12 +31,14 @@ class Game_Controller(Node):
         self.start_for_lidar_distance   = False
         self.start_for_pid_distance     = False
         self.voice_switch               = True
+        self.start_count                = False
 
         # 数据字典
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
         self.flowers_with_tag = [] # 存储花属性
         self.flowers_with_tag_again = [] # 存储花属性
         self.flowers_lists = [] # primitive flower data
+        self.last_flowers_lists = []
 
         # 可调参数
         self.area_scaling_factor                     = 0.25 # 面积缩放系数
@@ -53,6 +55,8 @@ class Game_Controller(Node):
         self.angle_tolerance                         = radians(2.0)
         self.odom_linear_scale_correction            = 1.0
         self.odom_angular_scale_correction           = 1.0
+        self.area_difference                         = 5000    #TODO: 修改阈值
+        self.time_threshold                          = 1.0     #时间阈值
 
         # 使用到的订阅者和发布者
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
@@ -218,7 +222,8 @@ class Game_Controller(Node):
         for flower in flowers_lists:
             if flower['Type'] == "famale":
                 for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                    if self.calculate_O_distance_(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
+                    if (self.calculate_O_distance_(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal and
+                        flower_with_tag['Area'] - flower['Area'] <= self.area_difference):
                         print("小于阈值")
                         self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
                         self.flowers_with_tag[index]['Area'] = flower['Area']
@@ -461,9 +466,22 @@ class Game_Controller(Node):
         if not self.open_vision_detect:
             return
 
-        if 0 != len(self.flowers_lists): # 预防处理空数据
-            print(self.flowers_lists)
-            self.confrim_moving_goal_for_arm_(self.flowers_lists) 
+        if self.last_flowers_lists == self.flowers_lists:
+            if self.start_count == False:
+                self.start_count = True
+                self.start_count_time = time.time()
+            if time.time() - self.start_count_time > self.time_threshold:
+                self.start_count = False
+                self.error = True
+                print('目标点丢失')
+                self.reset_arm_pose_(self.pose_name)
+                
+        else:
+            if 0 != len(self.flowers_lists): # 预防处理空数据
+                self.start_count = False
+                print(self.flowers_lists)
+                self.confrim_moving_goal_for_arm_(self.flowers_lists) 
+                self.last_flowers_lists = self.flowers_lists
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """

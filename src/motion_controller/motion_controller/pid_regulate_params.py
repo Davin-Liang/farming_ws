@@ -9,8 +9,8 @@ from pid import PID
 class Motion_Controller(Node):
     def __init__(self, name):
         super().__init__(name)
-        self.ori_angle_pid = PID(Kp=0.685, Ki=0.0, Kd=0.426, max_out=1.4, max_iout=0.0)
-        self.distance_pid  = PID(Kp=0.42, Ki=0.0, Kd=0.08, max_out=1.0, max_iout=0.0)
+        self.ori_angle_pid = PID(Kp=0.685, Ki=0.00079, Kd=0.426, max_out=0.9, max_iout=0.0085)
+        self.distance_pid  = PID(Kp=0.42, Ki=0.0, Kd=0.08, max_out=0.85, max_iout=0.0)
 
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.move_cmd = Twist()
@@ -51,6 +51,8 @@ class Motion_Controller(Node):
         
         self.declare_parameter('start_for_pid_distance', False)
         self.declare_parameter('start_for_lidar_distance', False)
+        self.start_for_lidar_distance = False
+        self.start_for_pid_distance = False
 
         self.position = Point()
         self.x_start = self.position.x

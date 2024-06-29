@@ -2,7 +2,7 @@ import rclpy
 from farming_visioner import Game_Controller
 import time
 
-A_switch                   = True
+A_switch                   = False
 B_switch                   = False
 C_switch                   = False
 Home_switch                = False
@@ -13,7 +13,15 @@ def main():
     try:
         node = Game_Controller("Game_Controller")
         node.buzzer_tips(times=2.0)
-        node.choose_arm_goal('a_left')
+        node.choose_arm_goal('c_right')
+        node.vision_control_arm("A", "c_right")
+        # for i in range(node.female_num-1):
+        #     print(node.female_num)
+        #     node.find_next_arm_goal_on_position()
+        #     if node.error:
+        #         print('重新给次机会')
+        #         node.find_next_arm_goal_on_position()
+        #         node.error = False
 # ---------------------------------------------------------------------------------------------------------------
 # ----------------AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA--------------------
 # ---------------------------------------------------------------------------------------------------------------
@@ -22,6 +30,7 @@ def main():
                 node.start_car_and_lidar_controls_stopping(0.06, 0.4)
                 node.vision_control_arm("A", "a_left")
                 for i in range(node.female_num-1):
+                    print(node.female_num)
                     node.find_next_arm_goal_on_position()
                     if node.error:
                         print('重新给次机会')

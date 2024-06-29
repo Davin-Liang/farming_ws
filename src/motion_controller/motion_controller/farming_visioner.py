@@ -30,8 +30,9 @@ class Game_Controller(Node):
         self.pre_process                = False # 是否打开数据预处理
         self.start_for_lidar_distance   = False
         self.start_for_pid_distance     = False
-        self.voice_switch               = True
+        self.voice_switch               = False
         self.start_count                = False
+        self.error                      = False
 
         # 数据字典
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
@@ -42,20 +43,20 @@ class Game_Controller(Node):
 
         # 可调参数
         self.area_scaling_factor                     = 0.25 # 面积缩放系数
-        self.O_distance_threthold_of_judge_same_goal = 100 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
+        self.O_distance_threthold_of_judge_same_goal = 150 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
         self.central_point_of_camera                 = [320, 240] # 相机中心点
         self.area_of_polliating                      = 70000 # 识别框为多少时才进行授粉的面积阈值
         self.joint_speed                             = 1.0 # 关节转动速度，将关节的转动的角度当作速度
         self.threthold_of_x_error                    = 10.0
         self.threthold_of_y_error                    = 10.0
         self.threthold_of_area_error                 = 5000.0
-        self.servo_time                              = 200  #机械臂运动时间，单位mm
+        self.servo_time                              = 100  #机械臂运动时间，单位mm
         self.servo_reset_time                        = 2000  #机械臂初始位置运动时间
         self.distance_tolerance                      = 0.03
         self.angle_tolerance                         = radians(2.0)
         self.odom_linear_scale_correction            = 1.0
         self.odom_angular_scale_correction           = 1.0
-        self.area_difference                         = 5000    #TODO: 修改阈值
+        self.area_difference                         = 10000    #TODO: 修改阈值
         self.time_threshold                          = 1.0     #时间阈值
 
         # 使用到的订阅者和发布者
@@ -71,8 +72,8 @@ class Game_Controller(Node):
         self.angles_of_joints   = Int32MultiArray()
         self.buzzer_cmd         = Bool()
 
-        self.ori_angle_pid = PID(Kp=0.685, Ki=0.0, Kd=0.426, max_out=1.4, max_iout=0.0)
-        self.distance_pid  = PID(Kp=0.42, Ki=0.0, Kd=0.08, max_out=1.0, max_iout=0.0)
+        self.ori_angle_pid = PID(Kp=0.685, Ki=0.00079, Kd=0.426, max_out=0.9, max_iout=0.0085)
+        self.distance_pid  = PID(Kp=0.42, Ki=0.0, Kd=0.08, max_out=0.85, max_iout=0.0)
 
         self.female_num      = 0
         self.distance        = 0.0
@@ -94,7 +95,7 @@ class Game_Controller(Node):
 
         # 创建定时器
         self.work_timer = self.create_timer(0.004, self.timer_work_)
-        self.arm_timer = self.create_timer(0.3, self.arm_timer_callback_)
+        self.arm_timer = self.create_timer(0.18, self.arm_timer_callback_)
 
         self.spin_thread = Thread(target=self.spin_task_)
         self.spin_thread.start()
@@ -120,7 +121,7 @@ class Game_Controller(Node):
         self.arm_moving         = False
         self.reset_vision_data()
         # 堵塞函数直到完成任务
-        print("正在等待完成任务......")
+        # print("正在等待完成任务......")
         while self.open_vision_detect:
             pass
         print("已经完成任务！！！！！！")
@@ -134,7 +135,7 @@ class Game_Controller(Node):
         self.open_vision_detect = True
         self.pre_process = True
         # 堵塞函数直到完成任务
-        print("正在等待完成任务......")
+        # print("正在等待完成任务......")
         while self.open_vision_detect:
             pass
         print("已经完成任务！！！！！！")
@@ -164,7 +165,7 @@ class Game_Controller(Node):
 
         # 等待 car 到位
         time.sleep(2.0) # 保证 car 驶出激光遮挡区域
-        print("激光未受到目标的遮挡......")
+        # print("激光未受到目标的遮挡......")
         if mode == 1:
             while self.lidar_distance > self.lidar_threthold:
                 pass
@@ -220,15 +221,23 @@ class Game_Controller(Node):
         # 更新数据
         # print("正在更新数据")
         for flower in flowers_lists:
+            print("有数据")
             if flower['Type'] == "famale":
+                print("满足条件 0")
                 for index, flower_with_tag in enumerate(self.flowers_with_tag):
-                    if (self.calculate_O_distance_(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal and
-                        flower_with_tag['Area'] - flower['Area'] <= self.area_difference):
-                        print("小于阈值")
-                        self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
-                        self.flowers_with_tag[index]['Area'] = flower['Area']
-                        #print(self.flowers_with_tag)
-                        break # 跳出内层 for 循环
+                    if self.calculate_O_distance_(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
+                        print("满足条件 1")
+                        if abs(flower_with_tag['Area'] - flower['Area']) <= self.area_difference:
+                            print("满足条件 2")
+                            print(flower_with_tag)
+                            if flower_with_tag['Moving'] == True:
+                                print("全部满足")
+                                self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
+                                self.flowers_with_tag[index]['Area'] = flower['Area']
+
+                                # self.control_arm_()
+                                #print(self.flowers_with_tag)
+                                break # 跳出内层 for 循环
 
         # # 控制 arm
         self.control_arm_()
@@ -242,6 +251,8 @@ class Game_Controller(Node):
                 print("正在进行数据预处理")
                 for index, flower in enumerate(flowers_lists):
                     self.female_num += 1
+                    if self.female_num >= 3:
+                        self.female_num = 3
                     if flower['Type'] == 'famale':
                         flower_with_tag['Type'] = flower['Type']
                         flower_with_tag['CentralPoint'] = flower['CentralPoint']
@@ -260,8 +271,8 @@ class Game_Controller(Node):
                 print("正在授粉下一个目标点")
                 self.flowers_with_tag = copy.deepcopy(self.flowers_with_tag_again)
                 print("预处理第二次")
-                print(self.flowers_with_tag_again)
-                print(self.flowers_with_tag)
+                # print(self.flowers_with_tag_again)
+                # print(self.flowers_with_tag)
                 # 更新中心点坐标参数
                 for flower in flowers_lists:
                     for index, flower_with_tag in enumerate(self.flowers_with_tag):
@@ -280,17 +291,17 @@ class Game_Controller(Node):
         y_error = 0
         x_error = 0
         area_error = 0
-        print(self.flowers_with_tag)
+        # print(self.flowers_with_tag)
         for flower_with_tag in self.flowers_with_tag:
             if flower_with_tag['Moving'] == True:
-                print("正在获取 x 轴误差")
+                # print("正在获取 x 轴误差")
                 x_error = self.central_point_of_camera[0] - flower_with_tag['CentralPoint'][0]
                 y_error = self.central_point_of_camera[1] - flower_with_tag['CentralPoint'][1]
                 area_error = self.area_of_polliating - flower_with_tag['Area']
                 break
         self.angles_of_joints.data = []
-        print(x_error)
-        print(area_error)
+        # print(x_error)
+        # print(area_error)
         if abs(x_error) > self.threthold_of_x_error:
             self.arm_params['joint1'] = int(self.limit_num_(self.arm_params['joint1'] + copysign(self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
         self.angles_of_joints.data.append(self.arm_params['joint1'])
@@ -312,8 +323,8 @@ class Game_Controller(Node):
             self.reset_arm_pose_(self.pose_name)
             return
         self.angles_of_joints.data.append(self.servo_time)
-        print("发送命令给机械臂")
-        print(self.angles_of_joints)
+        # print("发送命令给机械臂")
+        # print(self.angles_of_joints)
         self.joint_angles_publisher_.publish(self.angles_of_joints)
         # ros2 topic pub /joint_angles "data: [68, 80, 65, 110]"
 
@@ -455,18 +466,18 @@ class Game_Controller(Node):
 
     def yaw_angle_callback_(self, msg):
         self.yaw_angle = -msg.data
-        print(self.yaw_angle)
+        # print(self.yaw_angle)
 
     def odom_callback_(self, msg):
         self.position.x = msg.pose.pose.position.x
         self.position.y = msg.pose.pose.position.y
 
     def arm_timer_callback_(self):
-        print("正在等待开启视觉")
+        # print("正在等待开启视觉")
         if not self.open_vision_detect:
             return
 
-        if self.last_flowers_lists == self.flowers_lists:
+        if self.last_flowers_lists == self.flowers_lists or len(self.flowers_lists) > 5:
             if self.start_count == False:
                 self.start_count = True
                 self.start_count_time = time.time()
@@ -479,7 +490,7 @@ class Game_Controller(Node):
         else:
             if 0 != len(self.flowers_lists): # 预防处理空数据
                 self.start_count = False
-                print(self.flowers_lists)
+                # print(self.flowers_lists)
                 self.confrim_moving_goal_for_arm_(self.flowers_lists) 
                 self.last_flowers_lists = self.flowers_lists
 
@@ -535,7 +546,7 @@ class Game_Controller(Node):
                 self.move_cmd.linear.x = self.distance_pid.out
             else:
                 self.move_cmd.linear.x = -self.distance_pid.out
-            print(self.move_cmd.linear.x)
+            # print(self.move_cmd.linear.x)
             if abs(self.distance_error) < self.distance_tolerance: # 达到目标的情况
                 self.start_for_pid_distance = False
                 # print("任务已完成......")

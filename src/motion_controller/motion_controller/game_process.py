@@ -13,8 +13,14 @@ def main():
     try:
         node = Game_Controller("Game_Controller")
         node.buzzer_tips(times=2.0)
-        node.choose_arm_goal('c_right')
-        node.vision_control_arm("A", "c_right")
+        # node.choose_arm_goal("moving")
+        node.choose_arm_goal('b_left_back')
+        node.choose_arm_goal('b_middle_back')
+        node.choose_arm_goal('b_right_back')
+        node.choose_arm_goal('b_left_front')
+        node.choose_arm_goal('b_middle_front')
+        node.choose_arm_goal('b_right_front')
+        # node.vision_control_arm("b", "b_left_back")
         # for i in range(node.female_num-1):
         #     print(node.female_num)
         #     node.find_next_arm_goal_on_position()
@@ -28,25 +34,25 @@ def main():
         if A_switch:
             for i in range(3):
                 node.start_car_and_lidar_controls_stopping(0.06, 0.4)
-                node.vision_control_arm("A", "a_left")
-                for i in range(node.female_num-1):
-                    print(node.female_num)
-                    node.find_next_arm_goal_on_position()
-                    if node.error:
-                        print('重新给次机会')
-                        node.find_next_arm_goal_on_position()
-                        node.error = False
-                node.vision_control_arm("A", "a_right")
-                for i in range(node.female_num-1):
-                    node.find_next_arm_goal_on_position()
-                    if node.error:
-                        node.find_next_arm_goal_on_position()
-                        node.error = False
-            node.set_distance(0.53)
+                # node.vision_control_arm("A", "a_left")
+                # for i in range(node.female_num-1):
+                #     print(node.female_num)
+                #     node.find_next_arm_goal_on_position()
+                #     if node.error:
+                #         print('重新给次机会')
+                #         node.find_next_arm_goal_on_position()
+                #         node.error = False
+                # node.vision_control_arm("A", "a_right")
+                # for i in range(node.female_num-1):
+                #     node.find_next_arm_goal_on_position()
+                #     if node.error:
+                #         node.find_next_arm_goal_on_position()
+                #         node.error = False
+            node.set_distance(0.55)
             node.set_angle(-90.0)
             node.start_car_and_lidar_controls_stopping(-0.06, 0.7)
             node.start_car_and_lidar_controls_stopping(-0.06, 0.7)
-            node.set_distance(-0.25) #TODO: 距离未确定
+            node.set_distance(-0.27) #TODO: 距离未确定
             node.set_angle(0.0)
 # ---------------------------------------------------------------------------------------------------------------
 # ----------------BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB--------------------
@@ -60,29 +66,33 @@ def main():
             # node.vision_control_arm("B", "a_left")
             # node.vision_control_arm("B", "a_left")
             node.choose_arm_goal("moving")
-            for i in range(3):
-                node.start_car_and_lidar_controls_stopping(-0.06, 0.4)
-                node.set_distance(-0.27) #TODO: 距离未确定
-                # arm action
-                # TODO:机械臂序号未确定
-                # node.vision_control_arm("B", "a_left") 
-                # node.vision_control_arm("B", "a_left")
-                # node.vision_control_arm("B", "a_left")
-                
-                if i == 2:
-                    break
-                # TODO:机械臂序号未确定 
-                # node.vision_control_arm("B", "a_left") 
-                # node.vision_control_arm("B", "a_left")
-                # node.vision_control_arm("B", "a_left")
-                node.choose_arm_goal("moving")
 
-            node.set_distance(-0.33) #TODO: 距离未确定
-            node.set_angle(90.0)
-            node.start_car_and_lidar_controls_stopping(0.06, 0.6)
-            node.start_car_and_lidar_controls_stopping(0.06, 0.6)
-            node.set_distance(0.405) #TODO: 距离未确定
-            node.set_angle(0.0)
+            node.start_car_and_lidar_controls_stopping(-0.06, 0.4)
+            node.set_distance(-0.29)
+
+            # for i in range(3):
+            #     node.start_car_and_lidar_controls_stopping(-0.06, 0.4)
+            #     node.set_distance(-0.29) #TODO: 距离未确定
+            #     # arm action
+            #     # TODO:机械臂序号未确定
+            #     # node.vision_control_arm("B", "a_left") 
+            #     # node.vision_control_arm("B", "a_left")
+            #     # node.vision_control_arm("B", "a_left")
+                
+            #     if i == 2:
+            #         break
+            #     # TODO:机械臂序号未确定 
+            #     # node.vision_control_arm("B", "a_left") 
+            #     # node.vision_control_arm("B", "a_left")
+            #     # node.vision_control_arm("B", "a_left")
+            #     node.choose_arm_goal("moving")
+
+            # node.set_distance(-0.33) #TODO: 距离未确定
+            # node.set_angle(90.0)
+            # node.start_car_and_lidar_controls_stopping(0.06, 0.6)
+            # node.start_car_and_lidar_controls_stopping(0.06, 0.6)
+            # node.set_distance(0.425) #TODO: 距离未确定
+            # node.set_angle(0.0)
 # ---------------------------------------------------------------------------------------------------------------
 # ----------------CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC--------------------
 # ---------------------------------------------------------------------------------------------------------------

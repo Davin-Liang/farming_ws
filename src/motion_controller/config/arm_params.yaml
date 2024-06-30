@@ -19,35 +19,35 @@ joint2_moving: 135
 joint3_moving: 115
 joint4_moving: 101
 # -----------------------
-joint1_b_left_front: 97
-joint2_b_left_front: 111
-joint3_b_left_front: 124
-joint4_b_left_front: 99
+joint1_b_left_front: 243
+joint2_b_left_front: 155
+joint3_b_left_front: 174
+joint4_b_left_front: 149
 
-joint1_b_middle_front: 111
-joint2_b_middle_front: 107
-joint3_b_middle_front: 124
-joint4_b_middle_front: 93
+joint1_b_middle_front: 213
+joint2_b_middle_front: 155
+joint3_b_middle_front: 174
+joint4_b_middle_front: 149
 
-joint1_b_right_front: 126
-joint2_b_right_front: 111
-joint3_b_right_front: 124
-joint4_b_right_front: 99
+joint1_b_right_front: 187
+joint2_b_right_front: 155
+joint3_b_right_front: 174
+joint4_b_right_front: 149
 # ---------------------
-joint1_b_left_back: 37
-joint2_b_left_back: 111
-joint3_b_left_back: 124
-joint4_b_left_back: 100
+joint1_b_left_back: 74
+joint2_b_left_back: 155
+joint3_b_left_back: 174
+joint4_b_left_back: 149
 
-joint1_b_middle_back: 21
-joint2_b_middle_back: 107
-joint3_b_middle_back: 124
-joint4_b_middle_back: 93
+joint1_b_middle_back: 46
+joint2_b_middle_back: 155
+joint3_b_middle_back: 174
+joint4_b_middle_back: 149
 
-joint1_b_right_back: 7
-joint2_b_right_back: 111
-joint3_b_right_back: 124
-joint4_b_right_back: 100
+joint1_b_right_back: 15
+joint2_b_right_back: 155
+joint3_b_right_back: 174
+joint4_b_right_back: 149
 
 # C 区
 joint1_c_left: 132

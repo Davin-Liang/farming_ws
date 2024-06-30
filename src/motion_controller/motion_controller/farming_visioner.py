@@ -43,20 +43,20 @@ class Game_Controller(Node):
 
         # 可调参数
         self.area_scaling_factor                     = 0.25 # 面积缩放系数
-        self.O_distance_threthold_of_judge_same_goal = 150 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
+        self.O_distance_threthold_of_judge_same_goal = 104 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
         self.central_point_of_camera                 = [320, 240] # 相机中心点
-        self.area_of_polliating                      = 70000 # 识别框为多少时才进行授粉的面积阈值
+        self.area_of_polliating                      = 80000 # 识别框为多少时才进行授粉的面积阈值 70000
         self.joint_speed                             = 1.0 # 关节转动速度，将关节的转动的角度当作速度
-        self.threthold_of_x_error                    = 10.0
-        self.threthold_of_y_error                    = 10.0
-        self.threthold_of_area_error                 = 5000.0
-        self.servo_time                              = 100  #机械臂运动时间，单位mm
+        self.threthold_of_x_error                    = 15.0
+        self.threthold_of_y_error                    = 15.0
+        self.threthold_of_area_error                 = 7000.0
+        self.servo_time                              = 140  #机械臂运动时间，单位mm
         self.servo_reset_time                        = 2000  #机械臂初始位置运动时间
         self.distance_tolerance                      = 0.03
         self.angle_tolerance                         = radians(2.0)
         self.odom_linear_scale_correction            = 1.0
         self.odom_angular_scale_correction           = 1.0
-        self.area_difference                         = 10000    #TODO: 修改阈值
+        self.area_difference                         = 30000    #TODO: 修改阈值
         self.time_threshold                          = 1.0     #时间阈值
 
         # 使用到的订阅者和发布者
@@ -473,14 +473,15 @@ class Game_Controller(Node):
             return
 
         if self.last_flowers_lists == self.flowers_lists or len(self.flowers_lists) > 5:
-            if self.start_count == False:
-                self.start_count = True
-                self.start_count_time = time.time()
-            if time.time() - self.start_count_time > self.time_threshold:
-                self.start_count = False
-                self.error = True
-                print('目标点丢失')
-                self.reset_arm_pose_(self.pose_name)
+            # if self.start_count == False:
+            #     self.start_count = True
+            #     self.start_count_time = time.time()
+            # if time.time() - self.start_count_time > self.time_threshold:
+            #     self.start_count = False
+            #     self.error = True
+            #     print('目标点丢失')
+            #     self.reset_arm_pose_(self.pose_name)
+            pass
                 
         else:
             if 0 != len(self.flowers_lists): # 预防处理空数据

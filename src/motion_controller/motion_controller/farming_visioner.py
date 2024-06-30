@@ -91,7 +91,7 @@ class Game_Controller(Node):
         self.distance_error = 0
         self.angle_error    = 0
 
-        time.sleep(3.0)
+        time.sleep(2.0)
 
         # 创建定时器
         self.work_timer = self.create_timer(0.004, self.timer_work_)
@@ -110,8 +110,6 @@ class Game_Controller(Node):
         time.sleep(times)
         self.buzzer_cmd.data = False
         self.buzzer_publisher_.publish(self.buzzer_cmd)
-
-
 
     def vision_control_arm(self, place_name, pose_name):
         self.place_name = place_name
@@ -266,8 +264,6 @@ class Game_Controller(Node):
                 print("正在授粉下一个目标点")
                 self.flowers_with_tag = copy.deepcopy(self.flowers_with_tag_again)
                 print("预处理第二次")
-                # print(self.flowers_with_tag_again)
-                # print(self.flowers_with_tag)
                 # 更新中心点坐标参数
                 for flower in flowers_lists:
                     for index, flower_with_tag in enumerate(self.flowers_with_tag):
@@ -461,7 +457,6 @@ class Game_Controller(Node):
 
     def yaw_angle_callback_(self, msg):
         self.yaw_angle = -msg.data
-        # print(self.yaw_angle)
 
     def odom_callback_(self, msg):
         self.position.x = msg.pose.pose.position.x
@@ -533,10 +528,8 @@ class Game_Controller(Node):
         if self.start_for_pid_distance:
             o_distance = self.get_O_distance_()
             o_distance *= self.odom_linear_scale_correction # 修正
-
             # 计算误差
             self.distance_error = o_distance - abs(self.distance) # 负值控制车向前，正值控制车向后
-
             self.distance_pid.pid_calculate(o_distance, abs(self.distance))
             if self.distance >= 0:
                 self.move_cmd.linear.x = self.distance_pid.out
@@ -545,7 +538,6 @@ class Game_Controller(Node):
             # print(self.move_cmd.linear.x)
             if abs(self.distance_error) < self.distance_tolerance: # 达到目标的情况
                 self.start_for_pid_distance = False
-                # print("任务已完成......")
         elif self.start_for_lidar_distance:
             self.move_cmd.linear.x = self.liear_speed
         else: # 未设定目标的情况

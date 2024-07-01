@@ -23,9 +23,9 @@ def main():
                 for x in range(6):
                     frame = camera.get()  # 采集一帧图片
                 cv2.imwrite(dir + '%05d.jpg' %i, frame)  # 写入图片以及命名
-                cv2.namedWindow("miku",0)
-                cv2.resizeWindow("miku", 640, 480)
-                cv2.imshow("miku", frame)
+                #cv2.namedWindow("miku",0)
+                #cv2.resizeWindow("miku", 640, 480)
+                #cv2.imshow("miku", frame)
                 print('%05d.采集成功' %i)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()

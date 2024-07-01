@@ -7,7 +7,7 @@ import time
 
 class Camera1920:
     def __init__(self):
-        self.capture= cv2.VideoCapture(0)
+        self.capture= cv2.VideoCapture(8)
         self.capture.set(3, 1920)
         self.capture.set(4, 1080)
         self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc('M', 'J', 'P', 'G'))

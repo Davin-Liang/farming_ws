@@ -33,6 +33,7 @@ class Game_Controller(Node):
         self.voice_switch               = False
         self.start_count                = False
         self.error                      = False
+        self.only_arm_action            = False
 
         # 数据字典
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
@@ -103,6 +104,21 @@ class Game_Controller(Node):
 # -----------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------对外接口函数------------------------------------------------------------------
 # -----------------------------------------------------------------------------------------------------------------------------
+    def auto_pollinate(self, place="A", arm_pose="a_left"):
+        if "A" == place or "C" == place:
+            self.vision_control_arm(place, arm_pose)
+            if self.only_arm_action:
+                return
+            for i in range(self.female_num-1):
+                print(self.female_num)
+                self.find_next_arm_goal_on_position()
+                if self.error:
+                    print('重新给次机会')
+                    self.find_next_arm_goal_on_position()
+                    self.error = False
+        elif "B" == place:
+            self.vision_control_arm(place, arm_pose)
+    
     def buzzer_tips(self, times=1.0):
         pass
         self.buzzer_cmd.data = True
@@ -114,6 +130,8 @@ class Game_Controller(Node):
     def vision_control_arm(self, place_name, pose_name):
         self.place_name = place_name
         self.choose_arm_goal(pose_name)
+        if self.only_arm_action:
+            return
         self.open_vision_detect = True
         self.pre_process        = True
         self.arm_moving         = False
@@ -155,7 +173,7 @@ class Game_Controller(Node):
             pass
         time.sleep(4.0)
 
-    def start_car_and_lidar_controls_stopping(self, speed, threthold=0.1, mode=1):
+    def car_action_in_lidar(self, speed, threthold=0.1, mode=1):
         """ 开动车并使用单线激光控制小车停止 """
         self.liear_speed = speed
         self.lidar_threthold = threthold
@@ -562,7 +580,7 @@ def main():
 # ---------------------------------------------------------------------------------------------------------------
         if node.A_switch:
             for i in range(3):
-                node.start_car_and_lidar_controls_stopping(0.05, 0.4)
+                node.car_action_in_lidar(0.05, 0.4)
                 node.vision_control_arm("A","a_left")
                 for i in range(node.female_num-1):
                     node.find_next_arm_goal_on_position()
@@ -571,15 +589,15 @@ def main():
                     node.find_next_arm_goal_on_position()
             node.set_distance(0.8) # TODO: 距离未确定
             node.set_angle(-90.0)
-            node.start_car_and_lidar_controls_stopping(-0.05, 0.6)
-            node.start_car_and_lidar_controls_stopping(-0.05, 0.6)
+            node.car_action_in_lidar(-0.05, 0.6)
+            node.car_action_in_lidar(-0.05, 0.6)
             node.set_distance(-0.35) #TODO: 距离未确定
             node.set_angle(0.0)
 # ---------------------------------------------------------------------------------------------------------------
 # ----------------BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB--------------------
 # ---------------------------------------------------------------------------------------------------------------
         if node.B_switch:
-            node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+            node.car_action_in_lidar(-0.05, 0.4)
             node.set_distance(0.15) #TODO: 距离未确定
             # TODO:机械臂序号未确定
             node.vision_control_arm("B","a_left") 
@@ -587,7 +605,7 @@ def main():
             node.vision_control_arm("B","a_left")
             node.choose_arm_goal("a_left")
             for i in range(3):
-                node.start_car_and_lidar_controls_stopping(-0.05, 0.4)
+                node.car_action_in_lidar(-0.05, 0.4)
                 node.set_distance(-0.15) #TODO: 距离未确定
                 # arm action
                 # TODO:机械臂序号未确定
@@ -605,8 +623,8 @@ def main():
 
             node.set_distance(-0.2) #TODO: 距离未确定
             node.set_angle(90.0)
-            node.start_car_and_lidar_controls_stopping(0.05, 0.6)
-            node.start_car_and_lidar_controls_stopping(0.05, 0.6)
+            node.car_action_in_lidar(0.05, 0.6)
+            node.car_action_in_lidar(0.05, 0.6)
             node.set_distance(0.25) #TODO: 距离未确定
             node.set_angle(0.0)
 # ---------------------------------------------------------------------------------------------------------------
@@ -614,7 +632,7 @@ def main():
 # ---------------------------------------------------------------------------------------------------------------
         if node.C_switch:
             for i in range(3):
-                node.start_car_and_lidar_controls_stopping(0.05, 0.4)
+                node.car_action_in_lidar(0.05, 0.4)
                 node.set_distance(0.1) #TODO: 距离未确定
                 node.vision_control_arm("C","a_left")
                 for i in range(node.female_num-1):
@@ -622,7 +640,7 @@ def main():
                 node.vision_control_arm("C","a_right")
                 for i in range(node.female_num-1):
                     node.find_next_arm_goal_on_position()
-                node.start_car_and_lidar_controls_stopping(0.05, 0.4, 0)
+                node.car_action_in_lidar(0.05, 0.4, 0)
 # ---------------------------------------------------------------------------------------------------------------
 # ----------------HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH--------------------
 # ---------------------------------------------------------------------------------------------------------------

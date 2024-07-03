@@ -16,6 +16,7 @@ def main():
         node = Game_Controller("Game_Controller")
         node.voice_switch = False
         node.only_arm_action = True
+        node.one_action = True
 
         node.buzzer_tips(times=2.0)
         node.choose_arm_goal("a_left")

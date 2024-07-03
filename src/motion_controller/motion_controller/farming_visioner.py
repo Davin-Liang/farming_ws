@@ -34,6 +34,7 @@ class Game_Controller(Node):
         self.start_count                = False
         self.error                      = False
         self.only_arm_action            = False
+        self.one_action                 = False
 
         # 数据字典
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
@@ -109,6 +110,8 @@ class Game_Controller(Node):
             self.vision_control_arm(place, arm_pose)
             if self.only_arm_action:
                 return
+            if self.one_action:
+                return
             for i in range(self.female_num-1):
                 print(self.female_num)
                 self.find_next_arm_goal_on_position()
@@ -118,6 +121,8 @@ class Game_Controller(Node):
                     self.error = False
         elif "B" == place:
             self.vision_control_arm(place, arm_pose)
+            if self.error == True:
+                self.find_next_arm_goal_on_position()
     
     def buzzer_tips(self, times=1.0):
         pass

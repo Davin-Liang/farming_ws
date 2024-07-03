@@ -15,8 +15,10 @@ def main():
     try:
         node = Game_Controller("Game_Controller")
         node.voice_switch = False
-        node.only_arm_action = True
-        node.one_action = True
+
+        node.only_arm_action        = True      # 只让机械臂到相应的点位，并不进行视觉识别
+        node.one_action             = True      # 机械臂到相应的点位，开启视觉，只授粉一朵花
+        node.vision_for_voice       = False     # 机械臂到相应的点位，开始视觉，不授粉，只播报
 
         node.buzzer_tips(times=2.0)
         node.choose_arm_goal("a_left")

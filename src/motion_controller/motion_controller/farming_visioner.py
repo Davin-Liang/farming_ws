@@ -35,6 +35,7 @@ class Game_Controller(Node):
         self.error                      = False
         self.only_arm_action            = False
         self.one_action                 = False
+        self.vision_for_voice           = False
 
         # 数据字典
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
@@ -239,6 +240,11 @@ class Game_Controller(Node):
         """ 确定 arm 的移动目标 """
         # 数据预处理并选择第一个处理的目标
         self.data_pre_processing_(flowers_lists)
+
+        if self.vision_for_voice == True:
+            self.open_vision_detect = False
+            return
+
         # 更新数据
         for flower in flowers_lists:
             print("有数据")
@@ -489,6 +495,9 @@ class Game_Controller(Node):
         # print("正在等待开启视觉")
         if not self.open_vision_detect:
             return
+
+        if self.vision_for_voice:
+            self.voice_switch = True
 
         if self.last_flowers_lists == self.flowers_lists or len(self.flowers_lists) > 5:
             # if self.start_count == False:

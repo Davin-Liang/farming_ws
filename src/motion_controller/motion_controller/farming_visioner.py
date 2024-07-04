@@ -21,30 +21,30 @@ class Game_Controller(Node):
     def __init__(self, name):
         super().__init__(name)
         self.get_logger().info("Wassup, bro, I am %s, M3!" % name)
-        # 加载 arm 参数
+        # Load arm params
         self.file_path = os.path.expanduser('~/farming_ws/src/motion_controller/config/arm_params.yaml')
         self.load_config_file_()
     
-        # 重要 BOOL 值
-        self.open_vision_detect         = False # 是否打开视觉检测
-        self.pre_process                = False # 是否打开数据预处理
+        # Important BOOL value
+        self.open_vision_detect         = False # whether to open vision
+        self.pre_process                = False # whether to open data primary process
         self.start_for_lidar_distance   = False
         self.start_for_pid_distance     = False
         self.voice_switch               = False
-        self.start_count                = False
-        self.error                      = False
+        self.start_count                = False # whether to start counting for error time
+        self.error                      = False # whether to pollinate properly
         self.only_arm_action            = False
         self.one_action                 = False
         self.vision_for_voice           = False
 
-        # 数据字典
-        self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # 存储实时的机械臂角度
-        self.flowers_with_tag = [] # 存储花属性
-        self.flowers_with_tag_again = [] # 存储花属性
+        self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # store real-time arm angles
+        self.flowers_with_tag = [] # store flower property
+        self.flowers_with_tag_again = []
         self.flowers_lists = [] # primitive flower data
-        self.last_flowers_lists = []
+        self.last_flowers_lists = [] # last primitive flower data
+        self.voice_board_params = ['-D', '0', '-d', '0']
 
-        # 可调参数
+        # alternative params
         self.area_scaling_factor                     = 0.25 # 面积缩放系数
         self.O_distance_threthold_of_judge_same_goal = 104 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
         self.central_point_of_camera                 = [320, 240] # 相机中心点
@@ -62,14 +62,14 @@ class Game_Controller(Node):
         self.area_difference                         = 30000    #TODO: 修改阈值
         self.time_threshold                          = 1.0     #时间阈值
 
-        # 使用到的订阅者和发布者
-        self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "hobot_dnn_detection", self.vision_callback_, 10)
-        self.joint_angles_publisher_ = self.create_publisher(Int32MultiArray, "servo_commands", 10)
+        # publisher and subscriber
+        self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "/hobot_dnn_detection", self.vision_callback_, 10)
+        self.joint_angles_publisher_ = self.create_publisher(Int32MultiArray, "/servo_commands", 10)
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.buzzer_publisher_ = self.create_publisher(Bool, "/Buzzer", 5)
-        self.lidar_subcriber_ = self.create_subscription(Range, "laser", self.lidar_callback_, 10)
-        self.odom_subcriber_ = self.create_subscription(Odometry, "odom", self.odom_callback_, 10)
-        self.yaw_angle_subcriber_ = self.create_subscription(Float64, "yaw_angle", self.yaw_angle_callback_, 10)
+        self.lidar_subcriber_ = self.create_subscription(Range, "/laser", self.lidar_callback_, 10)
+        self.odom_subcriber_ = self.create_subscription(Odometry, "/odom", self.odom_callback_, 10)
+        self.yaw_angle_subcriber_ = self.create_subscription(Float64, "/yaw_angle", self.yaw_angle_callback_, 10)
 
         self.move_cmd           = Twist()
         self.angles_of_joints   = Int32MultiArray()
@@ -81,7 +81,7 @@ class Game_Controller(Node):
         self.female_num      = 0
         self.distance        = 0.0
         self.angle           = 0.0
-        self.yaw_angle       = 0.0 # testing
+        self.yaw_angle       = 0.0
         self.lidar_threthold = 0.1
         self.liear_speed     = 0.5
         self.angle = radians(self.angle)
@@ -96,7 +96,6 @@ class Game_Controller(Node):
 
         time.sleep(2.0)
 
-        # 创建定时器
         self.work_timer = self.create_timer(0.004, self.timer_work_)
         self.arm_timer = self.create_timer(0.18, self.arm_timer_callback_)
 
@@ -106,7 +105,8 @@ class Game_Controller(Node):
 # -----------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------对外接口函数------------------------------------------------------------------
 # -----------------------------------------------------------------------------------------------------------------------------
-    def auto_pollinate(self, place="A", arm_pose="a_left"):
+    def auto_pollinate(self, place="A", arm_pose="a_left", area_of_polliating=70000):
+        self.area_of_polliating = area_of_polliating
         if "A" == place or "C" == place:
             self.vision_control_arm(place, arm_pose)
             if self.only_arm_action:
@@ -126,7 +126,7 @@ class Game_Controller(Node):
                 self.find_next_arm_goal_on_position()
     
     def buzzer_tips(self, times=1.0):
-        pass
+        """ Make buzzer ring for a second times. """
         self.buzzer_cmd.data = True
         self.buzzer_publisher_.publish(self.buzzer_cmd)
         time.sleep(times)
@@ -142,11 +142,11 @@ class Game_Controller(Node):
         self.pre_process        = True
         self.arm_moving         = False
         self.reset_vision_data()
-        # 堵塞函数直到完成任务
-        # print("正在等待完成任务......")
+
+        self.get_logger().info('Waiting for finishing task......')
         while self.open_vision_detect:
             pass
-        print("已经完成任务！！！！！！")
+        self.get_logger().info('Finished task!!!!!!')
 
     def reset_vision_data(self):
         self.flowers_with_tag.clear()
@@ -156,45 +156,46 @@ class Game_Controller(Node):
     def find_next_arm_goal_on_position(self):
         self.open_vision_detect = True
         self.pre_process = True
-        # 堵塞函数直到完成任务
-        # print("正在等待完成任务......")
+
+        self.get_logger().info('Waiting for finishing task......')
         while self.open_vision_detect:
             pass
-        print("已经完成任务！！！！！！")
+        self.get_logger().info('Finished task!!!!!!')
 
     def set_distance(self, distance):
-        """ 设置车轮方向的行驶距离及以什么样的速度行驶 """
         self.distance = distance
         self.start_for_pid_distance = True
-        # 等待完成任务
+
+        self.get_logger().info('Waiting for finishing task......')
         while self.start_for_pid_distance:
             pass
+        self.get_logger().info('Finished task!!!!!!')
         time.sleep(2.0)
 
     def set_angle(self, angle):
-        """ 设置底盘转动角度 """
         self.angle = radians(angle)
-        # 等待转完角度
+
+        self.get_logger().info('Waiting for finishing task......')
         while abs(self.angle-self.yaw_angle)>self.angle_tolerance:
             pass
+        self.get_logger().info('Finished task!!!!!!')
         time.sleep(4.0)
 
     def car_action_in_lidar(self, speed, threthold=0.1, mode=1):
-        """ 开动车并使用单线激光控制小车停止 """
+        """ Start car and stop car by lidar. """
         self.liear_speed = speed
         self.lidar_threthold = threthold
         self.start_for_lidar_distance = True
 
-        # 等待 car 到位
-        time.sleep(2.0) # 保证 car 驶出激光遮挡区域
-        # print("激光未受到目标的遮挡......")
+        self.get_logger().info('Waiting for finishing task......')
+        time.sleep(2.0) # ensure car will leave the area of lidar keeping out.
         if mode == 1:
             while self.lidar_distance > self.lidar_threthold:
                 pass
         elif mode == 0:
             while self.lidar_distance > self.lidar_threthold:
                 pass
-        print("已经到达激光遮挡区域!!!")
+        self.get_logger().info('Finished task!!!!!!')
         self.start_for_lidar_distance = False
         time.sleep(2.0)
 
@@ -237,7 +238,6 @@ class Game_Controller(Node):
 # -----------------------------------------------------------------------------------------------------------------------------
 
     def confrim_moving_goal_for_arm_(self, flowers_lists):
-        """ 确定 arm 的移动目标 """
         # 数据预处理并选择第一个处理的目标
         self.data_pre_processing_(flowers_lists)
 
@@ -245,7 +245,7 @@ class Game_Controller(Node):
             self.open_vision_detect = False
             return
 
-        # 更新数据
+        # Update data
         for flower in flowers_lists:
             print("有数据")
             if flower['Type'] == "famale":
@@ -259,10 +259,7 @@ class Game_Controller(Node):
                                 self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
                                 self.flowers_with_tag[index]['Area'] = flower['Area']
                                 self.control_arm_()
-                                break # 跳出内层 for 循环
-
-        # # 控制 arm
-        # self.control_arm_()
+                                break # hop inner loop
 
     def data_pre_processing_(self, flowers_lists):
         """ 为存储花属性的字典添加花属性：是否正在操作、是否已授粉 """
@@ -335,7 +332,7 @@ class Game_Controller(Node):
         if (abs(x_error) < self.threthold_of_x_error and
             abs(area_error) < self.threthold_of_area_error): # and
             # abs(y_error) < self.threthold_of_y_error):
-            print("已经完成授粉")
+            self.get_logger().info('Finished pollinating!!!!!!')
             for index, flower_with_tag in enumerate(self.flowers_with_tag):
                 if flower_with_tag['Moving'] == True:
                     self.flowers_with_tag_again[index]['Moving'] = False
@@ -343,10 +340,7 @@ class Game_Controller(Node):
             self.reset_arm_pose_(self.pose_name)
             return
         self.angles_of_joints.data.append(self.servo_time)
-        # print("发送命令给机械臂")
-        # print(self.angles_of_joints)
         self.joint_angles_publisher_.publish(self.angles_of_joints)
-        # ros2 topic pub /joint_angles "data: [68, 80, 65, 110]"
 
     def limit_num_(self, num, num_range):
         if num > num_range[1]:
@@ -357,14 +351,13 @@ class Game_Controller(Node):
 
     def reset_arm_pose_(self, pose="a_left"):
         """ 控制 arm 回到初始姿态 """
-        print("控制 arm 回到初始姿态")
+        self.get_logger().info('Control arm to return initial pose......')
         self.choose_arm_goal(pose)
         self.open_vision_detect = False
         self.pre_process = False
         time.sleep(2.0)
 
     def voice_(self, flowers_lists):
-        #语音播报'A'
         if self.place_name == 'A':
             goal_list = self.data_sort_(flowers_lists, prior_axis='v')
                 
@@ -388,8 +381,6 @@ class Game_Controller(Node):
                     else:
                         self.voice_broadcast(type="male")
             return
-        #self.open_vision_detect = False
-        #语音播报"B"
         if self.place_name == 'B':
             goal_list = self.data_sort_(flowers_lists, prior_axis='v')
 
@@ -442,41 +433,40 @@ class Game_Controller(Node):
         """ 语音播报 """
         if direction != '':
             if direction == 'up':
-                print("上边的花为")
-                subprocess.Popen(['sudo', 'tinyplay', './voice/up.wav', '-D', '0', '-d', '0'])
+                self.get_logger().info('The flower above is: ')
+                subprocess.Popen(['sudo', 'tinyplay', './voice/up.wav'] + self.voice_board_params)
                 time.sleep(2.0)
             elif direction == 'middle':
-                print("中间的花为")
-                subprocess.Popen(['sudo', 'tinyplay', './voice/middle.wav', '-D', '0', '-d', '0'])
+                self.get_logger().info('The middle flower is: ')
+                subprocess.Popen(['sudo', 'tinyplay', './voice/middle.wav'] + self.voice_board_params)
                 time.sleep(2.0)
             elif direction == 'down':
-                print("下边的花为")
-                subprocess.Popen(['sudo', 'tinyplay', './voice/down.wav', '-D', '0', '-d', '0'])
+                self.get_logger().info('The lower flower is: ')
+                subprocess.Popen(['sudo', 'tinyplay', './voice/down.wav'] + self.voice_board_params)
                 time.sleep(2.0)
             elif direction == 'left':
-                print("左边的花为")
-                subprocess.Popen(['sudo', 'tinyplay', './voice/left.wav', '-D', '0', '-d', '0'])
+                self.get_logger().info('The left flower is: ')
+                subprocess.Popen(['sudo', 'tinyplay', './voice/left.wav'] + self.voice_board_params)
                 time.sleep(2.0)
             elif direction == 'right':
-                print("右边的花为")
-                subprocess.Popen(['sudo', 'tinyplay', './voice/right.wav', '-D', '0', '-d', '0'])
+                self.get_logger().info('The right flower is: ')
+                subprocess.Popen(['sudo', 'tinyplay', './voice/right.wav'] + self.voice_board_params)
                 time.sleep(2.0)
         if type != '':
             if type == 'male':
-                print("雄花")
-                subprocess.Popen(['sudo', 'tinyplay', './voice/male.wav', '-D', '0', '-d', '0'])
+                self.get_logger().info('male!!! male!!! male!!! ')
+                subprocess.Popen(['sudo', 'tinyplay', './voice/male.wav'] + self.voice_board_params)
                 time.sleep(1.0)
             elif type == 'female':
-                print("雌花")
-                subprocess.Popen(['sudo', 'tinyplay', './voice/female.wav', '-D', '0', '-d', '0'])
+                self.get_logger().info('female!!! female!!! female!!! ')
+                subprocess.Popen(['sudo', 'tinyplay', './voice/female.wav'] + self.voice_board_params)
                 time.sleep(1.0)
 
     def calculate_O_distance_(self, point1, point2):
-        """ 计算两个坐标点之间的 O 式距离 """
         return math.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
     
     def load_config_file_(self):
-        """ 读取 YAML 文件 """
+        """ Load YAML file. """
         with open(self.file_path, 'r') as file:
             self.default_arm_params = yaml.safe_load(file)
 
@@ -492,7 +482,6 @@ class Game_Controller(Node):
         self.position.y = msg.pose.pose.position.y
 
     def arm_timer_callback_(self):
-        # print("正在等待开启视觉")
         if not self.open_vision_detect:
             return
 
@@ -548,7 +537,6 @@ class Game_Controller(Node):
 
     def lidar_callback_(self, msg):
         """ 单线激光雷达的回调函数 """
-        # print("激光")
         self.lidar_distance = msg.range
 
     def timer_work_(self):
@@ -567,7 +555,6 @@ class Game_Controller(Node):
                 self.move_cmd.linear.x = self.distance_pid.out
             else:
                 self.move_cmd.linear.x = -self.distance_pid.out
-            # print(self.move_cmd.linear.x)
             if abs(self.distance_error) < self.distance_tolerance: # 达到目标的情况
                 self.start_for_pid_distance = False
         elif self.start_for_lidar_distance:

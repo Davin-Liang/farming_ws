@@ -15,6 +15,7 @@ def main():
     try:
         node = Game_Controller("Game_Controller")
         node.voice_switch = False
+        node.voice_board_params = ['-D', '0', '-d', '0']
 
         node.only_arm_action        = True      # 只让机械臂到相应的点位，并不进行视觉识别
         node.one_action             = True      # 机械臂到相应的点位，开启视觉，只授粉一朵花

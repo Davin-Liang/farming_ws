@@ -41,7 +41,6 @@ class Game_Controller(Node):
         self.flowers_with_tag = [] # store flower property
         self.flowers_with_tag_again = []
         self.flowers_lists = [] # primitive flower data
-        self.last_flowers_lists = [] # last primitive flower data
         self.voice_board_params = ['-D', '0', '-d', '0']
 
         # alternative params
@@ -125,6 +124,9 @@ class Game_Controller(Node):
             if self.error == True:
                 self.find_next_arm_goal_on_position()
     
+    def guo_xiaoyu_is_broadcasting(self, info):
+        self.get_logger().info(info)
+
     def buzzer_tips(self, times=1.0):
         """ Make buzzer ring for a second times. """
         self.buzzer_cmd.data = True
@@ -143,10 +145,10 @@ class Game_Controller(Node):
         self.arm_moving         = False
         self.reset_vision_data()
 
-        self.get_logger().info('Waiting for finishing task......')
+        self.guo_xiaoyu_is_broadcasting('Waiting for finishing task......')
         while self.open_vision_detect:
             pass
-        self.get_logger().info('Finished task!!!!!!')
+        self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
 
     def reset_vision_data(self):
         self.flowers_with_tag.clear()
@@ -157,28 +159,28 @@ class Game_Controller(Node):
         self.open_vision_detect = True
         self.pre_process = True
 
-        self.get_logger().info('Waiting for finishing task......')
+        self.guo_xiaoyu_is_broadcasting('Waiting for finishing task......')
         while self.open_vision_detect:
             pass
-        self.get_logger().info('Finished task!!!!!!')
+        self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
 
     def set_distance(self, distance):
         self.distance = distance
         self.start_for_pid_distance = True
 
-        self.get_logger().info('Waiting for finishing task......')
+        self.guo_xiaoyu_is_broadcasting('Waiting for finishing task......')
         while self.start_for_pid_distance:
             pass
-        self.get_logger().info('Finished task!!!!!!')
+        self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
         time.sleep(2.0)
 
     def set_angle(self, angle):
         self.angle = radians(angle)
 
-        self.get_logger().info('Waiting for finishing task......')
+        self.guo_xiaoyu_is_broadcasting('Waiting for finishing task......')
         while abs(self.angle-self.yaw_angle)>self.angle_tolerance:
             pass
-        self.get_logger().info('Finished task!!!!!!')
+        self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
         time.sleep(4.0)
 
     def car_action_in_lidar(self, speed, threthold=0.1, mode=1):
@@ -187,7 +189,7 @@ class Game_Controller(Node):
         self.lidar_threthold = threthold
         self.start_for_lidar_distance = True
 
-        self.get_logger().info('Waiting for finishing task......')
+        self.guo_xiaoyu_is_broadcasting('Waiting for finishing task......')
         time.sleep(2.0) # ensure car will leave the area of lidar keeping out.
         if mode == 1:
             while self.lidar_distance > self.lidar_threthold:
@@ -195,7 +197,7 @@ class Game_Controller(Node):
         elif mode == 0:
             while self.lidar_distance > self.lidar_threthold:
                 pass
-        self.get_logger().info('Finished task!!!!!!')
+        self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
         self.start_for_lidar_distance = False
         time.sleep(2.0)
 
@@ -332,7 +334,7 @@ class Game_Controller(Node):
         if (abs(x_error) < self.threthold_of_x_error and
             abs(area_error) < self.threthold_of_area_error): # and
             # abs(y_error) < self.threthold_of_y_error):
-            self.get_logger().info('Finished pollinating!!!!!!')
+            self.guo_xiaoyu_is_broadcasting('Finished pollinating!!!!!!')
             for index, flower_with_tag in enumerate(self.flowers_with_tag):
                 if flower_with_tag['Moving'] == True:
                     self.flowers_with_tag_again[index]['Moving'] = False
@@ -351,7 +353,7 @@ class Game_Controller(Node):
 
     def reset_arm_pose_(self, pose="a_left"):
         """ 控制 arm 回到初始姿态 """
-        self.get_logger().info('Control arm to return initial pose......')
+        self.guo_xiaoyu_is_broadcasting('Control arm to return initial pose......')
         self.choose_arm_goal(pose)
         self.open_vision_detect = False
         self.pre_process = False
@@ -433,32 +435,32 @@ class Game_Controller(Node):
         """ 语音播报 """
         if direction != '':
             if direction == 'up':
-                self.get_logger().info('The flower above is: ')
+                self.guo_xiaoyu_is_broadcasting('The flower above is: ')
                 subprocess.Popen(['sudo', 'tinyplay', './voice/up.wav'] + self.voice_board_params)
                 time.sleep(2.0)
             elif direction == 'middle':
-                self.get_logger().info('The middle flower is: ')
+                self.guo_xiaoyu_is_broadcasting('The middle flower is: ')
                 subprocess.Popen(['sudo', 'tinyplay', './voice/middle.wav'] + self.voice_board_params)
                 time.sleep(2.0)
             elif direction == 'down':
-                self.get_logger().info('The lower flower is: ')
+                self.guo_xiaoyu_is_broadcasting('The lower flower is: ')
                 subprocess.Popen(['sudo', 'tinyplay', './voice/down.wav'] + self.voice_board_params)
                 time.sleep(2.0)
             elif direction == 'left':
-                self.get_logger().info('The left flower is: ')
+                self.guo_xiaoyu_is_broadcasting('The left flower is: ')
                 subprocess.Popen(['sudo', 'tinyplay', './voice/left.wav'] + self.voice_board_params)
                 time.sleep(2.0)
             elif direction == 'right':
-                self.get_logger().info('The right flower is: ')
+                self.guo_xiaoyu_is_broadcasting('The right flower is: ')
                 subprocess.Popen(['sudo', 'tinyplay', './voice/right.wav'] + self.voice_board_params)
                 time.sleep(2.0)
         if type != '':
             if type == 'male':
-                self.get_logger().info('male!!! male!!! male!!! ')
+                self.guo_xiaoyu_is_broadcasting('male!!! male!!! male!!! ')
                 subprocess.Popen(['sudo', 'tinyplay', './voice/male.wav'] + self.voice_board_params)
                 time.sleep(1.0)
             elif type == 'female':
-                self.get_logger().info('female!!! female!!! female!!! ')
+                self.guo_xiaoyu_is_broadcasting('female!!! female!!! female!!! ')
                 subprocess.Popen(['sudo', 'tinyplay', './voice/female.wav'] + self.voice_board_params)
                 time.sleep(1.0)
 
@@ -495,28 +497,13 @@ class Game_Controller(Node):
             if time.time() - self.start_count_time > self.time_threshold:
                 self.start_count = False
                 self.error = True
-                print('目标点丢失')
+                self.guo_xiaoyu_is_broadcasting('目标点丢失！！！！！！')
                 self.reset_arm_pose_(self.pose_name)
-            pass
-
-        # if self.last_flowers_lists == self.flowers_lists or len(self.flowers_lists) > 5:
-            # if self.start_count == False:
-            #     self.start_count = True
-            #     self.start_count_time = time.time()
-            # if time.time() - self.start_count_time > self.time_threshold:
-            #     self.start_count = False
-            #     self.error = True
-            #     print('目标点丢失')
-            #     self.reset_arm_pose_(self.pose_name)
-            # pass
-                
         else:
             if 0 != len(self.flowers_lists): # 预防处理空数据
                 self.start_count = False
-                # print(self.flowers_lists)
                 self.confrim_moving_goal_for_arm_(self.flowers_lists) 
-                # self.last_flowers_lists = self.flowers_lists
-                self.joint_last_state = self.arm_params['joint4']
+                self.joint_last_state = self.arm_params['joint1']
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """

@@ -488,7 +488,18 @@ class Game_Controller(Node):
         if self.vision_for_voice:
             self.voice_switch = True
 
-        if self.last_flowers_lists == self.flowers_lists or len(self.flowers_lists) > 5:
+        if self.joint_last_state == self.arm_params['joint1']:
+            if self.start_count == False:
+                self.start_count = True
+                self.start_count_time = time.time()
+            if time.time() - self.start_count_time > self.time_threshold:
+                self.start_count = False
+                self.error = True
+                print('目标点丢失')
+                self.reset_arm_pose_(self.pose_name)
+            pass
+
+        # if self.last_flowers_lists == self.flowers_lists or len(self.flowers_lists) > 5:
             # if self.start_count == False:
             #     self.start_count = True
             #     self.start_count_time = time.time()
@@ -497,14 +508,15 @@ class Game_Controller(Node):
             #     self.error = True
             #     print('目标点丢失')
             #     self.reset_arm_pose_(self.pose_name)
-            pass
+            # pass
                 
         else:
             if 0 != len(self.flowers_lists): # 预防处理空数据
                 self.start_count = False
                 # print(self.flowers_lists)
                 self.confrim_moving_goal_for_arm_(self.flowers_lists) 
-                self.last_flowers_lists = self.flowers_lists
+                # self.last_flowers_lists = self.flowers_lists
+                self.joint_last_state = self.arm_params['joint4']
 
     def vision_callback_(self, msg):
         """ 视觉回调函数 """

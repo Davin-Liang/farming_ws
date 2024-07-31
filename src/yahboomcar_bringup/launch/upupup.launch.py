@@ -69,10 +69,16 @@ def generate_launch_description():
             '/ekf_x1_x3_launch.py']),
     )
 
-    lidar_node = IncludeLaunchDescription(
+    stp23l_node = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
             get_package_share_directory('ldlidar'), 'launch'),
             '/stp23l.launch.py']),
+    )
+
+    stp23_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory('ldlidar'), 'launch'),
+            '/stp23.launch.py']),
     )
 
     vision_node = IncludeLaunchDescription(
@@ -93,7 +99,7 @@ def generate_launch_description():
         executable='servo',
     )
 
-    critical_nodes = [driver_node, base_node, lidar_node, vision_node]
+    critical_nodes = [driver_node, base_node, stp23_node, vision_node]
 
     event_handlers = [
         RegisterEventHandler(
@@ -117,7 +123,8 @@ def generate_launch_description():
             yahboom_joy_node,
             base_footprint_tf,
             imu_tf,
-            lidar_node,
+            stp23_node,
+            # stp23l_node,
             vision_node,
             servo_node,
             

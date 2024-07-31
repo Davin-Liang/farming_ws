@@ -44,22 +44,22 @@ class Game_Controller(Node):
         self.voice_board_params = ['-D', '0', '-d', '0']
 
         # alternative params
-        self.area_scaling_factor                     = 0.25 # 面积缩放系数
-        self.O_distance_threthold_of_judge_same_goal = 104 # 判断前后两次数据检测的识别框是否为同一个目标的阈值
-        self.central_point_of_camera                 = [320, 240] # 相机中心点
-        self.area_of_polliating                      = 80000 # 识别框为多少时才进行授粉的面积阈值 70000
-        self.joint_speed                             = 1.0 # 关节转动速度，将关节的转动的角度当作速度
+        self.area_scaling_factor                     = 0.25
+        self.O_distance_threthold_of_judge_same_goal = 104          # the threshold is used to determing whether the identification boxes of the two previous data detections are the same target.
+        self.central_point_of_camera                 = [320, 240]
+        self.area_of_polliating                      = 80000        # the area threshold for how long the box takes to polinate 70000
+        self.joint_speed                             = 1.0          # make the angle of joint rotating as joint speed
         self.threthold_of_x_error                    = 15.0
         self.threthold_of_y_error                    = 15.0
         self.threthold_of_area_error                 = 7000.0
-        self.servo_time                              = 140  #机械臂运动时间，单位mm
-        self.servo_reset_time                        = 2000  #机械臂初始位置运动时间
+        self.servo_time                              = 140          # Movement time of mechanical arm, unit mm.
+        self.servo_reset_time                        = 2000         # Movement time when arm returns to original orientation.
         self.distance_tolerance                      = 0.03
         self.angle_tolerance                         = radians(2.0)
         self.odom_linear_scale_correction            = 1.0
         self.odom_angular_scale_correction           = 1.0
-        self.area_difference                         = 30000    #TODO: 修改阈值
-        self.time_threshold                          = 1.0     #时间阈值
+        self.area_difference                         = 30000        #TODO: 修改阈值
+        self.time_threshold                          = 1.0          #时间阈值
 
         # publisher and subscriber
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "/hobot_dnn_detection", self.vision_callback_, 10)
@@ -103,7 +103,7 @@ class Game_Controller(Node):
         self.spin_thread.start()
 
 # -----------------------------------------------------------------------------------------------------------------------------
-# ------------------------------------------------对外接口函数------------------------------------------------------------------
+# ------------------------------------------------External interface funxtion--------------------------------------------------
 # -----------------------------------------------------------------------------------------------------------------------------
     def auto_pollinate(self, place="A", arm_pose="a_left", area_of_polliating=70000):
         self.area_of_polliating = area_of_polliating
@@ -316,7 +316,6 @@ class Game_Controller(Node):
         # print(self.flowers_with_tag)
         for flower_with_tag in self.flowers_with_tag:
             if flower_with_tag['Moving'] == True:
-                # print("正在获取 x 轴误差")
                 x_error = self.central_point_of_camera[0] - flower_with_tag['CentralPoint'][0]
                 y_error = self.central_point_of_camera[1] - flower_with_tag['CentralPoint'][1]
                 area_error = self.area_of_polliating - flower_with_tag['Area']
@@ -476,6 +475,7 @@ class Game_Controller(Node):
             self.default_arm_params = yaml.safe_load(file)
 
     def get_O_distance_(self):
+        """ Calculate the O distance from current positon to the positon of starting action. """
         return sqrt(pow((self.position.x - self.x_start), 2) + pow((self.position.y - self.y_start), 2))
 
 
@@ -504,22 +504,21 @@ class Game_Controller(Node):
                     self.guo_xiaoyu_is_broadcasting('目标点丢失！！！！！！')
                     self.reset_arm_pose_(self.pose_name)
         else:
-            if 0 != len(self.flowers_lists): # 预防处理空数据
+            if 0 != len(self.flowers_lists):
                 self.start_count = False
                 self.confrim_moving_goal_for_arm_(self.flowers_lists) 
                 self.joint_last_state = self.arm_params['joint1']
 
     def vision_callback_(self, msg):
-        """ 视觉回调函数 """
+        """ Get type, central point, area of each goal frame from callback function. """
         flowers_lists = []
-        flower = {'Type': '', 'CentralPoint': [], 'Area': 0} # 类型、中心点坐标、面积
+        flower = {'Type': '', 'CentralPoint': [], 'Area': 0}
         
         if 0 != len(msg.targets):
             for i in range(len(msg.targets)):
                 flower['CentralPoint'].clear()
                 if msg.targets[i].type == "male": 
                     flower['Type'] = msg.targets[i].type
-
                     flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.width/2)
                     flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.height/2)
                     flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
@@ -528,41 +527,39 @@ class Game_Controller(Node):
                     flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.width/2)
                     flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.height/2)
                     flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
-
-                # 得到原始数据
-                flowers_lists.append(copy.deepcopy(flower)) # 深拷贝
-        #print(flowers_lists)
+                # Get original data.
+                flowers_lists.append(copy.deepcopy(flower))
         self.flowers_lists.clear()
         self.flowers_lists = copy.deepcopy(flowers_lists)
 
     def spin_task_(self):
+        """ Spin node in class. """
         rclpy.spin(self)
 
     def lidar_callback_(self, msg):
-        """ 单线激光雷达的回调函数 """
+        """ Get distance of lidar from callback function. """
         self.lidar_distance = msg.range
 
     def timer_work_(self):
-        # 姿态控制
+        # orientation control
         self.ori_angle_pid.pid_calculate(ref=self.yaw_angle, goal=self.angle)
         self.move_cmd.angular.z = self.ori_angle_pid.out
 
-        # 距离控制
+        # distance control
         if self.start_for_pid_distance:
-            o_distance = self.get_O_distance_()
-            o_distance *= self.odom_linear_scale_correction # 修正
-            # 计算误差
-            self.distance_error = o_distance - abs(self.distance) # 负值控制车向前，正值控制车向后
+            o_distance = self.odom_linear_scale_correction * self.get_O_distance_()
+            # calculate error
+            self.distance_error = o_distance - abs(self.distance)
             self.distance_pid.pid_calculate(o_distance, abs(self.distance))
             if self.distance >= 0:
                 self.move_cmd.linear.x = self.distance_pid.out
             else:
                 self.move_cmd.linear.x = -self.distance_pid.out
-            if abs(self.distance_error) < self.distance_tolerance: # 达到目标的情况
+            if abs(self.distance_error) < self.distance_tolerance: # achieve goal
                 self.start_for_pid_distance = False
         elif self.start_for_lidar_distance:
             self.move_cmd.linear.x = self.liear_speed
-        else: # 未设定目标的情况
+        else:
             self.move_cmd.linear.x = 0.0
             self.x_start = self.position.x
             self.y_start = self.position.y

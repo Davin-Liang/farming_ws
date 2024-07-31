@@ -83,6 +83,7 @@ class Game_Controller(Node):
         self.yaw_angle       = 0.0
         self.lidar_threthold = 0.1
         self.liear_speed     = 0.5
+        self.joint_last_state  = 0
         self.angle = radians(self.angle)
         self.deviation_angle = radians(0.85)
 
@@ -111,6 +112,8 @@ class Game_Controller(Node):
             if self.only_arm_action:
                 return
             if self.one_action:
+                return
+            if self.vision_for_voice:
                 return
             for i in range(self.female_num-1):
                 print(self.female_num)
@@ -491,14 +494,15 @@ class Game_Controller(Node):
             self.voice_switch = True
 
         if self.joint_last_state == self.arm_params['joint1']:
-            if self.start_count == False:
-                self.start_count = True
-                self.start_count_time = time.time()
-            if time.time() - self.start_count_time > self.time_threshold:
-                self.start_count = False
-                self.error = True
-                self.guo_xiaoyu_is_broadcasting('目标点丢失！！！！！！')
-                self.reset_arm_pose_(self.pose_name)
+            if self.vision_for_voice != True:
+                if self.start_count == False:
+                    self.start_count = True
+                    self.start_count_time = time.time()
+                if time.time() - self.start_count_time > self.time_threshold:
+                    self.start_count = False
+                    self.error = True
+                    self.guo_xiaoyu_is_broadcasting('目标点丢失！！！！！！')
+                    self.reset_arm_pose_(self.pose_name)
         else:
             if 0 != len(self.flowers_lists): # 预防处理空数据
                 self.start_count = False
@@ -516,13 +520,13 @@ class Game_Controller(Node):
                 if msg.targets[i].type == "male": 
                     flower['Type'] = msg.targets[i].type
 
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
+                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.width/2)
+                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.height/2)
                     flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
                 elif msg.targets[i].type == "famale":
                     flower['Type'] = msg.targets[i].type
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.height/2)
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.width/2)
+                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.width/2)
+                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.height/2)
                     flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
 
                 # 得到原始数据

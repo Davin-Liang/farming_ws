@@ -34,6 +34,7 @@ class Game_Controller(Node):
         self.only_arm_action            = False
         self.one_action                 = False
         self.vision_for_voice           = False
+        self.start_delay = False
 
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # store real-time arm angles
         self.flowers_with_tag = [] # store flower property
@@ -190,9 +191,10 @@ class Game_Controller(Node):
         self.liear_speed = speed
         self.lidar_threthold = threthold
         self.start_for_lidar_distance = True
+        self.start_delay = True
 
         self.guo_xiaoyu_is_broadcasting('Waiting for finishing task......')
-        time.sleep(2.0) # ensure car will leave the area of lidar keeping out.
+        # time.sleep(3.0) # ensure car will leave the area of lidar keeping out.
         while self.start_for_lidar_distance:
             pass
         self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
@@ -544,6 +546,11 @@ class Game_Controller(Node):
             if abs(o_distance - abs(self.distance)) < self.distance_tolerance: # achieve goal
                 self.start_for_pid_distance = False
         elif self.start_for_lidar_distance:
+            if self.start_delay:
+                self.move_cmd.linear.x = self.liear_speed
+                self.cmd_vel.publish(self.move_cmd)
+                time.sleep(2.5)
+                self.start_delay = False
             self.move_cmd.linear.x = self.liear_speed
             if self.lidar_distance < self.lidar_threthold:
                 self.start_for_lidar_distance = False

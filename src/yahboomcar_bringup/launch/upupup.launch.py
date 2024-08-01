@@ -101,19 +101,19 @@ def generate_launch_description():
 
     critical_nodes = [driver_node, base_node, stp23_node, vision_node]
 
-    event_handlers = [
-        RegisterEventHandler(
-            OnStateTransition(
-                target_lifecycle_node=node,
-                goal_state='inactive',
-                entities=[
-                    LogInfo(msg=f"A critical node [{node.executable}] has stopped. Shutting down..."),
-                    EmitEvent(event=Shutdown())
-                ]
-            )
-        )
-        for node in critical_nodes
-    ]
+    # event_handlers = [
+    #     RegisterEventHandler(
+    #         OnStateTransition(
+    #             target_lifecycle_node=node,
+    #             goal_state='inactive',
+    #             entities=[
+    #                 LogInfo(msg=f"A critical node [{node.executable}] has stopped. Shutting down..."),
+    #                 EmitEvent(event=Shutdown())
+    #             ]
+    #         )
+    #     )
+    #     for node in critical_nodes
+    # ]
 
     def launch_other_nodes(context):
         return [
@@ -128,7 +128,7 @@ def generate_launch_description():
             vision_node,
             servo_node,
             
-            *event_handlers,
+            # *event_handlers,
         ]
 
     delayed_start = TimerAction(

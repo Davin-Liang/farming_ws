@@ -2,8 +2,8 @@ import rclpy
 from farming_visioner import Game_Controller
 import time
 
-A_switch                   = True
-B_switch                   = False
+A_switch                   = False
+B_switch                   = True
 C_switch                   = False
 Home_switch                = False
 
@@ -14,7 +14,7 @@ def main():
     rclpy.init()
     try:
         node = Game_Controller("Game_Controller")
-        node.voice_switch = True
+        node.voice_switch = False
         node.voice_board_params = ['-D', '0', '-d', '0']
 
         node.only_arm_action        = False      # 只让机械臂到相应的点位，并不进行视觉识别
@@ -49,9 +49,9 @@ def main():
             node.car_action_in_lidar(-patrol_speed, 0.4)
             node.set_distance(0.30) #TODO: 距离未确定
             # TODO:机械臂序号未确定
-            node.auto_pollinate("B", "b_left_front")
-            node.auto_pollinate("B", "b_middle_front")
-            node.auto_pollinate("B", "b_right_front")
+            node.auto_pollinate("B", "b_left_front", area_of_polliating=80000)
+            node.auto_pollinate("B", "b_middle_front", area_of_polliating=80000)
+            node.auto_pollinate("B", "b_right_front", area_of_polliating=80000)
             node.choose_arm_goal("moving")
 
             for i in range(3):
@@ -59,16 +59,16 @@ def main():
                 node.set_distance(-0.25) #TODO: 距离未确定
                 # arm action
                 # TODO:机械臂序号未确定
-                node.auto_pollinate("B", "b_left_back")
-                node.auto_pollinate("B", "b_middle_back")
-                node.auto_pollinate("B", "b_right_back")
+                node.auto_pollinate("B", "b_left_back", area_of_polliating=80000)
+                node.auto_pollinate("B", "b_middle_back", area_of_polliating=80000)
+                node.auto_pollinate("B", "b_right_back", area_of_polliating=80000)
                 
                 if i == 2:
                     break
                 # TODO:机械臂序号未确定 
-                node.auto_pollinate("B", "b_left_front")
-                node.auto_pollinate("B", "b_middle_front")
-                node.auto_pollinate("B", "b_right_front")
+                node.auto_pollinate("B", "b_left_front", area_of_polliating=80000)
+                node.auto_pollinate("B", "b_middle_front", area_of_polliating=80000)
+                node.auto_pollinate("B", "b_right_front", area_of_polliating=80000)
                 node.choose_arm_goal("moving")
 
             node.set_distance(-0.33) #TODO: 距离未确定

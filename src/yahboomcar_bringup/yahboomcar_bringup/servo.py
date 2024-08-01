@@ -1,5 +1,5 @@
 import rclpy
-from std_msgs.msg import Int32MultiArray
+from std_msgs.msg import Int32MultiArray, Float32MultiArray
 import serial
 
 LOBOT_CMD_SERVO_MOVE = 3
@@ -42,7 +42,7 @@ def servo_control_callback(msg):
         servo_data[3] = int((2500 - 500) / 270 * msg.data[1] + 500)  # 映射第二个数据到 servo_data[3]
         servo_data[5] = int((2500 - 500) / 270 * msg.data[2] + 500)  # 映射第三个数据到 servo_data[5]
         servo_data[7] = int((2500 - 500) / 270 * msg.data[3] + 500)  # 映射第四个数据到 servo_data[7]
-        time = msg.data[-1]  # 获取最后一个数据作为时间
+        time = int(msg.data[-1])  # 获取最后一个数据作为时间
     else:
         print('error')
         servo_data = [1, 1500, 2, 1500, 3, 1500, 4, 1500]  #回到初始位置防止堵转
@@ -54,7 +54,7 @@ def main():
     rclpy.init()
     node = rclpy.create_node('servo_controller')
 
-    servo_subscriber = node.create_subscription(Int32MultiArray, 'servo_commands', servo_control_callback,10)
+    servo_subscriber = node.create_subscription(Float32MultiArray, 'servo_commands', servo_control_callback,10)
 
     try:
         rclpy.spin(node)

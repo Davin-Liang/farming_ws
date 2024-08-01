@@ -2,6 +2,10 @@
 
 > **天道酬勤，拒绝 *TM* 的歪门邪道！**
 
+$$
+1 + 1 +1 > 3
+$$
+
 <div align="center">
   <img src="image/README/1722498555324.png" alt="Alt text" width="500">
 </div>

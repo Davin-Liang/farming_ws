@@ -2,8 +2,9 @@
 
 > **天道酬勤，拒绝 *TM* 的歪门邪道！**
 
-
-<img src="image/1722498555324.png" alt="Alt text" width="300">
+<div align="center">
+  <img src="image/README/1722498555324.png" alt="Alt text" width="500">
+</div>
 
 
 ## 一、团队成员

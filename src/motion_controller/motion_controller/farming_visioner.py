@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
-import math
 import rclpy
 from rclpy.node import Node
-from ai_msgs.msg import PerceptionTargets # type: ignore
 import os
 import yaml
-from std_msgs.msg import Int32MultiArray
-from std_msgs.msg import Float64, Bool
-from nav_msgs.msg import Odometry
 import time
 import subprocess
 import copy
-from threading import Thread
+from std_msgs.msg import Int32MultiArray, Float64, Bool
+from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist, Point
 from sensor_msgs.msg import Range
+from ai_msgs.msg import PerceptionTargets # type: ignore
+from threading import Thread
 from math import copysign, sqrt, pow, radians
 from pid import PID
 
@@ -60,6 +58,7 @@ class Game_Controller(Node):
         self.odom_angular_scale_correction           = 1.0
         self.area_difference                         = 30000        #TODO: 修改阈值
         self.time_threshold                          = 1.0          #时间阈值
+        self.goal_confidence                         = 0.75
 
         # publisher and subscriber
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "/hobot_dnn_detection", self.vision_callback_, 10)
@@ -83,7 +82,7 @@ class Game_Controller(Node):
         self.yaw_angle       = 0.0
         self.lidar_threthold = 0.1
         self.liear_speed     = 0.5
-        self.joint_last_state  = 0
+        self.joint_last_state  = {}
         self.angle = radians(self.angle)
         self.deviation_angle = radians(0.85)
 
@@ -181,12 +180,12 @@ class Game_Controller(Node):
         self.angle = radians(angle)
 
         self.guo_xiaoyu_is_broadcasting('Waiting for finishing task......')
-        while abs(self.angle-self.yaw_angle)>self.angle_tolerance:
+        while abs(self.angle-self.yaw_angle) > self.angle_tolerance:
             pass
         self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
         time.sleep(4.0)
 
-    def car_action_in_lidar(self, speed, threthold=0.1, mode=1):
+    def car_action_in_lidar(self, speed, threthold=0.1):
         """ Start car and stop car by lidar. """
         self.liear_speed = speed
         self.lidar_threthold = threthold
@@ -194,14 +193,9 @@ class Game_Controller(Node):
 
         self.guo_xiaoyu_is_broadcasting('Waiting for finishing task......')
         time.sleep(2.0) # ensure car will leave the area of lidar keeping out.
-        if mode == 1:
-            while self.lidar_distance > self.lidar_threthold:
-                pass
-        elif mode == 0:
-            while self.lidar_distance > self.lidar_threthold:
-                pass
+        while self.start_for_lidar_distance:
+            pass
         self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
-        self.start_for_lidar_distance = False
         time.sleep(2.0)
 
     def choose_arm_goal(self, pose_name):
@@ -252,15 +246,15 @@ class Game_Controller(Node):
 
         # Update data
         for flower in flowers_lists:
-            print("有数据")
             if flower['Type'] == "famale":
-                print("满足条件 0")
+                print("===============================================================================")
+                self.guo_xiaoyu_is_broadcasting("该次处理的目标为雌花!!!!!!")
                 for index, flower_with_tag in enumerate(self.flowers_with_tag):
                     if flower_with_tag['Moving'] == True:
                         if self.calculate_O_distance_(flower_with_tag['CentralPoint'], flower['CentralPoint']) < self.O_distance_threthold_of_judge_same_goal:
-                            print("满足条件 1")
+                            self.guo_xiaoyu_is_broadcasting("满足 O 式距离限制!!!!!!")
                             if abs(flower_with_tag['Area']-flower['Area']) <= self.area_difference:
-                                print("满足条件 2")
+                                self.guo_xiaoyu_is_broadcasting("满足面积变化限制!!!!!!")
                                 self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
                                 self.flowers_with_tag[index]['Area'] = flower['Area']
                                 self.control_arm_()
@@ -467,7 +461,7 @@ class Game_Controller(Node):
                 time.sleep(1.0)
 
     def calculate_O_distance_(self, point1, point2):
-        return math.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
+        return sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
     
     def load_config_file_(self):
         """ Load YAML file. """
@@ -493,7 +487,7 @@ class Game_Controller(Node):
         if self.vision_for_voice:
             self.voice_switch = True
 
-        if self.joint_last_state == self.arm_params['joint1']:
+        if self.joint_last_state == self.arm_params:
             if self.vision_for_voice != True:
                 if self.start_count == False:
                     self.start_count = True
@@ -501,13 +495,13 @@ class Game_Controller(Node):
                 if time.time() - self.start_count_time > self.time_threshold:
                     self.start_count = False
                     self.error = True
-                    self.guo_xiaoyu_is_broadcasting('目标点丢失！！！！！！')
+                    self.guo_xiaoyu_is_broadcasting("目标点丢失!!!!!!")
                     self.reset_arm_pose_(self.pose_name)
         else:
             if 0 != len(self.flowers_lists):
                 self.start_count = False
                 self.confrim_moving_goal_for_arm_(self.flowers_lists) 
-                self.joint_last_state = self.arm_params['joint1']
+                self.joint_last_state = self.arm_params
 
     def vision_callback_(self, msg):
         """ Get type, central point, area of each goal frame from callback function. """
@@ -517,16 +511,12 @@ class Game_Controller(Node):
         if 0 != len(msg.targets):
             for i in range(len(msg.targets)):
                 flower['CentralPoint'].clear()
-                if msg.targets[i].type == "male": 
-                    flower['Type'] = msg.targets[i].type
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.width/2)
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.height/2)
-                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
-                elif msg.targets[i].type == "famale":
-                    flower['Type'] = msg.targets[i].type
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.width/2)
-                    flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.height/2)
-                    flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
+                if msg.targets[i].type == "male" or msg.targets[i].type == "famale": 
+                    if msg.targets[i].rois[0].confidence > self.goal_confidence:
+                        flower['Type'] = msg.targets[i].type
+                        flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.width/2)
+                        flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.height/2)
+                        flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
                 # Get original data.
                 flowers_lists.append(copy.deepcopy(flower))
         self.flowers_lists.clear()
@@ -549,16 +539,15 @@ class Game_Controller(Node):
         if self.start_for_pid_distance:
             o_distance = self.odom_linear_scale_correction * self.get_O_distance_()
             # calculate error
-            self.distance_error = o_distance - abs(self.distance)
-            self.distance_pid.pid_calculate(o_distance, abs(self.distance))
-            if self.distance >= 0:
-                self.move_cmd.linear.x = self.distance_pid.out
-            else:
-                self.move_cmd.linear.x = -self.distance_pid.out
-            if abs(self.distance_error) < self.distance_tolerance: # achieve goal
+            self.distance_pid.pid_calculate(ref=o_distance, goal=abs(self.distance))
+            self.move_cmd.linear.x = copysign(self.distance_pid.out, self.distance)
+            if abs(o_distance - abs(self.distance)) < self.distance_tolerance: # achieve goal
                 self.start_for_pid_distance = False
         elif self.start_for_lidar_distance:
             self.move_cmd.linear.x = self.liear_speed
+            if self.lidar_distance < self.lidar_threthold:
+                self.start_for_lidar_distance = False
+                self.cmd_vel.publish(Twist())
         else:
             self.move_cmd.linear.x = 0.0
             self.x_start = self.position.x

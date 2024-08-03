@@ -64,10 +64,13 @@ class Game_Controller(Node):
         self.area_difference                         = 50000        #TODO: 修改阈值
         self.time_threshold                          = 3.0          #时间阈值
         self.goal_confidence                         = 0.6
+        self.joint2_area_threthold                   = 38000
+        self.joint2_coefficient                      = 1.0          #B区
 
         # publisher and subscriber
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "/hobot_dnn_detection", self.vision_callback_, 10)
         self.joint_angles_publisher_ = self.create_publisher(Float32MultiArray, "/servo_commands", 10)
+        self.voice_publisher_ = self.create_publisher(Int32MultiArray, "/voice_commands", 10)
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.buzzer_publisher_ = self.create_publisher(Bool, "/Buzzer", 5)
         self.lidar_subcriber_ = self.create_subscription(Range, "/laser", self.lidar_callback_, 10)
@@ -76,6 +79,7 @@ class Game_Controller(Node):
 
         self.move_cmd           = Twist()
         self.angles_of_joints   = Float32MultiArray()
+        self.voice_cmd          = Int32MultiArray()
         self.buzzer_cmd         = Bool()
 
         self.ori_angle_pid = PID(Kp=0.685, Ki=0.00079, Kd=0.426, max_out=0.9, max_iout=0.0085)
@@ -124,8 +128,10 @@ class Game_Controller(Node):
 # -----------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------External interface funxtion--------------------------------------------------
 # -----------------------------------------------------------------------------------------------------------------------------
-    def auto_pollinate(self, place="A", arm_pose="a_left", area_of_polliating=70000):
+    def auto_pollinate(self, place="A", arm_pose="a_left", joint2_area_threthold=38000, joint2_coefficient=1.5,area_of_polliating=70000):
         self.area_of_polliating = area_of_polliating
+        self.joint2_area_threthold = joint2_area_threthold
+        self.joint2_coefficient = joint2_coefficient
         if "A" == place or "C" == place:
             self.vision_control_arm(place, arm_pose)
             if self.error:
@@ -333,7 +339,8 @@ class Game_Controller(Node):
                     self.reset_arm_pose_()
                 self.flowers_with_tag_again = copy.deepcopy(self.flowers_with_tag)
                 #添加语音播报
-                self.start_voice_thread = True
+                # self.start_voice_thread = True
+                self.voice_process(self.flowers_lists)
                 # if self.voice_switch:
                 #     self.voice_(flowers_lists)
             else:
@@ -377,9 +384,9 @@ class Game_Controller(Node):
             self.arm_params['joint1'] = float(self.limit_num_(self.arm_params['joint1'] + copysign(0.25 * self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
         self.angles_of_joints.data.append(self.arm_params['joint1'])
 
-        if area < 38000:
+        if area < self.joint2_area_threthold:                                    #38000
             if abs(area_error) > self.threthold_of_area_error:
-                self.arm_params['joint2'] = float(self.limit_num_(self.arm_params['joint2'] + copysign(1.0 * self.joint_speed, area_error), self.default_arm_params['joint2_limiting']))
+                self.arm_params['joint2'] = float(self.limit_num_(self.arm_params['joint2'] + copysign(self.joint2_coefficient * self.joint_speed, area_error), self.default_arm_params['joint2_limiting']))
             self.angles_of_joints.data.append(self.arm_params['joint2']) # 1.5
 
             if abs(y_error) > self.threthold_of_y_error:
@@ -430,6 +437,35 @@ class Game_Controller(Node):
         self.pre_process = False
         self.data_update = False
         time.sleep(2.0)
+
+    def voice_process(self, flowers_lists):
+        goal_list_agn = []
+        #数组第一位为播报哪个区域
+        if self.place_name == 'A':
+            goal_list_agn.append(0)     # A区
+        if self.place_name == 'B':
+            goal_list_agn.append(1)     # B区
+        if self.place_name == 'C':
+            goal_list_agn.append(2)     # C区
+        goal_list = self.data_sort_(flowers_lists, prior_axis='v')
+        for index, goal in enumerate(goal_list):
+            if index == 0:
+                    if goal == 'famale':
+                        goal_list_agn.append(1)
+                    else:
+                        goal_list_agn.append(2)
+            if index == 1:
+                    if goal == 'famale':
+                        goal_list_agn.append(1)
+                    else:
+                        goal_list_agn.append(2)
+            if index == 2:
+                    if goal == 'famale':
+                        goal_list_agn.append(1)
+                    else:
+                        goal_list_agn.append(2)
+        self.voice_cmd.data.append(goal_list_agn)
+        self.voice_publisher_.publish(self.voice_cmd)
 
     def voice_(self, flowers_lists):
         if self.place_name == 'A':

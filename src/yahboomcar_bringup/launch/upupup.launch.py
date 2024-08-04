@@ -99,6 +99,16 @@ def generate_launch_description():
         executable='servo',
     )
 
+    voice_node = Node(
+        package='yahboomcar_bringup',
+        executable='voice',
+    )
+
+    car_node = Node(
+        package='car_control',
+        executable='car_control',
+    )
+
     critical_nodes = [driver_node, base_node, stp23_node, vision_node]
 
     # event_handlers = [
@@ -127,6 +137,8 @@ def generate_launch_description():
             stp23l_node,
             vision_node,
             servo_node,
+            voice_node,
+            car_node
             
             # *event_handlers,
         ]

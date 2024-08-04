@@ -39,6 +39,7 @@ setup(
         'patrol_4ROS_R2 = yahboomcar_bringup.patrol_4ROS_R2:main',
         'patrol_a1_R2 = yahboomcar_bringup.patrol_a1_R2:main',
         'servo = yahboomcar_bringup.servo:main',
+        'voice = yahboomcar_bringup.voice:main',
         ],
     },
 )

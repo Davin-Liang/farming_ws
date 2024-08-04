@@ -49,12 +49,12 @@ class Game_Controller(Node):
 
         # alternative params
         self.area_scaling_factor                     = 0.25
-        self.O_distance_threthold_of_judge_same_goal = 105          # the threshold is used to determing whether the identification boxes of the two previous data detections are the same target.
-        self.central_point_of_camera                 = [360, 240]
+        self.O_distance_threthold_of_judge_same_goal = 111          # the threshold is used to determing whether the identification boxes of the two previous data detections are the same target.
+        self.central_point_of_camera                 = [320, 240]
         self.area_of_polliating                      = 80000        # the area threshold for how long the box takes to polinate 70000
         self.joint_speed                             = 2.0          # make the angle of joint rotating as joint speed
-        self.threthold_of_x_error                    = 30.0
-        self.threthold_of_y_error                    = 30.0
+        self.threthold_of_x_error                    = 25.0
+        self.threthold_of_y_error                    = 25.0
         self.threthold_of_area_error                 = 7000.0
         self.servo_time                              = 850          # Movement time of mechanical arm, unit mm.
         self.servo_reset_time                        = 2000         # Movement time when arm returns to original orientation.
@@ -424,7 +424,7 @@ class Game_Controller(Node):
         # print(area_error)
 
         if abs(x_error) > self.threthold_of_x_error:
-            self.arm_params['joint1'] = float(self.limit_num_(self.arm_params['joint1'] + copysign(0.75 * self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
+            self.arm_params['joint1'] = float(self.limit_num_(self.arm_params['joint1'] + copysign(0.25 * self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
         self.angles_of_joints.data.append(self.arm_params['joint1'])
 
         if area < self.joint2_area_threthold:                                    #38000
@@ -437,16 +437,16 @@ class Game_Controller(Node):
             self.angles_of_joints.data.append(self.arm_params['joint3'])
 
             if abs(y_error) > self.threthold_of_y_error:
-                self.arm_params['joint4'] = float(self.limit_num_(self.arm_params['joint4'] + copysign(1.0 * self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
+                self.arm_params['joint4'] = float(self.limit_num_(self.arm_params['joint4'] + copysign(0.5 * self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
             self.angles_of_joints.data.append(self.arm_params['joint4'])
         else:
             self.angles_of_joints.data.append(self.arm_params['joint2'])
             if abs(area_error) > self.threthold_of_area_error:
-                self.arm_params['joint3'] = float(self.limit_num_(self.arm_params['joint3'] + copysign(0.75 * self.joint_speed, -area_error), self.default_arm_params['joint3_limiting']))
+                self.arm_params['joint3'] = float(self.limit_num_(self.arm_params['joint3'] + copysign(0.5 * self.joint_speed, -area_error), self.default_arm_params['joint3_limiting']))
             self.angles_of_joints.data.append(self.arm_params['joint3'])
 
             if abs(y_error) > self.threthold_of_y_error:
-                self.arm_params['joint4'] = float(self.limit_num_(self.arm_params['joint4'] + copysign(1.25 * self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
+                self.arm_params['joint4'] = float(self.limit_num_(self.arm_params['joint4'] + copysign(1.0 * self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
             self.angles_of_joints.data.append(self.arm_params['joint4'])
 
 
@@ -461,7 +461,7 @@ class Game_Controller(Node):
                     self.flowers_with_tag_again[index]['Pollinated'] = True
             self.reset_arm_pose_(self.pose_name)
             return
-        print(self.angles_of_joints)
+        # print(self.angles_of_joints)
         self.angles_of_joints.data.append(self.servo_time)
         self.joint_angles_publisher_.publish(self.angles_of_joints)
 

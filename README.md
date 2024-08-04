@@ -148,6 +148,12 @@ colcon build --packages-select <package_name>
 ls /dev/sn*
 ```
 
+* 通过命令行发布话题:
+
+```
+ros2 topic pub /voice_commands std_msgs/msg/Int32MultiArray '{data:[2,2,1,1]}' --once
+```
+
 ## 七、快捷命令
 
 * 测试音频板是否能播放音频

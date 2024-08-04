@@ -94,7 +94,7 @@ public:
         lidar_sub_ = this->create_subscription<sensor_msgs::msg::Range>("/laser", 10, std::bind(&CarController::lidar_callback, this, std::placeholders::_1));
         odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("/odom", 10, std::bind(&CarController::odom_callback, this, std::placeholders::_1));
         yaw_angle_sub_ = this->create_subscription<std_msgs::msg::Float64>("/yaw_angle", 10, std::bind(&CarController::yaw_angle_callback, this, std::placeholders::_1));
-        car_command_sub_ = this->create_subscription<std_msgs::msg::Float64MultiArray>("/car_command", 10, std::bind(&CarController::car_command_callback, this, std::placeholders::_1));
+        car_command_sub_ = this->create_subscription<std_msgs::msg::Float64MultiArray>("/car_commands", 100, std::bind(&CarController::car_command_callback, this, std::placeholders::_1));
 
         work_timer_ = this->create_wall_timer(4ms, std::bind(&CarController::timer_work, this));
 
@@ -108,6 +108,7 @@ private:
         {
             distance_ = msg->data[1];
             start_for_pid_distance_ = true;
+            std::cout << "open distance control !!!!!!" << std::endl;
         }
         else if (msg->data[0] == 1.0) // 代表激光
         {
@@ -115,10 +116,12 @@ private:
             liear_speed_ = msg->data[1];
             lidar_threthold_ = msg->data[2];
             start_for_lidar_distance_ = true;
+            std::cout << "open lidar control !!!!!!" << std::endl;
         }
         else if (msg->data[0] == 2.0) // 代表角度
         {
             angle_ = msg->data[1];
+            std::cout << "open angle control !!!!!!" << std::endl;
         }
     }
 

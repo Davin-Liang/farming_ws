@@ -108,7 +108,7 @@ class Game_Controller(Node):
 
         time.sleep(2.0)
 
-        # self.work_timer = self.create_timer(0.004, self.timer_work_)
+        self.work_timer = self.create_timer(0.004, self.timer_work_)
         self.arm_timer = self.create_timer(0.5, self.arm_timer_callback_)
         # self.voice_timer = self.create_timer(0.01, self.voice_task_)
 
@@ -640,7 +640,7 @@ class Game_Controller(Node):
 
 
     def yaw_angle_callback_(self, msg):
-        self.yaw_angle = -msg.data
+        self.yaw_angle = msg.data
 
     def odom_callback_(self, msg):
         self.position.x = msg.pose.pose.position.x
@@ -721,8 +721,8 @@ class Game_Controller(Node):
 
     def timer_work_(self):
         # orientation control
-        self.ori_angle_pid.pid_calculate(ref=self.yaw_angle, goal=self.angle)
-        self.move_cmd.angular.z = self.ori_angle_pid.out
+        # self.ori_angle_pid.pid_calculate(ref=self.yaw_angle, goal=self.angle)
+        # self.move_cmd.angular.z = self.ori_angle_pid.out
 
         # distance control
         x = time.time()

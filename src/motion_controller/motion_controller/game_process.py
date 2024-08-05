@@ -24,7 +24,7 @@ def main():
         node.buzzer_tips(times=2.0)
         node.choose_arm_goal("a_left")
 
-        # node.auto_pollinate("A", "a_left", 45000, 1.0, 108000)
+        node.auto_pollinate("A", "a_left", 45000, 1.0, 108000)
         # node.auto_pollinate("A", "a_right", 28000, 1.0, 145000)
 
         # node.auto_pollinate("B", "b_left_back", 155000, 1.0, 118000)
@@ -35,8 +35,8 @@ def main():
         # node.auto_pollinate("B", "b_middle_front", 155000, 1.0, 118000)
         # node.auto_pollinate("B", "b_right_front", 155000, 1.0, 118000)
 
-        node.auto_pollinate("C", "c_left", 45000, 1.5, 108000)
-        node.auto_pollinate("C", "c_right", 45000, 1.5, 108000)
+        # node.auto_pollinate("C", "c_left", 45000, 1.5, 108000)
+        # node.auto_pollinate("C", "c_right", 45000, 1.5, 108000)
 
 # ---------------------------------------------------------------------------------------------------------------
 # ----------------AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA--------------------

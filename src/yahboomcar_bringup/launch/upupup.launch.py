@@ -138,7 +138,7 @@ def generate_launch_description():
             vision_node,
             servo_node,
             voice_node,
-            car_node
+            # car_node
             
             # *event_handlers,
         ]

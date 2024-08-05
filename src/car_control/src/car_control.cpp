@@ -127,7 +127,7 @@ private:
 
     void yaw_angle_callback(const std_msgs::msg::Float64::SharedPtr msg) 
     {
-        yaw_angle_ = -msg->data;
+        yaw_angle_ = msg->data;
     }
 
     void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg) 
@@ -145,7 +145,7 @@ private:
     {
         // orientation control
         ori_angle_pid_.pid_calculate(yaw_angle_, angle_);
-        move_cmd_.angular.z = ori_angle_pid_.get_output();
+        move_cmd_.angular.z = -ori_angle_pid_.get_output();
 
         // distance control
         if (start_for_pid_distance_) 
@@ -166,12 +166,12 @@ private:
         {
             if (start_delay_) 
             {
-                move_cmd_.linear.x = liear_speed_;
+                move_cmd_.linear.x = -liear_speed_;
                 cmd_vel_pub_->publish(move_cmd_);
                 std::this_thread::sleep_for(std::chrono::milliseconds(2500));
                 start_delay_ = false;
             }
-            move_cmd_.linear.x = liear_speed_;
+            move_cmd_.linear.x = -liear_speed_;
             if (lidar_distance_ < lidar_threthold_) 
             {
                 start_for_lidar_distance_ = false;

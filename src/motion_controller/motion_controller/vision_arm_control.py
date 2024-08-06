@@ -53,8 +53,8 @@ class Game_Controller(Node):
         self.central_point_of_camera                 = [320, 240]
         self.area_of_polliating                      = 80000        # the area threshold for how long the box takes to polinate 70000
         self.joint_speed                             = 2.0          # make the angle of joint rotating as joint speed
-        self.threthold_of_x_error                    = 25.0
-        self.threthold_of_y_error                    = 25.0
+        self.threthold_of_x_error                    = 20.0
+        self.threthold_of_y_error                    = 20.0
         self.threthold_of_area_error                 = 7000.0
         self.servo_time                              = 850          # Movement time of mechanical arm, unit mm.
         self.servo_reset_time                        = 2000         # Movement time when arm returns to original orientation.

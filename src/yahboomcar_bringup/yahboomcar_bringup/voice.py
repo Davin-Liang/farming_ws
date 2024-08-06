@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int32MultiArray
+from std_msgs.msg import Int32MultiArray, Bool
 import subprocess
 import time
 
@@ -9,9 +9,11 @@ class VoiceNotifier(Node):
         super().__init__('voice_notifier')
         # 订阅 Int32MultiArray 类型的消息
         self.subscriber = self.create_subscription(Int32MultiArray, '/voice_commands', self.callback, 10)
+        self.voice_state_publisher_ = self.create_publisher(Bool, "/voice_state", 10)
         # 初始化其他变量
         self.place_name = 'A'  # 给一个初始位置
         self.voice_board_params = ['-D', '0', '-d', '0']
+        self.voice_state = Bool()
         print('初始化完成')
         # self.data_sort_ = self.dummy_data_sort  # 示例数据排序方法
 
@@ -65,8 +67,13 @@ class VoiceNotifier(Node):
             self.voice_broadcast(type=voice_type)
 
     def handle_place_B(self, data):
-        if len(data) > 1:
-            self.voice_broadcast(type='female' if data[1] == 1 else 'male')
+        # if len(data) > 1:
+        print(data)
+        self.voice_broadcast(type='female' if data[1] == 1 else 'male')
+        # for index, value in enumerate(data[1:]):  # 使用 data[1:] 从第二个元素开始
+        #     voice_type = 'female' if value == 1 else 'male'
+            
+        #     self.voice_broadcast(type=voice_type)
 
     def handle_place_C(self, data):
         directions = ['left', 'middle', 'right']
@@ -76,6 +83,8 @@ class VoiceNotifier(Node):
                 break
             self.voice_broadcast(directions[index])
             self.voice_broadcast(type='female' if value == 1 else 'male')
+        self.voice_state.data = True
+        self.voice_state_publisher_.publish(self.voice_state)
 
     def voice_broadcast(self, direction='', type=''):
         """ 语音播报 """

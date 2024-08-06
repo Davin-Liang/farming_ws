@@ -153,6 +153,12 @@ ls /dev/sn*
 ```
 ros2 topic pub /voice_commands std_msgs/msg/Int32MultiArray '{data:[2,2,1,1]}' --once
 ```
+IP
+```
+nmcli connection modify 134 ipv4.method manual ipv4.addresses 192.168.11.111/24 ipv4.gateway 192.168.3.1 ipv4.dns 8.8.8.8 right
+nmcli connection modify Mi11 ipv4.method manual ipv4.addresses 192.168.120.111/24 ipv4.gateway 192.168.3.1 ipv4.dns 8.8.8.8 right
+```
+
 
 ## 七、快捷命令
 
@@ -184,4 +190,20 @@ game
 
 ```
 sust_books
+```
+* 打开 YoloV5 视觉
+```
+vision
+```
+* 连接热点
+```
+wifi_phone
+```
+* 连接路由器 wifi
+```
+wifi_134
+```
+* 在终端列出 wifi 列表
+```
+wifi_list
 ```

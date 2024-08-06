@@ -40,6 +40,7 @@ class Game_Controller(Node):
         self.start_voice_thread         = False
         self.new_choice                 = False
         self.finish_task                = False
+        self.voice_state                = False
 
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # store real-time arm angles
         self.flowers_with_tag = [] # store flower property
@@ -49,31 +50,41 @@ class Game_Controller(Node):
 
         # alternative params
         self.area_scaling_factor                     = 0.25
-        self.O_distance_threthold_of_judge_same_goal = 105          # the threshold is used to determing whether the identification boxes of the two previous data detections are the same target.
-        self.central_point_of_camera                 = [360, 240]
+        self.O_distance_threthold_of_judge_same_goal = 99          # the threshold is used to determing whether the identification boxes of the two previous data detections are the same target.
+        self.central_point_of_camera                 = [320, 240]
         self.area_of_polliating                      = 80000        # the area threshold for how long the box takes to polinate 70000
         self.joint_speed                             = 2.0          # make the angle of joint rotating as joint speed
-        self.threthold_of_x_error                    = 30.0
-        self.threthold_of_y_error                    = 30.0
+        self.threthold_of_x_error                    = 12.0
+        self.threthold_of_y_error                    = 13.0
         self.threthold_of_area_error                 = 7000.0
-        self.servo_time                              = 850          # Movement time of mechanical arm, unit mm.
+        self.servo_time                              = 880          # Movement time of mechanical arm, unit mm.
         self.servo_reset_time                        = 2000         # Movement time when arm returns to original orientation.
         self.distance_tolerance                      = 0.03
         self.angle_tolerance                         = radians(2.0)
         self.odom_linear_scale_correction            = 1.0
         self.odom_angular_scale_correction           = 1.0
         self.area_difference                         = 50000        #TODO: 修改阈值
-        self.time_threshold                          = 3.0          #时间阈值
-        self.goal_confidence                         = 0.6
+        self.time_threshold                          = 1.5          #时间阈值
+        self.goal_confidence                         = 0.45
         self.joint2_area_threthold                   = 38000
         self.joint2_coefficient                      = 1.0          #B区
-        self.fix_pose_joint3                         = 120          #TODO:固定姿态3的角度值  首先需调整面积阈值使其达到合适的位置
-        self.fix_pose_joint4                         = 120          #TODO:固定姿态4的角度值
+        #self.fix_pose_joint3                         = 120          #TODO:固定姿态3的角度值  首先需调整面积阈值使其达到合适的位置
+        # self.fix_pose_joint4                         = 120          #TODO:固定姿态4的角度值
+        # self.fix_joint3_angle                        = 5
+        # self.fix_joint4_angle                        = 5
+        self.add_joint2_pre_slide                    = 6
+        self.add_joint3_pre_slide                    = -8
+        self.add_joint4_pre_slide                    = -10
+        self.add_joint4_slide                        = 9
+        self.filter_area                             = 20000
+        self.reset_count                             = 0
+        self.reset_count_threshold                   = 3
 
         # publisher and subscriber
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "/hobot_dnn_detection", self.vision_callback_, 10)
         self.joint_angles_publisher_ = self.create_publisher(Float32MultiArray, "/servo_commands", 10)
         self.voice_publisher_ = self.create_publisher(Int32MultiArray, "/voice_commands", 10)
+        self.voice_state_subscribe_ = self.create_subscription(Bool, "/voice_state", self.voice_state_callback_, 5)
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.buzzer_publisher_ = self.create_publisher(Bool, "/Buzzer", 5)
         self.lidar_subcriber_ = self.create_subscription(Range, "/laser", self.lidar_callback_, 10)
@@ -108,7 +119,7 @@ class Game_Controller(Node):
         self.distance_error = 0
         self.angle_error    = 0
 
-        time.sleep(2.0)
+        time.sleep(1.0)
 
         self.work_timer = self.create_timer(0.004, self.timer_work_)
         self.arm_timer = self.create_timer(0.5, self.arm_timer_callback_)
@@ -123,6 +134,11 @@ class Game_Controller(Node):
 
         # self.arm_thread = Thread(target=self.arm_timer_callback_)
         # self.arm_thread.start()
+    
+        self.guo_xiaoyu_is_broadcasting("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Finish initial task !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        self.guo_xiaoyu_is_broadcasting("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Finish initial task !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        self.guo_xiaoyu_is_broadcasting("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Finish initial task !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        self.guo_xiaoyu_is_broadcasting("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Finish initial task !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
     def voice_task_(self):
         # while True:
@@ -212,12 +228,18 @@ class Game_Controller(Node):
         self.guo_xiaoyu_is_broadcasting('Waiting for finishing task......')
         while self.open_vision_detect:
             pass
+        if self.place_name == 'C':
+            while not self.voice_state:
+                # print("voice_announce")
+                pass
+            self.voice_state = False
         # self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
 
     def reset_vision_data(self):
         self.flowers_with_tag.clear()
         self.flowers_with_tag_again.clear()
         self.female_num = 0
+        self.reset_count = 0
 
     def find_next_arm_goal_on_position(self):
         self.joint_last_state = {}
@@ -311,23 +333,24 @@ class Game_Controller(Node):
         self.angles_of_joints.data.append(self.arm_params['joint4'])
         self.angles_of_joints.data.append(self.servo_reset_time)
         self.joint_angles_publisher_.publish(self.angles_of_joints)
-        time.sleep(3.0)
+        time.sleep(4.0)
 
-    def choose_arm_goal_in_number(self, joint1=0, joint2=0, joint3=0, joint4=0):
+    def choose_arm_goal_in_number(self, joint1=0, joint2=0, joint3=0, joint4=0, servo_time=1000):
         """ Use own numbers to control arm instead of arm goals in YAML file. """
         if joint1 != 0:
             self.arm_params['joint1'] = joint1
         if joint2 != 0:
-            self.arm_params['joint1'] = joint2
+            self.arm_params['joint2'] = joint2
         if joint3 != 0:
-            self.arm_params['joint1'] = joint3
+            self.arm_params['joint3'] = joint3
         if joint4 != 0:
-            self.arm_params['joint1'] = joint4
+            self.arm_params['joint4'] = joint4
         self.angles_of_joints.data = []
         self.angles_of_joints.data.append(self.arm_params['joint1'])
         self.angles_of_joints.data.append(self.arm_params['joint2'])
         self.angles_of_joints.data.append(self.arm_params['joint3'])
         self.angles_of_joints.data.append(self.arm_params['joint4'])
+        self.angles_of_joints.data.append(servo_time)
         self.joint_angles_publisher_.publish(self.angles_of_joints)
         time.sleep(2.0)
 
@@ -366,28 +389,48 @@ class Game_Controller(Node):
         if self.pre_process:
             if len(self.flowers_with_tag) == 0:
                 print("正在进行数据预处理")
+                self.voice_process(self.flowers_lists)
                 for index, flower in enumerate(flowers_lists):
-                    if flower['Type'] == 'famale':
-                        self.female_num += 1
-                        if self.female_num >= 3:
-                            self.female_num = 3
-                        flower_with_tag['Type'] = flower['Type']
-                        flower_with_tag['CentralPoint'] = flower['CentralPoint']
-                        flower_with_tag['Area'] = flower['Area']
-                        if self.arm_moving == False:
-                            flower_with_tag['Moving'] = True
-                            self.arm_moving = True
-                        else:
-                            flower_with_tag['Moving'] = False
-                        self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
+                    if self.place_name == 'B':
+                        if  flower['Area'] > self.filter_area:
+                            if flower['Type'] == 'famale':
+                                self.female_num += 1
+                                flower_with_tag['Type'] = flower['Type']
+                                flower_with_tag['CentralPoint'] = flower['CentralPoint']
+                                flower_with_tag['Area'] = flower['Area']
+                                if self.arm_moving == False:
+                                    flower_with_tag['Moving'] = True
+                                    self.arm_moving = True
+                                else:
+                                    flower_with_tag['Moving'] = False
+                                self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
+                                break
+                    else:
+                        if flower['Type'] == 'famale':
+                            self.female_num += 1
+                            if self.female_num >= 3:
+                                self.female_num = 3
+                            flower_with_tag['Type'] = flower['Type']
+                            flower_with_tag['CentralPoint'] = flower['CentralPoint']
+                            flower_with_tag['Area'] = flower['Area']
+                            if self.arm_moving == False:
+                                flower_with_tag['Moving'] = True
+                                self.arm_moving = True
+                            else:
+                                flower_with_tag['Moving'] = False
+                            self.flowers_with_tag.append(copy.deepcopy(flower_with_tag))
+                # if self.female_num == 0:
+                #     self.reset_arm_pose_()
+                # self.flowers_with_tag_again = copy.deepcopy(self.flowers_with_tag)
+                #添加语音播报
+                # self.start_voice_thread = True
+                # print("voice_pre")
+                # self.voice_process(self.flowers_lists)
+                # if self.voice_switch:
+                #     self.voice_(flowers_lists)
                 if self.female_num == 0:
                     self.reset_arm_pose_()
                 self.flowers_with_tag_again = copy.deepcopy(self.flowers_with_tag)
-                #添加语音播报
-                # self.start_voice_thread = True
-                self.voice_process(self.flowers_lists)
-                # if self.voice_switch:
-                #     self.voice_(flowers_lists)
             else:
                 print("正在授粉下一个目标点")
                 self.flowers_with_tag = copy.deepcopy(self.flowers_with_tag_again)
@@ -425,44 +468,118 @@ class Game_Controller(Node):
         # print(x_error)
         # print(area_error)
 
-        if abs(x_error) > self.threthold_of_x_error:
-            self.arm_params['joint1'] = float(self.limit_num_(self.arm_params['joint1'] + copysign(0.75 * self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
-        self.angles_of_joints.data.append(self.arm_params['joint1'])
+        # if abs(x_error) > self.threthold_of_x_error:
+        #     self.arm_params['joint1'] = float(self.limit_num_(self.arm_params['joint1'] + copysign(0.75 * self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
+        # self.angles_of_joints.data.append(self.arm_params['joint1'])
 
-        if area < self.joint2_area_threthold:                                    #38000
-            if abs(area_error) > self.threthold_of_area_error:
-                self.arm_params['joint2'] = float(self.limit_num_(self.arm_params['joint2'] + copysign(self.joint2_coefficient * self.joint_speed, area_error), self.default_arm_params['joint2_limiting']))
-            self.angles_of_joints.data.append(self.arm_params['joint2']) # 1.5
+        if self.place_name == 'A':
+            if area < self.joint2_area_threthold:                                    #38000
+                if abs(x_error) > self.threthold_of_x_error:
+                    self.arm_params['joint1'] = float(self.limit_num_(self.arm_params['joint1'] + copysign(0.3 * self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
+                self.angles_of_joints.data.append(self.arm_params['joint1'])
 
-            if abs(y_error) > self.threthold_of_y_error:
-                self.arm_params['joint3'] = float(self.limit_num_(self.arm_params['joint3'] + copysign(0.25 * self.joint_speed, y_error), self.default_arm_params['joint3_limiting']))
-            self.angles_of_joints.data.append(self.arm_params['joint3'])
+                if abs(area_error) > self.threthold_of_area_error:
+                    self.arm_params['joint2'] = float(self.limit_num_(self.arm_params['joint2'] + copysign(self.joint2_coefficient * self.joint_speed, area_error), self.default_arm_params['joint2_limiting']))
+                self.angles_of_joints.data.append(self.arm_params['joint2']) # 1.5
 
-            if abs(y_error) > self.threthold_of_y_error:
-                self.arm_params['joint4'] = float(self.limit_num_(self.arm_params['joint4'] + copysign(1.0 * self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
-            self.angles_of_joints.data.append(self.arm_params['joint4'])
-        else:
-            self.angles_of_joints.data.append(self.arm_params['joint2'])
-            if abs(area_error) > self.threthold_of_area_error:
-                self.arm_params['joint3'] = float(self.limit_num_(self.arm_params['joint3'] + copysign(0.75 * self.joint_speed, -area_error), self.default_arm_params['joint3_limiting']))
-            self.angles_of_joints.data.append(self.arm_params['joint3'])
+                if abs(y_error) > self.threthold_of_y_error:
+                    self.arm_params['joint3'] = float(self.limit_num_(self.arm_params['joint3'] + copysign(0.25 * self.joint_speed, y_error), self.default_arm_params['joint3_limiting']))
+                self.angles_of_joints.data.append(self.arm_params['joint3'])
 
-            if abs(y_error) > self.threthold_of_y_error:
-                self.arm_params['joint4'] = float(self.limit_num_(self.arm_params['joint4'] + copysign(1.25 * self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
-            self.angles_of_joints.data.append(self.arm_params['joint4'])
+                if abs(y_error) > self.threthold_of_y_error:
+                    self.arm_params['joint4'] = float(self.limit_num_(self.arm_params['joint4'] + copysign(1.0 * self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
+                self.angles_of_joints.data.append(self.arm_params['joint4'])
+            else:
+                if abs(x_error) > self.threthold_of_x_error:
+                    self.arm_params['joint1'] = float(self.limit_num_(self.arm_params['joint1'] + copysign(0.15 * self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
+                else:
+                    self.guo_xiaoyu_is_broadcasting("x error is suitable!!!")
+                self.angles_of_joints.data.append(self.arm_params['joint1'])
+
+                self.angles_of_joints.data.append(self.arm_params['joint2'])
+                if abs(area_error) > self.threthold_of_area_error:
+                    self.arm_params['joint3'] = float(self.limit_num_(self.arm_params['joint3'] + copysign(0.75 * self.joint_speed, -area_error), self.default_arm_params['joint3_limiting']))
+                else:
+                    self.guo_xiaoyu_is_broadcasting("area error is suitable!!!")
+                self.angles_of_joints.data.append(self.arm_params['joint3'])
+
+                if abs(y_error) > self.threthold_of_y_error:
+                    self.arm_params['joint4'] = float(self.limit_num_(self.arm_params['joint4'] + copysign(0.4 * self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
+                else:
+                    self.guo_xiaoyu_is_broadcasting("y error is suitable!!!")
+                self.angles_of_joints.data.append(self.arm_params['joint4'])
+        elif self.place_name == 'C':
+            print("c!!!!!!!!!!!!!!!!!!!")
+            if area < self.joint2_area_threthold:                                    #38000
+                if abs(x_error) > self.threthold_of_x_error:
+                    self.arm_params['joint1'] = float(self.limit_num_(self.arm_params['joint1'] + copysign(0.6 * self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
+                self.angles_of_joints.data.append(self.arm_params['joint1'])
+
+                if abs(area_error) > self.threthold_of_area_error:
+                    self.arm_params['joint2'] = float(self.limit_num_(self.arm_params['joint2'] + copysign(self.joint2_coefficient * self.joint_speed, area_error), self.default_arm_params['joint2_limiting']))
+                self.angles_of_joints.data.append(self.arm_params['joint2']) # 1.5
+
+                # if abs(y_error) > self.threthold_of_y_error:
+                #     self.arm_params['joint3'] = float(self.limit_num_(self.arm_params['joint3'] + copysign(0.25 * self.joint_speed, y_error), self.default_arm_params['joint3_limiting']))
+                self.angles_of_joints.data.append(self.arm_params['joint3'])
+
+                if abs(y_error) > self.threthold_of_y_error:
+                    self.arm_params['joint4'] = float(self.limit_num_(self.arm_params['joint4'] + copysign(2.0 * self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
+                self.angles_of_joints.data.append(self.arm_params['joint4'])
+            else:
+                if abs(x_error) > self.threthold_of_x_error:
+                    self.arm_params['joint1'] = float(self.limit_num_(self.arm_params['joint1'] + copysign(0.3 * self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
+                else:
+                    self.guo_xiaoyu_is_broadcasting("x error is suitable!!!")
+                self.angles_of_joints.data.append(self.arm_params['joint1'])
+
+                self.angles_of_joints.data.append(self.arm_params['joint2'])
+
+                if abs(area_error) > self.threthold_of_area_error:
+                    self.arm_params['joint3'] = float(self.limit_num_(self.arm_params['joint3'] + copysign(0.6 * self.joint_speed, -area_error), self.default_arm_params['joint3_limiting']))
+                else:
+                    self.guo_xiaoyu_is_broadcasting("area error is suitable!!!")
+                self.angles_of_joints.data.append(self.arm_params['joint3'])
+
+                if abs(y_error) > self.threthold_of_y_error:
+                    self.arm_params['joint4'] = float(self.limit_num_(self.arm_params['joint4'] + copysign(1.25 * self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
+                else:
+                    self.guo_xiaoyu_is_broadcasting("y error is suitable!!!")
+                self.angles_of_joints.data.append(self.arm_params['joint4'])
+        elif self.place_name == 'B':
+            print("B !!!!!!!!!!!!!!!!!!!!!")
+            if area < self.joint2_area_threthold:                                    #38000
+                if abs(x_error) > self.threthold_of_x_error:
+                    self.arm_params['joint1'] = float(self.limit_num_(self.arm_params['joint1'] + copysign(0.2 * self.joint_speed, x_error), self.default_arm_params['joint1_limiting']))
+                self.angles_of_joints.data.append(self.arm_params['joint1'])
+
+                if abs(area_error) > self.threthold_of_area_error:
+                    self.arm_params['joint2'] = float(self.limit_num_(self.arm_params['joint2'] + copysign(self.joint2_coefficient * self.joint_speed, area_error), self.default_arm_params['joint2_limiting']))
+                self.angles_of_joints.data.append(self.arm_params['joint2']) # 1.5
+
+                # if abs(y_error) > self.threthold_of_y_error:
+                #     self.arm_params['joint3'] = float(self.limit_num_(self.arm_params['joint3'] + copysign(0.25 * self.joint_speed, y_error), self.default_arm_params['joint3_limiting']))
+                self.angles_of_joints.data.append(self.arm_params['joint3'])
+
+                if abs(y_error) > self.threthold_of_y_error:
+                    self.arm_params['joint4'] = float(self.limit_num_(self.arm_params['joint4'] + copysign(0.3 * self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
+                self.angles_of_joints.data.append(self.arm_params['joint4'])
+            
 
 
 
         if (abs(x_error) < self.threthold_of_x_error and
             abs(area_error) < self.threthold_of_area_error and
             abs(y_error) < self.threthold_of_y_error):
-            self.guo_xiaoyu_is_broadcasting('Finished pollinating!!!!!!')
-            #测试完合适位置后再开启
-            # self.choose_arm_goal_in_number(self.arm_params['joint1'],self.arm_params['joint2'],self.fix_pose_joint3,self.fix_pose_joint4)
+            self.guo_xiaoyu_is_broadcasting('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Finished pollinating!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+            self.guo_xiaoyu_is_broadcasting('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Finished pollinating!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+            self.guo_xiaoyu_is_broadcasting('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Finished pollinating!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+
             for index, flower_with_tag in enumerate(self.flowers_with_tag):
                 if flower_with_tag['Moving'] == True:
                     self.flowers_with_tag_again[index]['Moving'] = False
                     self.flowers_with_tag_again[index]['Pollinated'] = True
+            self.slide_draw()
             self.reset_arm_pose_(self.pose_name)
             return
         print(self.angles_of_joints)
@@ -475,6 +592,25 @@ class Game_Controller(Node):
         elif num < num_range[0]:
             num = num_range[0]
         return num
+
+    def slide_draw(self):
+        self.choose_arm_goal_in_number(self.arm_params['joint1'], 
+                                       self.arm_params['joint2'], 
+                                       self.arm_params['joint3'], 
+                                       self.arm_params['joint4']+self.add_joint4_pre_slide)
+        self.choose_arm_goal_in_number(self.arm_params['joint1'], 
+                                       self.arm_params['joint2'], 
+                                       self.arm_params['joint3']+self.add_joint3_pre_slide, 
+                                       self.arm_params['joint4'])
+        self.choose_arm_goal_in_number(self.arm_params['joint1'], 
+                                       self.arm_params['joint2']+self.add_joint2_pre_slide, 
+                                       self.arm_params['joint3'], 
+                                       self.arm_params['joint4'])
+        print('滑动')
+        self.choose_arm_goal_in_number(self.arm_params['joint1'],
+                                       self.arm_params['joint2'],
+                                       self.arm_params['joint3'],
+                                       self.arm_params['joint4']+self.add_joint4_slide)
 
     def reset_arm_pose_(self, pose="a_left"):
         """ 控制 arm 回到初始姿态 """
@@ -523,6 +659,7 @@ class Game_Controller(Node):
                         self.voice_cmd.data.append(2)
         # self.voice_cmd.data.append(goal_list_agn)
         self.voice_publisher_.publish(self.voice_cmd)
+        # print("voice_publish")
 
     def voice_(self, flowers_lists):
         if self.place_name == 'A':
@@ -667,6 +804,7 @@ class Game_Controller(Node):
         # print("self.joint_last_state = ", self.joint_last_state)
         # print("self.arm_params = ", self.arm_params)
 
+        # if self.reset_count > self.reset_count_threshold:
         if self.joint_last_state == self.arm_params:
             if self.vision_for_voice != True:
                 if self.start_count == False:
@@ -677,15 +815,18 @@ class Game_Controller(Node):
                         self.start_count = False
                         self.error = True
                         self.guo_xiaoyu_is_broadcasting("目标点丢失!!!!!!")
+                        self.slide_draw()
                         self.reset_arm_pose_(self.pose_name)
         else:
         # print(self.flowers_lists)
             self.joint_last_state = copy.deepcopy(self.arm_params)
-            print("'self.flowers_lists' 's length = ", self.flowers_lists)
+            # print("'self.flowers_lists' 's length = ", self.flowers_lists)
             if 0 != len(self.flowers_lists):
                 # print(self.flowers_lists)
                 self.start_count = False
-                self.confrim_moving_goal_for_arm_(self.flowers_lists) 
+                self.confrim_moving_goal_for_arm_(self.flowers_lists)
+            # else:
+                # self.reset_count += 1 
 
         y = time.time()
         # print("time = ", y - x)
@@ -722,6 +863,9 @@ class Game_Controller(Node):
     def lidar_callback_(self, msg):
         """ Get distance of lidar from callback function. """
         self.lidar_distance = msg.range
+
+    def voice_state_callback_(self, msg):
+        self.voice_state = msg.data
 
     def timer_work_(self):
         # orientation control

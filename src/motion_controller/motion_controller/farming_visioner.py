@@ -67,6 +67,8 @@ class Game_Controller(Node):
         self.goal_confidence                         = 0.6
         self.joint2_area_threthold                   = 38000
         self.joint2_coefficient                      = 1.0          #B区
+        self.fix_pose_joint3                         = 120          #TODO:固定姿态3的角度值  首先需调整面积阈值使其达到合适的位置
+        self.fix_pose_joint4                         = 120          #TODO:固定姿态4的角度值
 
         # publisher and subscriber
         self.vision_subscribe_ = self.create_subscription(PerceptionTargets, "/hobot_dnn_detection", self.vision_callback_, 10)
@@ -455,6 +457,8 @@ class Game_Controller(Node):
             abs(area_error) < self.threthold_of_area_error and
             abs(y_error) < self.threthold_of_y_error):
             self.guo_xiaoyu_is_broadcasting('Finished pollinating!!!!!!')
+            #测试完合适位置后再开启
+            # self.choose_arm_goal_in_number(self.arm_params['joint1'],self.arm_params['joint2'],self.fix_pose_joint3,self.fix_pose_joint4)
             for index, flower_with_tag in enumerate(self.flowers_with_tag):
                 if flower_with_tag['Moving'] == True:
                     self.flowers_with_tag_again[index]['Moving'] = False

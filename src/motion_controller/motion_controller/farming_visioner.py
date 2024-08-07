@@ -41,6 +41,7 @@ class Game_Controller(Node):
         self.new_choice                 = False
         self.finish_task                = False
         self.voice_state                = False
+        self.normal_lidar_action        = False
 
         self.arm_params = {'joint1': 0, 'joint2': 0, 'joint3': 0, 'joint4': 0} # store real-time arm angles
         self.flowers_with_tag = [] # store flower property
@@ -100,7 +101,7 @@ class Game_Controller(Node):
         self.buzzer_cmd         = Bool()
         self.car_command_cmd    = Float64MultiArray()
 
-        self.ori_angle_pid = PID(Kp=0.685, Ki=0.00079, Kd=0.426, max_out=0.9, max_iout=0.0085)
+        self.ori_angle_pid = PID(Kp=0.698, Ki=0.0, Kd=0.456, max_out=0.9, max_iout=0.0085)
         self.distance_pid  = PID(Kp=0.42, Ki=0.0, Kd=0.08, max_out=0.85, max_iout=0.0)
 
         self.female_num      = 0
@@ -266,12 +267,12 @@ class Game_Controller(Node):
 
         self.guo_xiaoyu_is_broadcasting('Waiting for finishing task......')
 
-        while self.finish_task == False:
-            pass
-        self.finish_task = False
-
-        # while self.start_for_pid_distance:
+        # while self.finish_task == False:
         #     pass
+        # self.finish_task = False
+
+        while self.start_for_pid_distance:
+            pass
         # self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
         time.sleep(2.0)
 
@@ -292,12 +293,12 @@ class Game_Controller(Node):
         self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
         time.sleep(4.0)
 
-    def car_action_in_lidar(self, speed, threthold=0.1):
+    def car_action_in_lidar(self, speed, threthold=0.1, distance_threshold=0.25):
         """ Start car and stop car by lidar. """
         self.liear_speed = speed
         self.lidar_threthold = threthold
-        self.start_for_lidar_distance = True
         self.start_delay = True
+        self.start_for_lidar_distance = True
 
         self.car_command_cmd.data = []
         self.car_command_cmd.data.append(1.0)
@@ -310,14 +311,20 @@ class Game_Controller(Node):
         self.guo_xiaoyu_is_broadcasting('Waiting for finishing task......')
         # time.sleep(3.0) # ensure car will leave the area of lidar keeping out.
 
-        while self.finish_task == False:
-            pass
-        print("finish_task")
-        self.finish_task = False
-
-        # while self.start_for_lidar_distance:
+        # while self.finish_task == False:
         #     pass
-        # self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
+        # print("finish_task")
+        # self.finish_task = False
+
+        while self.get_O_distance_() < distance_threshold:
+            print("Current distance = ", self.get_O_distance_())
+            pass
+        self.guo_xiaoyu_is_broadcasting("avoided error lidar data!!!!!!")
+        self.normal_lidar_action = True
+
+        while self.start_for_lidar_distance:
+            pass
+        self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
         time.sleep(2.0)
 
     def choose_arm_goal(self, pose_name):
@@ -829,7 +836,7 @@ class Game_Controller(Node):
 
 
     def yaw_angle_callback_(self, msg):
-        self.yaw_angle = msg.data
+        self.yaw_angle = -msg.data
 
     def odom_callback_(self, msg):
         self.position.x = msg.pose.pose.position.x
@@ -920,8 +927,8 @@ class Game_Controller(Node):
 
     def timer_work_(self):
         # orientation control
-        # self.ori_angle_pid.pid_calculate(ref=self.yaw_angle, goal=self.angle)
-        # self.move_cmd.angular.z = self.ori_angle_pid.out
+        self.ori_angle_pid.pid_calculate(ref=self.yaw_angle, goal=self.angle)
+        self.move_cmd.angular.z = self.ori_angle_pid.out
 
         # distance control
         x = time.time()
@@ -930,19 +937,21 @@ class Game_Controller(Node):
             # calculate error
             self.distance_pid.pid_calculate(ref=o_distance, goal=abs(self.distance))
             self.move_cmd.linear.x = copysign(self.distance_pid.out, self.distance)
+            # print("error = ", abs(o_distance - abs(self.distance)))
             if abs(o_distance - abs(self.distance)) < self.distance_tolerance: # achieve goal
                 self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
                 self.start_for_pid_distance = False
         elif self.start_for_lidar_distance:
-            if self.start_delay:
-                self.move_cmd.linear.x = self.liear_speed
-                self.cmd_vel.publish(self.move_cmd)
-                time.sleep(2.5)
-                self.start_delay = False
+            # if self.start_delay:
+            #     self.move_cmd.linear.x = self.liear_speed
+            #     self.cmd_vel.publish(self.move_cmd)
+            #     time.sleep(3.0)
+            #     self.start_delay = False
             self.move_cmd.linear.x = self.liear_speed
-            if self.lidar_distance < self.lidar_threthold:
+            if self.lidar_distance < self.lidar_threthold and self.normal_lidar_action:
                 self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
                 self.start_for_lidar_distance = False
+                self.normal_lidar_action = False
                 self.cmd_vel.publish(Twist())
         else:
             self.move_cmd.linear.x = 0.0

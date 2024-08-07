@@ -133,11 +133,11 @@ def generate_launch_description():
             yahboom_joy_node,
             base_footprint_tf,
             imu_tf,
-            stp23_node,
+            # stp23_node,
             # stp23l_node,
-            vision_node,
-            servo_node,
-            voice_node,
+            # vision_node,
+            # servo_node,
+            # voice_node,
             # car_node
             
             # *event_handlers,

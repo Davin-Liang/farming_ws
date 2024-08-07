@@ -36,8 +36,22 @@ def generate_launch_description():
         executable='voice',
     )
 
+    stp23_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory('ldlidar'), 'launch'),
+            '/stp23.launch.py']),
+    )
+
+    stp23l_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory('ldlidar'), 'launch'),
+            '/stp23l.launch.py']),
+    )
+
     return LaunchDescription([
         vision_node,
         servo_node,
-        voice_node
+        voice_node,
+        # stp23_node
+        # stp23l_node
     ])

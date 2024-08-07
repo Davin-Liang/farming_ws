@@ -9,7 +9,7 @@ from pid import PID
 class Motion_Controller(Node):
     def __init__(self, name):
         super().__init__(name)
-        self.ori_angle_pid = PID(Kp=0.685, Ki=0.00079, Kd=0.426, max_out=0.9, max_iout=0.0085)
+        self.ori_angle_pid = PID(Kp=0.698, Ki=0.0, Kd=0.456, max_out=0.9, max_iout=0.0085)
         self.distance_pid  = PID(Kp=0.42, Ki=0.0, Kd=0.08, max_out=0.85, max_iout=0.0)
 
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)

@@ -47,6 +47,7 @@ class Game_Controller(Node):
         self.flowers_with_tag_again = []
         self.flowers_lists = [] # primitive flower data
         self.voice_board_params = ['-D', '0', '-d', '0']
+        self.closest_flower = []
 
         # alternative params
         self.area_scaling_factor                     = 0.25
@@ -381,6 +382,19 @@ class Game_Controller(Node):
                                 self.flowers_with_tag[index]['Area'] = flower['Area']
                                 self.control_arm_()
                                 break # hop inner loop
+
+                            else:
+                                self.closest_flower.clear()
+                                self.closest_flower = self.find_closest_flower(flowers_lists, self.flowers_with_tag)
+                                self.flowers_with_tag[index]['CentralPoint'] = self.closest_flower['CentralPoint']
+                                self.flowers_with_tag[index]['Area'] = self.closest_flower['Area']
+                                self.reset_count += 1
+                        else:
+                            self.closest_flower.clear()
+                            self.closest_flower = self.find_closest_flower(flowers_lists, self.flowers_with_tag)
+                            self.flowers_with_tag[index]['CentralPoint'] = self.closest_flower['CentralPoint']
+                            self.flowers_with_tag[index]['Area'] = self.closest_flower['Area']
+                            self.reset_count += 1
 
     def data_pre_processing_(self, flowers_lists):
         """ 为存储花属性的字典添加花属性：是否正在操作、是否已授粉 """
@@ -733,6 +747,17 @@ class Game_Controller(Node):
 
         return goal_list
 
+    def find_closest_flower(self, flowers_lists, flowers_with_tag):
+        """找到与指定花朵的CentralPoint差值最小的花朵"""
+        min_distance = float('inf')
+        closest_flower = None
+        for tagged_flower in flowers_lists:
+            dist = self.calculate_O_distance_(flowers_with_tag['CentralPoint'], tagged_flower['CentralPoint'])
+            if dist < min_distance:
+                min_distance = dist
+                closest_flower = tagged_flower
+        return closest_flower
+
     def voice_broadcast(self, direction='', type=''):
         """ 语音播报 """
         if direction != '':
@@ -804,19 +829,19 @@ class Game_Controller(Node):
         # print("self.joint_last_state = ", self.joint_last_state)
         # print("self.arm_params = ", self.arm_params)
 
-        # if self.reset_count > self.reset_count_threshold:
-        if self.joint_last_state == self.arm_params:
-            if self.vision_for_voice != True:
-                if self.start_count == False:
-                    self.start_count = True
-                    self.start_count_time = time.time()
-                if self.start_count == True:
-                    if time.time() - self.start_count_time > self.time_threshold:
-                        self.start_count = False
-                        self.error = True
-                        self.guo_xiaoyu_is_broadcasting("目标点丢失!!!!!!")
-                        self.slide_draw()
-                        self.reset_arm_pose_(self.pose_name)
+        if self.reset_count > self.reset_count_threshold:
+            if self.joint_last_state == self.arm_params:
+                if self.vision_for_voice != True:
+                    if self.start_count == False:
+                        self.start_count = True
+                        self.start_count_time = time.time()
+                    if self.start_count == True:
+                        if time.time() - self.start_count_time > self.time_threshold:
+                            self.start_count = False
+                            self.error = True
+                            self.guo_xiaoyu_is_broadcasting("目标点丢失!!!!!!")
+                            self.slide_draw()
+                            self.reset_arm_pose_(self.pose_name)
         else:
         # print(self.flowers_lists)
             self.joint_last_state = copy.deepcopy(self.arm_params)
@@ -825,8 +850,8 @@ class Game_Controller(Node):
                 # print(self.flowers_lists)
                 self.start_count = False
                 self.confrim_moving_goal_for_arm_(self.flowers_lists)
-            # else:
-                # self.reset_count += 1 
+            else:
+                self.reset_count += 1 
 
         y = time.time()
         # print("time = ", y - x)

@@ -6,10 +6,6 @@ $$
 1 + 1 +1 > 3
 $$
 
-<div align="center">
-  <img src="image/README/1722498555324.png" alt="Alt text" width="500">
-</div>
-
 
 ## 一、团队成员
 
@@ -18,9 +14,22 @@ $$
 * **郭晓宇**
 
 ## 二、项目背景
+
 &emsp;&emsp;主要围绕智慧农业研究领域，开展智慧农业以及农业机器人的技术研究。随着经济、社会的进一步发展，传统农业、林业、牧业、渔业，以及人类生命健康的相关专业，融合了电子信息、计算机控制、机器人技术、大数据、人工智能等知识后，智慧农业机器人的概念、内涵不断丰富，学科交叉的新技术、新应用、新发展不断涌现，应用场景不断扩展，发展迅速。本赛事模拟智能授粉作业过程，该比赛可以锻炼学生的实践创新能力和工程能力，同时可以激发优秀学者和青年投身到智慧农业和农业机器人的研究中，培养智慧农业的科研后备力量。
 
-## 三、硬件组成
+
+## 三、开源组成
+
+一共有四个文件夹，分别是：
+
+* **src** —— 存放各代码功能包
+* **models** —— 存放各打印件的 STEP 源文件
+
+* **serial_bash** —— 存放用于固定串口设备名的 sh 文件
+* **race_rule** —— 存放比赛规则文件
+
+
+## 四、硬件组成
 
 | 地平线 RDK X3  2.0                      | [亚博智能 旭日X3派RDK开发板地平线机器人古月居ROS2树莓派AI套件-tmall.com天猫](https://detail.tmall.com/item.htm?spm=a21n57.1.item.3.29c45ae852foaF&priceTId=2100c80917224773608396003e0d64&utparam=%7B%22aplus_abtest%22:%22d62905fc07b25160b2cb2c0b3c017d8b%22%7D&id=675925264685&ns=1&abbucket=4&xxc=taobaoSearch&pisk=fn1xtSq7AuqmmHeGGZwksord9QUo6sQ4mi7IshxmCgIR53cguI2w6GKRbnvDGnc96NINjGQauFt1fGKGn8VhuZRw1kATtWbVtKUbeihXh4a65enbM72ulZRw1l3o1JVduMEDZcZ9CzdWWFY61KO6PatySjiffn9SVeLe1hs61zKW7EKsGnG6VLTKGuVDbb-n6O13UTZruPcis_L70QQYYXYAZEnXvZx8Uz18TKKCl3h_xDkMihKPOu2RzgXfmUST9ud5RTdXkGNIK36RPsJH9JMAAajV9I1LDjYkBnB5GL3s1aOymL6ODoH2ctjJLU9SWW8lx3_VGTUZVZsHDITWEWadPd6lgp50VjdCLZAcCgN-MMsrt6fKRQoHvFDbyzHZQKTodRhoqA-CfjLJxzx-QAJ8GfDAszksCcbvyH4oKAkwe5f..)         |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -35,12 +44,18 @@ $$
 | **一个 360 度舵机**               | [20kg机器人车模大扭力30kg金属数码舵机60kg大角度可控云台航拍-淘宝网 (taobao.com)](https://item.taobao.com/item.htm?spm=a1z09.2.0.0.6cf02e8dI7SoXE&id=36360286212&_u=13nmt0be1880&pisk=fQcE0WfliBdEz0HublNz7WoiKENLZSKXqbZ7r40uRkqHeyOla4u0PeKJJAzoVcLJJWgu40o_X_aWp3CrbDgmdJiSdu4ujc0COuOLU0ujD01W9valacg8E0Gry_zor0LLVepsJ2F8Zntj4IgKJHWwxDcU-5biWr4lxFHHZxV8ZntPC_2pg7njoSgw4RYaPzah-02nSl44jyXht0qgIr4fx7VoqVYazyjhq9flSP448jsiexbQPJYqyIsUug_3do03x4gSsM2Cp2Zacocg8jiq-TClZfzULb65aKvzdY0YHXgBa1FIuAVg80ADx50mQqwETn5Q28lZYYoBPTUZU4cY9S7ktVPUY-cUpaCKmVuohRl6oIFUtkD794_2AVlEA2hZPaXgTWMa3XPDMMqSCqlzzbKJ_munn0DP4Rj8SROIwvSlUJ4T7oTwS6wnvRhLhUPfeTepjPrX-5BlEiC5N9lYaTB8pxUaceVV.)                                                                                            |
 | **三个 270 度舵机**               | *暂无链接*                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
-## 三、重要事项
+## 五、重要事项
+
+
+<div align="center">
+  <img src="image/README/1722498555324.png" alt="Alt text" width="500">
+</div>
+
 
 1. 车体不得一丝磕碰，预防影响 **IMU** 精度
-2. 不启动 **IMU** 读取程序时，需拔掉 **IMU** 的 **USB** 读取接口
-3. 不在运行程序的 **X3** 派和 **IMU** 需用小风扇对着吹
-4. **X3** 派初开机时，先录音，激活音频板
+3. 不启动 **IMU** 读取程序时，需拔掉 **IMU** 的 **USB** 读取接口
+4. 不在运行程序的 **X3** 派和 **IMU** 需用小风扇对着吹
+5. **X3** 派初开机时，先录音，激活音频板
 
 ```
 sust_record
@@ -50,7 +65,7 @@ sust_record
 sust_preplay
 ```
 
-## 四、操作流程
+## 六、操作流程
 
 1. 准备好三个终端，一个用于启动 **launch**，一个用于启动 **python** 文件，一个用于测试音频板
 2. 比赛前测试音频板是否可以播放音频
@@ -81,7 +96,7 @@ python3 game_process.py
 game
 ```
 
-## 五、重要的子节点
+## 七、重要的子节点
 
 * 激光 **stp23l**
 
@@ -113,7 +128,7 @@ ros2 launch fdilink_ahrs ahrs_driver.launch.py
 ros2 run yahboomcar_bringup servo
 ```
 
-## 六、常用终端命令
+## 八、常用终端命令
 
 * 扫描 **WIFI** 网络
 
@@ -152,17 +167,20 @@ ls /dev/sn*
 ```
 ros2 topic pub /voice_commands std_msgs/msg/Int32MultiArray '{data:[2,2,1,1]}' --once
 ```
+
 * 设置静态 IP
+
 ```
 nmcli connection modify 134 ipv4.method manual ipv4.addresses 192.168.3.33/24 ipv4.gateway 192.168.3.1 ipv4.dns 8.8.8.8
 ```
+
 * 查看网关地址，在这些命令的输出中，寻找default行，该行的via字段后面跟的就是你的网关地址
+
 ```
 ip route show
 ```
 
-
-## 七、快捷命令
+## 九、快捷命令
 
 * 测试音频板是否能播放音频
 
@@ -193,19 +211,27 @@ game
 ```
 sust_books
 ```
+
 * 打开 YoloV5 视觉
+
 ```
 vision
 ```
+
 * 连接热点
+
 ```
 wifi_phone
 ```
+
 * 连接路由器 wifi
+
 ```
 wifi_134
 ```
+
 * 在终端列出 wifi 列表
+
 ```
 wifi_list
 ```

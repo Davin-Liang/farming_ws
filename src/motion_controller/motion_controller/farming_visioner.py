@@ -58,11 +58,11 @@ class Game_Controller(Node):
         self.joint_speed                             = 2.0          # make the angle of joint rotating as joint speed
         self.threthold_of_x_error                    = 12.0
         self.threthold_of_y_error                    = 13.0
-        self.threthold_of_area_error                 = 7000.0
+        self.threthold_of_area_error                 = 4500.0
         self.servo_time                              = 880          # Movement time of mechanical arm, unit mm.
         self.servo_reset_time                        = 2000         # Movement time when arm returns to original orientation.
-        self.distance_tolerance                      = 0.03
-        self.angle_tolerance                         = radians(2.0)
+        self.distance_tolerance                      = 0.02
+        self.angle_tolerance                         = radians(1.5)
         self.odom_linear_scale_correction            = 1.0
         self.odom_angular_scale_correction           = 1.0
         self.area_difference                         = 50000        #TODO: 修改阈值
@@ -90,7 +90,7 @@ class Game_Controller(Node):
         self.cmd_vel = self.create_publisher(Twist, "/cmd_vel", 5)
         self.buzzer_publisher_ = self.create_publisher(Bool, "/Buzzer", 5)
         self.lidar_subcriber_ = self.create_subscription(Range, "/laser", self.lidar_callback_, 10)
-        self.odom_subcriber_ = self.create_subscription(Odometry, "/odom", self.odom_callback_, 10)
+        self.odom_subcriber_ = self.create_subscription(Odometry, "/odom_raw", self.odom_callback_, 10)
         self.yaw_angle_subcriber_ = self.create_subscription(Float64, "/yaw_angle", self.yaw_angle_callback_, 10)
         self.car_command_publisher_ = self.create_publisher(Float64MultiArray, "/car_commands", 10)
         self.finish_task_subcriber_ = self.create_subscription(Bool, "/finish_task", self.finish_task_callback_, 10)
@@ -101,8 +101,8 @@ class Game_Controller(Node):
         self.buzzer_cmd         = Bool()
         self.car_command_cmd    = Float64MultiArray()
 
-        self.ori_angle_pid = PID(Kp=0.698, Ki=0.0, Kd=0.456, max_out=0.9, max_iout=0.0085)
-        self.distance_pid  = PID(Kp=0.42, Ki=0.0, Kd=0.08, max_out=0.85, max_iout=0.0)
+        self.ori_angle_pid = PID(Kp=0.698, Ki=0.0003, Kd=0.456, max_out=0.15, max_iout=0.0065)
+        self.distance_pid  = PID(Kp=0.42, Ki=0.0, Kd=0.08, max_out=0.07, max_iout=0.0)
 
         self.female_num      = 0
         self.distance        = 0.0
@@ -111,6 +111,7 @@ class Game_Controller(Node):
         self.lidar_threthold = 0.1
         self.liear_speed     = 0.5
         self.joint_last_state  = {}
+        self.pose_name       = ""
         self.angle = radians(self.angle)
         self.deviation_angle = radians(0.85)
 
@@ -240,6 +241,7 @@ class Game_Controller(Node):
     def reset_vision_data(self):
         self.flowers_with_tag.clear()
         self.flowers_with_tag_again.clear()
+        self.voice_state = False
         self.female_num = 0
         self.reset_count = 0
 
@@ -276,7 +278,8 @@ class Game_Controller(Node):
         # self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
         time.sleep(2.0)
 
-    def set_angle(self, angle):
+    def set_angle(self, angle, times=4.0):
+        # time.sleep(times-1.0)
         self.angle = radians(angle)
 
         self.car_command_cmd.data = []
@@ -291,10 +294,14 @@ class Game_Controller(Node):
         while abs(self.angle-self.yaw_angle) > self.angle_tolerance:
             pass
         self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
-        time.sleep(4.0)
+        # time.sleep(4.0)
+        time.sleep(times)
 
     def car_action_in_lidar(self, speed, threthold=0.1, distance_threshold=0.25):
         """ Start car and stop car by lidar. """
+        while abs(self.angle-self.yaw_angle) > self.angle_tolerance:
+            self.guo_xiaoyu_is_broadcasting("****************************")
+
         self.liear_speed = speed
         self.lidar_threthold = threthold
         self.start_delay = True
@@ -329,7 +336,6 @@ class Game_Controller(Node):
 
     def choose_arm_goal(self, pose_name):
         """ Use arm goals in YAML file. """
-        self.pose_name = pose_name
         self.arm_params['joint1'] = float(self.default_arm_params['joint1_'+pose_name])
         self.arm_params['joint2'] = float(self.default_arm_params['joint2_'+pose_name])
         self.arm_params['joint3'] = float(self.default_arm_params['joint3_'+pose_name])
@@ -341,7 +347,10 @@ class Game_Controller(Node):
         self.angles_of_joints.data.append(self.arm_params['joint4'])
         self.angles_of_joints.data.append(self.servo_reset_time)
         self.joint_angles_publisher_.publish(self.angles_of_joints)
-        time.sleep(4.0)
+
+        if self.pose_name != pose_name:
+            self.pose_name = pose_name
+            time.sleep(3.0)
 
     def choose_arm_goal_in_number(self, joint1=0, joint2=0, joint3=0, joint4=0, servo_time=250):
         """ Use own numbers to control arm instead of arm goals in YAML file. """
@@ -469,7 +478,8 @@ class Game_Controller(Node):
                 # if self.voice_switch:
                 #     self.voice_(flowers_lists)
                 if self.female_num == 0:
-                    self.reset_arm_pose_()
+                    self.voice_state = True
+                    self.reset_arm_pose_("no")
                 self.flowers_with_tag_again = copy.deepcopy(self.flowers_with_tag)
             else:
                 print("正在授粉下一个目标点")
@@ -653,14 +663,31 @@ class Game_Controller(Node):
                                        self.arm_params['joint3'],
                                        self.arm_params['joint4']+self.add_joint4_slide)
 
+        if self.place_name == "B":
+            # self.arm_params['joint1'] = float(self.default_arm_params['joint1_'+self.pose_name])
+            self.arm_params['joint2'] = float(self.default_arm_params['joint2_'+self.pose_name])
+            # self.arm_params['joint3'] = float(self.default_arm_params['joint3_'+self.pose_name])
+            # self.arm_params['joint4'] = float(self.default_arm_params['joint4_'+self.pose_name])
+            self.angles_of_joints.data = []
+            self.angles_of_joints.data.append(self.arm_params['joint1'])
+            self.angles_of_joints.data.append(self.arm_params['joint2'])
+            self.angles_of_joints.data.append(self.arm_params['joint3'])
+            self.angles_of_joints.data.append(self.arm_params['joint4'])
+            self.angles_of_joints.data.append(500)
+            self.joint_angles_publisher_.publish(self.angles_of_joints)
+
+            time.sleep(1.0)
+
     def reset_arm_pose_(self, pose="a_left"):
         """ 控制 arm 回到初始姿态 """
         self.guo_xiaoyu_is_broadcasting('Control arm to return initial pose......')
-        self.choose_arm_goal(pose)
+        if pose != "no":
+            self.choose_arm_goal(pose)
         self.open_vision_detect = False
         self.pre_process = False
         self.data_update = False
-        time.sleep(2.0)
+        if pose != "no":
+            time.sleep(3.5)
 
     def voice_process(self, flowers_lists):
         # goal_list_agn = []
@@ -669,13 +696,15 @@ class Game_Controller(Node):
         if self.place_name == 'A':
             # goal_list_agn.append(0)     # A区
             self.voice_cmd.data.append(0)
+            goal_list = self.data_sort_(flowers_lists, prior_axis='v')
         if self.place_name == 'B':
             # goal_list_agn.append(1)     # B区
             self.voice_cmd.data.append(1)
+            goal_list = self.data_sort_(flowers_lists, prior_axis='v')
         if self.place_name == 'C':
             # goal_list_agn.append(2)     # C区
             self.voice_cmd.data.append(2)
-        goal_list = self.data_sort_(flowers_lists, prior_axis='v')
+            goal_list = self.data_sort_(flowers_lists, prior_axis='h')
         for index, goal in enumerate(goal_list):
             if index == 0:
                     if goal == 'famale':
@@ -861,17 +890,18 @@ class Game_Controller(Node):
 
         if self.reset_count > self.reset_count_threshold:
             # if self.joint_last_state == self.arm_params:
-            if self.vision_for_voice != True:
+            self.error = True
+            self.voice_state = True
+            self.guo_xiaoyu_is_broadcasting("目标点丢失!!!!!!")
+            # if self.vision_for_voice != True:
                 # if self.start_count == False:
                 #     self.start_count = True
                 #     self.start_count_time = time.time()
                 # if self.start_count == True:
                 #     if time.time() - self.start_count_time > self.time_threshold:
                         # self.start_count = False
-                self.error = True
-                self.guo_xiaoyu_is_broadcasting("目标点丢失!!!!!!")
-                self.slide_draw()
-                self.reset_arm_pose_(self.pose_name)
+                # self.slide_draw()
+            self.reset_arm_pose_(self.pose_name)
         else:
         # print(self.flowers_lists)
             # self.joint_last_state = copy.deepcopy(self.arm_params)
@@ -937,7 +967,7 @@ class Game_Controller(Node):
             # calculate error
             self.distance_pid.pid_calculate(ref=o_distance, goal=abs(self.distance))
             self.move_cmd.linear.x = copysign(self.distance_pid.out, self.distance)
-            # print("error = ", abs(o_distance - abs(self.distance)))
+            print("error = ", abs(o_distance - abs(self.distance)))
             if abs(o_distance - abs(self.distance)) < self.distance_tolerance: # achieve goal
                 self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
                 self.start_for_pid_distance = False

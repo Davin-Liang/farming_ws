@@ -27,12 +27,12 @@ joint2_moving: 135
 joint3_moving: 115
 joint4_moving: 101
 # -----------------------
-joint1_b_left_front: 243
+joint1_b_left_front: 253
 joint2_b_left_front: 155
 joint3_b_left_front: 174
 joint4_b_left_front: 149
 
-joint1_b_middle_front: 213
+joint1_b_middle_front: 220
 joint2_b_middle_front: 155
 joint3_b_middle_front: 174
 joint4_b_middle_front: 149
@@ -52,7 +52,7 @@ joint2_b_middle_back: 155
 joint3_b_middle_back: 174
 joint4_b_middle_back: 149
 
-joint1_b_right_back: 15
+joint1_b_right_back: 13
 joint2_b_right_back: 155
 joint3_b_right_back: 174
 joint4_b_right_back: 149
@@ -65,12 +65,12 @@ joint4_b_right_back: 149
 joint1_c_left: 132
 joint2_c_left: 170
 joint3_c_left: 165
-joint4_c_left: 97     #角度待定
+joint4_c_left: 100     #角度待定
 
 joint1_c_right: 312
 joint2_c_right: 170
 joint3_c_right: 165
-joint4_c_right: 97
+joint4_c_right: 100
 
 # --------------------------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------

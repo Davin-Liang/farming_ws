@@ -31,7 +31,13 @@ def generate_launch_description():
         # condition=IfCondition(LaunchConfiguration('debug_arm'))
     )
 
+    voice_node = Node(
+        package='yahboomcar_bringup',
+        executable='voice',
+    )
+
     return LaunchDescription([
         vision_node,
-        servo_node
+        servo_node,
+        voice_node
     ])

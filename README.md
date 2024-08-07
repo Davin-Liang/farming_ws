@@ -153,10 +153,13 @@ ls /dev/sn*
 ```
 ros2 topic pub /voice_commands std_msgs/msg/Int32MultiArray '{data:[2,2,1,1]}' --once
 ```
-IP
+* 设置静态 IP
 ```
-nmcli connection modify 134 ipv4.method manual ipv4.addresses 192.168.11.111/24 ipv4.gateway 192.168.3.1 ipv4.dns 8.8.8.8 right
-nmcli connection modify Mi11 ipv4.method manual ipv4.addresses 192.168.120.111/24 ipv4.gateway 192.168.3.1 ipv4.dns 8.8.8.8 right
+nmcli connection modify 134 ipv4.method manual ipv4.addresses 192.168.3.33/24 ipv4.gateway 192.168.3.1 ipv4.dns 8.8.8.8
+```
+* 查看网关地址，在这些命令的输出中，寻找default行，该行的via字段后面跟的就是你的网关地址
+```
+ip route show
 ```
 
 

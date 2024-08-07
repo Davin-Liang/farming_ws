@@ -336,7 +336,7 @@ class Game_Controller(Node):
         self.joint_angles_publisher_.publish(self.angles_of_joints)
         time.sleep(4.0)
 
-    def choose_arm_goal_in_number(self, joint1=0, joint2=0, joint3=0, joint4=0, servo_time=1000):
+    def choose_arm_goal_in_number(self, joint1=0, joint2=0, joint3=0, joint4=0, servo_time=250):
         """ Use own numbers to control arm instead of arm goals in YAML file. """
         if joint1 != 0:
             self.arm_params['joint1'] = joint1
@@ -353,7 +353,8 @@ class Game_Controller(Node):
         self.angles_of_joints.data.append(self.arm_params['joint4'])
         self.angles_of_joints.data.append(servo_time)
         self.joint_angles_publisher_.publish(self.angles_of_joints)
-        time.sleep(2.0)
+        print(servo_time/1000 + 0.25)
+        time.sleep(servo_time/1000 + 0.25)
 
 # -----------------------------------------------------------------------------------------------------------------------------
 # --------------------------------------------------------END------------------------------------------------------------------
@@ -367,9 +368,18 @@ class Game_Controller(Node):
             self.open_vision_detect = False
             return
 
+        have_female = False
+
+        if self.place_name == 'B':
+            for index, flower in enumerate(flowers_lists):
+                if flower['Area'] < self.filter_area:
+                    flowers_lists.pop(index)
+
+
         # Update data
         for flower in flowers_lists:
             if flower['Type'] == "famale":
+                have_female = True
                 print("===============================================================================")
                 self.guo_xiaoyu_is_broadcasting("该次处理的目标为雌花!!!!!!")
                 for index, flower_with_tag in enumerate(self.flowers_with_tag):
@@ -381,20 +391,29 @@ class Game_Controller(Node):
                                 self.flowers_with_tag[index]['CentralPoint'] = flower['CentralPoint']
                                 self.flowers_with_tag[index]['Area'] = flower['Area']
                                 self.control_arm_()
+                                self.reset_count = 0
                                 break # hop inner loop
 
                             else:
+                                self.guo_xiaoyu_is_broadcasting("Area way!!!")
                                 self.closest_flower.clear()
-                                self.closest_flower = self.find_closest_flower(flowers_lists, self.flowers_with_tag)
+                                self.closest_flower = self.find_closest_flower(flowers_lists, flower_with_tag)
                                 self.flowers_with_tag[index]['CentralPoint'] = self.closest_flower['CentralPoint']
                                 self.flowers_with_tag[index]['Area'] = self.closest_flower['Area']
                                 self.reset_count += 1
+                                break
                         else:
+                            self.guo_xiaoyu_is_broadcasting("O_distance way!!!")
                             self.closest_flower.clear()
-                            self.closest_flower = self.find_closest_flower(flowers_lists, self.flowers_with_tag)
+                            self.closest_flower = self.find_closest_flower(flowers_lists, flower_with_tag)
                             self.flowers_with_tag[index]['CentralPoint'] = self.closest_flower['CentralPoint']
                             self.flowers_with_tag[index]['Area'] = self.closest_flower['Area']
                             self.reset_count += 1
+                            break
+
+        if have_female == False:
+            self.guo_xiaoyu_is_broadcasting("Only have male!!!!!!")
+            self.reset_count += 1
 
     def data_pre_processing_(self, flowers_lists):
         """ 为存储花属性的字典添加花属性：是否正在操作、是否已授粉 """
@@ -619,7 +638,8 @@ class Game_Controller(Node):
         self.choose_arm_goal_in_number(self.arm_params['joint1'], 
                                        self.arm_params['joint2']+self.add_joint2_pre_slide, 
                                        self.arm_params['joint3'], 
-                                       self.arm_params['joint4'])
+                                       self.arm_params['joint4'],
+                                       1000)
         print('滑动')
         self.choose_arm_goal_in_number(self.arm_params['joint1'],
                                        self.arm_params['joint2'],
@@ -750,12 +770,15 @@ class Game_Controller(Node):
     def find_closest_flower(self, flowers_lists, flowers_with_tag):
         """找到与指定花朵的CentralPoint差值最小的花朵"""
         min_distance = float('inf')
+        # print(flowers_lists)
         closest_flower = None
         for tagged_flower in flowers_lists:
+            # print(tagged_flower)
             dist = self.calculate_O_distance_(flowers_with_tag['CentralPoint'], tagged_flower['CentralPoint'])
             if dist < min_distance:
                 min_distance = dist
-                closest_flower = tagged_flower
+                # closest_flower = tagged_flower 
+                closest_flower = copy.deepcopy(tagged_flower)
         return closest_flower
 
     def voice_broadcast(self, direction='', type=''):
@@ -830,27 +853,28 @@ class Game_Controller(Node):
         # print("self.arm_params = ", self.arm_params)
 
         if self.reset_count > self.reset_count_threshold:
-            if self.joint_last_state == self.arm_params:
-                if self.vision_for_voice != True:
-                    if self.start_count == False:
-                        self.start_count = True
-                        self.start_count_time = time.time()
-                    if self.start_count == True:
-                        if time.time() - self.start_count_time > self.time_threshold:
-                            self.start_count = False
-                            self.error = True
-                            self.guo_xiaoyu_is_broadcasting("目标点丢失!!!!!!")
-                            self.slide_draw()
-                            self.reset_arm_pose_(self.pose_name)
+            # if self.joint_last_state == self.arm_params:
+            if self.vision_for_voice != True:
+                # if self.start_count == False:
+                #     self.start_count = True
+                #     self.start_count_time = time.time()
+                # if self.start_count == True:
+                #     if time.time() - self.start_count_time > self.time_threshold:
+                        # self.start_count = False
+                self.error = True
+                self.guo_xiaoyu_is_broadcasting("目标点丢失!!!!!!")
+                self.slide_draw()
+                self.reset_arm_pose_(self.pose_name)
         else:
         # print(self.flowers_lists)
-            self.joint_last_state = copy.deepcopy(self.arm_params)
+            # self.joint_last_state = copy.deepcopy(self.arm_params)
             # print("'self.flowers_lists' 's length = ", self.flowers_lists)
             if 0 != len(self.flowers_lists):
                 # print(self.flowers_lists)
-                self.start_count = False
+                # self.start_count = False
                 self.confrim_moving_goal_for_arm_(self.flowers_lists)
             else:
+                self.guo_xiaoyu_is_broadcasting("Why not have data?!?!?!")
                 self.reset_count += 1 
 
         y = time.time()
@@ -873,10 +897,12 @@ class Game_Controller(Node):
                         flower['CentralPoint'].append(msg.targets[i].rois[0].rect.x_offset + msg.targets[i].rois[0].rect.width/2)
                         flower['CentralPoint'].append(msg.targets[i].rois[0].rect.y_offset + msg.targets[i].rois[0].rect.height/2)
                         flower['Area'] = msg.targets[i].rois[0].rect.height * msg.targets[i].rois[0].rect.width
-                # Get original data.
-                flowers_lists.append(copy.deepcopy(flower))
+                        # Get original data.
+                        flowers_lists.append(copy.deepcopy(flower))
+                        # print(flower)
         self.flowers_lists.clear()
         self.flowers_lists = copy.deepcopy(flowers_lists)
+        # print(self.flowers_lists)
 
         self.data_update = True
         # print(self.flowers_lists)

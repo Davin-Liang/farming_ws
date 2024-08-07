@@ -1,5 +1,5 @@
 #CP2102 串口号0003 设置别名为fdilink_ahrs
-echo  'KERNEL=="ttyUSB*", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{serial}=="0001", MODE:="0777",SYMLINK+="servo_usb"' >/etc/udev/rules.d/servo_usb.rules
+echo  'KERNEL=="ttyUSB*", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", MODE:="0777",SYMLINK+="car_usb"' >/etc/udev/rules.d/car_usb.rules
 #CH9102，同时系统安装了对应驱动 串口号0003 设置别名为fdilink_ahrs
 #echo  'KERNEL=="ttyCH343USB*", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="55d4",ATTRS{serial}=="0003", MODE:="0777", GROUP:="dialout", SYMLINK+="fdilink_ahrs"' >/etc/udev/rules.d/wheeltec_fdi_imu_gnss2.rules
 #CH9102，同时系统没有安装对应驱动 串口号0003 设置别名为fdilink_ahrs

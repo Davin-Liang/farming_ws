@@ -3,7 +3,7 @@ from std_msgs.msg import Int32MultiArray, Float32MultiArray
 import serial
 
 LOBOT_CMD_SERVO_MOVE = 3
-serialHandle = serial.Serial("/dev/ttyUSB1", 9600)  # 初始化串口， 波特率为9600
+serialHandle = serial.Serial("/dev/servo_usb", 9600)  # 初始化串口， 波特率为9600
 
 def setPWMServoMoveByArray(servos, servos_count, time):
     #控制多个PWM舵机转动

@@ -24,8 +24,8 @@ def main():
         # node.buzzer_tips(times=2.0)
         # node.choose_arm_goal("a_left")
 
-        node.auto_pollinate("A", "a_left", 22000, 1.5, 35000) # Finished test
-        node.auto_pollinate("A", "a_right", 22000, 1.5, 35000)
+        # node.auto_pollinate("A", "a_left", 22000, 1.5, 35000) # Finished test
+        # node.auto_pollinate("A", "a_right", 22000, 1.5, 35000)
 
         node.add_joint2_pre_slide                    = 10
         node.add_joint3_pre_slide                    = -4
@@ -40,10 +40,10 @@ def main():
         node.auto_pollinate("B", "b_middle_front", 150000, 0.3, 30000)
         node.auto_pollinate("B", "b_right_front", 150000, 0.3, 30000)
 
-        node.vision_for_voice       = True
+        # node.vision_for_voice       = True
 
-        node.auto_pollinate("C", "c_left")
-        node.auto_pollinate("C", "c_right")
+        # node.auto_pollinate("C", "c_left")
+        # node.auto_pollinate("C", "c_right")
 
         # node.add_joint2_pre_slide                    = 10
         # node.add_joint3_pre_slide                    = -4

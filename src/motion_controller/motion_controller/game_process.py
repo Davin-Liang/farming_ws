@@ -92,7 +92,7 @@ def main():
             node.car_action_in_lidar(-patrol_speed+0.01, 0.6, distance_threshold=0.13)
             node.car_action_in_lidar(-patrol_speed+0.02, 0.6, distance_threshold=0.05)
             time.sleep(1.0)
-            node.set_distance(-0.305) #TODO: 距离未确定 0.290
+            node.set_distance(-0.305) #TODO: 
             node.set_angle(0.0, times=5.0)
 # ---------------------------------------------------------------------------------------------------------------
 # ----------------BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB--------------------
@@ -105,8 +105,8 @@ def main():
 
             node.choose_arm_goal("moving")
             node.car_action_in_lidar(-patrol_speed+0.01, 0.4, distance_threshold=0.15)
-            node.set_distance(0.31) #TODO: 距离未确定 0.32
-            # TODO:机械臂序号未确定
+            node.set_distance(0.31) #TODO: 
+            
             node.auto_pollinate("B", "b_left_front", 150000, 0.3, 30000)
             node.auto_pollinate("B", "b_middle_front", 150000, 0.3, 30000)
             node.auto_pollinate("B", "b_right_front", 150000, 0.3, 30000)
@@ -114,27 +114,25 @@ def main():
 
             for i in range(3):
                 node.car_action_in_lidar(-patrol_speed+0.02, 0.4, distance_threshold=0.1)
-                node.set_distance(-0.285) #TODO: 距离未确定 -0.275
+                node.set_distance(-0.285) #TODO: 
                 # arm action
-                # TODO:机械臂序号未确定
                 node.auto_pollinate("B", "b_left_back", 150000, 0.3, 30000)
                 node.auto_pollinate("B", "b_middle_back", 150000, 0.3, 30000)
                 node.auto_pollinate("B", "b_right_back", 150000, 0.3, 30000)
                 
                 if i == 2:
                     break
-                # TODO:机械臂序号未确定 
                 node.auto_pollinate("B", "b_left_front", 150000, 0.3, 30000)
                 node.auto_pollinate("B", "b_middle_front", 150000, 0.3, 30000)
                 node.auto_pollinate("B", "b_right_front", 150000, 0.3, 30000)
                 node.choose_arm_goal("moving")
 
-            node.set_distance(-0.265) #TODO: 距离未确定
+            node.set_distance(-0.265) 
             node.choose_arm_goal("a_left")
             node.set_angle(90.0, times=5.0)
             node.car_action_in_lidar(patrol_speed, 0.6, distance_threshold=0.05)
             node.car_action_in_lidar(patrol_speed-0.02, 0.6, distance_threshold=0.05)
-            node.set_distance(0.375) #TODO: 距离未确定
+            node.set_distance(0.375) #TODO: 
             node.set_angle(0.0, times=5.0)
 # ---------------------------------------------------------------------------------------------------------------
 # ----------------CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC--------------------
@@ -147,7 +145,7 @@ def main():
             node.auto_pollinate("C", "c_left")
             node.auto_pollinate("C", "c_right")
             for i in range(2):
-                node.set_distance(0.57) #TODO: 距离未确定
+                node.set_distance(0.57) 
                 if i == 0:
                     node.auto_pollinate("C", "c_right")
                     node.auto_pollinate("C", "c_left")

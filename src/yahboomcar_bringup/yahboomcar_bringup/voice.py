@@ -91,33 +91,33 @@ class VoiceNotifier(Node):
         if direction != '':
             if direction == 'up':
                 self.guo_xiaoyu_is_broadcasting('The flower above is: ')
-                subprocess.Popen(['sudo', 'tinyplay', '/root/farming_ws/src/motion_controller/motion_controller/voice/up.wav'] + self.voice_board_params)
-                time.sleep(2.0)
+                subprocess.Popen(['sudo', 'tinyplay', '/root/farming_ws/src/motion_controller/motion_controller/voice/up2.wav'] + self.voice_board_params)
+                time.sleep(2.5)
             elif direction == 'middle':
                 self.guo_xiaoyu_is_broadcasting('The middle flower is: ')
-                subprocess.Popen(['sudo', 'tinyplay', '/root/farming_ws/src/motion_controller/motion_controller/voice/middle.wav'] + self.voice_board_params)
-                time.sleep(2.0)
+                subprocess.Popen(['sudo', 'tinyplay', '/root/farming_ws/src/motion_controller/motion_controller/voice/middle2.wav'] + self.voice_board_params)
+                time.sleep(2.5)
             elif direction == 'down':
                 self.guo_xiaoyu_is_broadcasting('The lower flower is: ')
-                subprocess.Popen(['sudo', 'tinyplay', '/root/farming_ws/src/motion_controller/motion_controller/voice/down.wav'] + self.voice_board_params)
-                time.sleep(2.0)
+                subprocess.Popen(['sudo', 'tinyplay', '/root/farming_ws/src/motion_controller/motion_controller/voice/down2.wav'] + self.voice_board_params)
+                time.sleep(2.5)
             elif direction == 'left':
                 self.guo_xiaoyu_is_broadcasting('The left flower is: ')
-                subprocess.Popen(['sudo', 'tinyplay', '/root/farming_ws/src/motion_controller/motion_controller/voice/left.wav'] + self.voice_board_params)
-                time.sleep(2.0)
+                subprocess.Popen(['sudo', 'tinyplay', '/root/farming_ws/src/motion_controller/motion_controller/voice/left2.wav'] + self.voice_board_params)
+                time.sleep(2.5)
             elif direction == 'right':
                 self.guo_xiaoyu_is_broadcasting('The right flower is: ')
-                subprocess.Popen(['sudo', 'tinyplay', '/root/farming_ws/src/motion_controller/motion_controller/voice/right.wav'] + self.voice_board_params)
-                time.sleep(2.0)
+                subprocess.Popen(['sudo', 'tinyplay', '/root/farming_ws/src/motion_controller/motion_controller/voice/right2.wav'] + self.voice_board_params)
+                time.sleep(2.5)
         if type != '':
             if type == 'male':
                 self.guo_xiaoyu_is_broadcasting('male!!! male!!! male!!! ')
-                subprocess.Popen(['sudo', 'tinyplay', '/root/farming_ws/src/motion_controller/motion_controller/voice/male.wav'] + self.voice_board_params)
-                time.sleep(1.0)
+                subprocess.Popen(['sudo', 'tinyplay', '/root/farming_ws/src/motion_controller/motion_controller/voice/male2.wav'] + self.voice_board_params)
+                time.sleep(1.5)
             elif type == 'female':
                 self.guo_xiaoyu_is_broadcasting('female!!! female!!! female!!! ')
-                subprocess.Popen(['sudo', 'tinyplay', '/root/farming_ws/src/motion_controller/motion_controller/voice/female.wav'] + self.voice_board_params)
-                time.sleep(1.0)
+                subprocess.Popen(['sudo', 'tinyplay', '/root/farming_ws/src/motion_controller/motion_controller/voice/female2.wav'] + self.voice_board_params)
+                time.sleep(1.5)
 
     def guo_xiaoyu_is_broadcasting(self, info):
         self.get_logger().info(info)

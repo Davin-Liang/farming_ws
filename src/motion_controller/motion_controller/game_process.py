@@ -17,7 +17,7 @@ def main():
         node.voice_switch = True
         node.voice_board_params = ['-D', '0', '-d', '0']
 
-        node.only_arm_action        = False      # 只让机械臂到相应的点位，并不进行视觉识别
+        node.only_arm_action        = False       # 只让机械臂到相应的点位，并不进行视觉识别
         node.one_action             = False      # 机械臂到相应的点位，开启视觉，只授粉一朵花
         node.vision_for_voice       = False      # 机械臂到相应的点位，开始视觉，不授粉，只播报
 
@@ -29,6 +29,8 @@ def main():
 
 
         node.buzzer_tips(times=2.0)
+
+        # node.car_action_in_lidar(-patrol_speed+0.025, 0.4, distance_threshold=0.15)
 
         # node.car_action_in_lidar(-patrol_speed+0.01, 0.6, distance_threshold=0.13)
         # node.car_action_in_lidar(-patrol_speed+0.02, 0.6, distance_threshold=0.05)
@@ -45,10 +47,22 @@ def main():
         # node.auto_pollinate("A", "a_left", 22000, 1.5, 35000) # Finished test
         # node.auto_pollinate("A", "a_right", 22000, 1.5, 35000)
 
-        # node.add_joint4_pre_slide                    = -4 # -5
+        # node.add_joint4_pre_slide                    = 4 # -5
         # node.add_joint3_pre_slide                    = 0 # -4
         # node.add_joint2_pre_slide                    = 14
-        # node.add_joint4_slide                        = 6
+        # node.add_joint4_slide                        = 0
+
+        # node.set_angle(-90.0, times=5.0)
+        # node.car_action_in_lidar(-patrol_speed+0.02, 0.6, distance_threshold=0.13)
+        # node.car_action_in_lidar(-patrol_speed+0.025, 0.6, distance_threshold=0.03)
+        # time.sleep(1.0)
+        # node.set_distance(-0.335) #TODO: 
+        # time.sleep(2.0)
+        # node.set_angle(0.0, times=5.0)
+
+        # node.choose_arm_goal("moving")
+        # node.car_action_in_lidar(-patrol_speed+0.025, 0.4, distance_threshold=0.15)
+        # node.set_distance(0.28) #TODO:
 
         # node.auto_pollinate("B", "b_left_back", 150000, 0.3, 30000)
         # node.auto_pollinate("B", "b_middle_back", 150000, 0.3, 30000)
@@ -79,7 +93,7 @@ def main():
         if A_switch:
             node.add_joint2_pre_slide                    = 8 #TODO:
             node.add_joint3_pre_slide                    = -8 #TODO:
-            node.add_joint4_pre_slide                    = -11 #TODO:
+            node.add_joint4_pre_slide                    = -12 #TODO:
             node.add_joint4_slide                        = 9 #TODO:
 
             for i in range(3):
@@ -96,20 +110,20 @@ def main():
             node.set_distance(0.5) # TODO:
             time.sleep(2.0)
             node.set_angle(-90.0, times=5.0)
-            node.car_action_in_lidar(-patrol_speed+0.015, 0.6, distance_threshold=0.13)
-            node.car_action_in_lidar(-patrol_speed+0.025, 0.6, distance_threshold=0.05)
+            node.car_action_in_lidar(-patrol_speed+0.02, 0.6, distance_threshold=0.13)
+            node.car_action_in_lidar(-patrol_speed+0.025, 0.6, distance_threshold=0.04)
             time.sleep(1.0)
-            node.set_distance(-0.3175) #TODO: 
+            node.set_distance(-0.335) #TODO: 
             time.sleep(2.0)
             node.set_angle(0.0, times=5.0)
 # ---------------------------------------------------------------------------------------------------------------
 # ----------------BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB--------------------
 # ---------------------------------------------------------------------------------------------------------------
         if B_switch:
-            node.add_joint4_pre_slide                    = -4 #TODO:
+            node.add_joint4_pre_slide                    = 4 #TODO:
             node.add_joint3_pre_slide                    = 0 #TODO:
-            node.add_joint2_pre_slide                    = 14 #TODO:
-            node.add_joint4_slide                        = 6 #TODO:
+            node.add_joint2_pre_slide                    = 13 #TODO:
+            node.add_joint4_slide                        = 0 #TODO:
 
             node.choose_arm_goal("moving")
             node.car_action_in_lidar(-patrol_speed+0.025, 0.4, distance_threshold=0.15)
@@ -138,8 +152,8 @@ def main():
             node.set_distance(-0.29) #TODO:0.265
             node.choose_arm_goal("a_left")
             node.set_angle(90.0, times=5.0)
-            node.car_action_in_lidar(patrol_speed-0.015, 0.6, distance_threshold=0.05)
-            node.car_action_in_lidar(patrol_speed-0.025, 0.6, distance_threshold=0.05)
+            node.car_action_in_lidar(patrol_speed-0.02, 0.6, distance_threshold=0.05)
+            node.car_action_in_lidar(patrol_speed-0.025, 0.6, distance_threshold=0.03)
             node.set_distance(0.335) #TODO: 0.345
             time.sleep(2.0)
             node.set_angle(0.0, times=5.0)

@@ -57,7 +57,7 @@ class Game_Controller(Node):
         self.area_of_polliating                      = 80000        # the area threshold for how long the box takes to polinate 70000
         self.joint_speed                             = 2.0          # make the angle of joint rotating as joint speed
         self.threthold_of_x_error                    = 12.0
-        self.threthold_of_y_error                    = 13.0
+        self.threthold_of_y_error                    = 12.0
         self.threthold_of_area_error                 = 4500.0
         self.servo_time                              = 880          # Movement time of mechanical arm, unit mm.
         self.servo_reset_time                        = 2000         # Movement time when arm returns to original orientation.
@@ -66,7 +66,7 @@ class Game_Controller(Node):
         self.odom_linear_scale_correction            = 1.0
         self.odom_angular_scale_correction           = 1.0
         self.area_difference                         = 50000        #TODO: 修改阈值
-        self.time_threshold                          = 1.5          #时间阈值
+        self.time_threshold                          = 5.0          #时间阈值
         self.goal_confidence                         = 0.45
         self.joint2_area_threthold                   = 38000
         self.joint2_coefficient                      = 1.0          #B区
@@ -101,8 +101,8 @@ class Game_Controller(Node):
         self.buzzer_cmd         = Bool()
         self.car_command_cmd    = Float64MultiArray()
 
-        self.ori_angle_pid = PID(Kp=0.698, Ki=0.0003, Kd=0.456, max_out=0.15, max_iout=0.0065)
-        self.distance_pid  = PID(Kp=0.42, Ki=0.0, Kd=0.08, max_out=0.07, max_iout=0.0)
+        self.ori_angle_pid = PID(Kp=0.698, Ki=0.0003, Kd=0.456, max_out=0.125, max_iout=0.0065) #0.15
+        self.distance_pid  = PID(Kp=0.45, Ki=0.0, Kd=0.1, max_out=0.04, max_iout=0.00025)
 
         self.female_num      = 0
         self.distance        = 0.0
@@ -110,6 +110,7 @@ class Game_Controller(Node):
         self.yaw_angle       = 0.0
         self.lidar_threthold = 0.1
         self.liear_speed     = 0.5
+        self.start_count_time = 0.0
         self.joint_last_state  = {}
         self.pose_name       = ""
         self.angle = radians(self.angle)
@@ -124,7 +125,7 @@ class Game_Controller(Node):
 
         time.sleep(1.0)
 
-        self.work_timer = self.create_timer(0.004, self.timer_work_)
+        self.work_timer = self.create_timer(0.002, self.timer_work_)
         self.arm_timer = self.create_timer(0.5, self.arm_timer_callback_)
         # self.voice_timer = self.create_timer(0.01, self.voice_task_)
 
@@ -276,7 +277,7 @@ class Game_Controller(Node):
         while self.start_for_pid_distance:
             pass
         # self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
-        time.sleep(2.0)
+        # time.sleep(2.0)
 
     def set_angle(self, angle, times=4.0):
         # time.sleep(times-1.0)
@@ -591,8 +592,8 @@ class Game_Controller(Node):
                     self.guo_xiaoyu_is_broadcasting("area error is suitable!!!")
                 self.angles_of_joints.data.append(self.arm_params['joint3'])
 
-                if abs(y_error) > self.threthold_of_y_error:
-                    self.arm_params['joint4'] = float(self.limit_num_(self.arm_params['joint4'] + copysign(1.25 * self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
+                if abs(y_error) > self.threthold_of_y_error:#1.25
+                    self.arm_params['joint4'] = float(self.limit_num_(self.arm_params['joint4'] + copysign(0.75 * self.joint_speed, y_error), self.default_arm_params['joint4_limiting']))
                 else:
                     self.guo_xiaoyu_is_broadcasting("y error is suitable!!!")
                 self.angles_of_joints.data.append(self.arm_params['joint4'])
@@ -967,10 +968,35 @@ class Game_Controller(Node):
             # calculate error
             self.distance_pid.pid_calculate(ref=o_distance, goal=abs(self.distance))
             self.move_cmd.linear.x = copysign(self.distance_pid.out, self.distance)
-            print("error = ", abs(o_distance - abs(self.distance)))
+            if self.distance < 0:
+                self.move_cmd.linear.x = -self.distance_pid.out
+            else:
+                self.move_cmd.linear.x = self.distance_pid.out
+            print("self.distance_pid.out = ", self.distance_pid.out)
+            print("self.move_cmd.linear.x = ", self.move_cmd.linear.x)
+            print("Error = ", o_distance - abs(self.distance))
+            
             if abs(o_distance - abs(self.distance)) < self.distance_tolerance: # achieve goal
-                self.guo_xiaoyu_is_broadcasting('Finished task!!!!!!')
+                self.guo_xiaoyu_is_broadcasting('Arrived goal distance !!!!!!')
+                self.guo_xiaoyu_is_broadcasting('Arrived goal distance !!!!!!')
+                self.guo_xiaoyu_is_broadcasting('Arrived goal distance !!!!!!')
+                self.cmd_vel.publish(Twist())
                 self.start_for_pid_distance = False
+                # if self.start_count == False:
+                #     self.start_count_time = time.time()
+                #     self.start_count = True
+                # if self.start_count:
+                #     if time.time() - self.start_count_time > self.time_threshold:
+                #         self.start_count = False
+                #         self.guo_xiaoyu_is_broadcasting('Arrived goal distance !!!!!!')
+                #         self.guo_xiaoyu_is_broadcasting('Arrived goal distance !!!!!!')
+                #         self.guo_xiaoyu_is_broadcasting('Arrived goal distance !!!!!!')
+                #         self.start_for_pid_distance = False
+                #         self.x_start = self.position.x
+                #         self.y_start = self.position.y
+            else:
+                self.guo_xiaoyu_is_broadcasting("Accidently overstepped the limit.")
+                self.start_count = False
         elif self.start_for_lidar_distance:
             # if self.start_delay:
             #     self.move_cmd.linear.x = self.liear_speed

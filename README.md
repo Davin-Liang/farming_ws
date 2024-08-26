@@ -1,6 +1,6 @@
 # Farming Pollinator Robot
 
-> God rewards ***the diligent*** and rejects ***FFFucking evil ways***.
+> God rewards ***the diligent*** . Reject ***FFFucking evil ways***.
 
 $$
 1 + 1 +1 > 3
@@ -11,10 +11,6 @@ $$
 * Gengming Liang
 * Jianghui Bian
 * Xiaoyu Guo
-
-## Project Background
-
-    It mainly focuses on the research field of smart agriculture, and carries out technical research on smart agriculture and agricultural robots. With the further development of economy and society, traditional agriculture, forestry, animal husbandry, fishery, and related majors of human life and health have integrated electronic information, computer control, robotics, big data, artificial intelligence and other knowledge, and the concept and connotation of intelligent agricultural robots have been continuously enriched, and new technologies, new applications and new developments across disciplines have been emerging. Application scenarios continue to expand and develop rapidly. This competition simulates the intelligent pollination operation process, which can exercise students' practical innovation ability and engineering ability, and inspire outstanding scholars and young people to devote themselves to the research of smart agriculture and agricultural robots, and cultivate the scientific research reserve force of smart agriculture.
 
 ## Open Source composition
 

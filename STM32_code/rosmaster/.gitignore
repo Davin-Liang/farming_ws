@@ -1,0 +1,10 @@
+
+MDK_PRO/Listings
+MDK_PRO/Objects
+
+OUTPUT/*
+!OUTPUT/*.hex
+
+*.uvguix.Administrator
+*.map
+*.bak

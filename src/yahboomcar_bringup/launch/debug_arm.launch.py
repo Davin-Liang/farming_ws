@@ -26,13 +26,13 @@ def generate_launch_description():
     )
 
     servo_node = Node(
-        package='yahboomcar_bringup',
+        package='servo_control',
         executable='servo',
         # condition=IfCondition(LaunchConfiguration('debug_arm'))
     )
 
     voice_node = Node(
-        package='yahboomcar_bringup',
+        package='voice_broadcast',
         executable='voice',
     )
 

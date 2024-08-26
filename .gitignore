@@ -3,6 +3,4 @@ build/
 install/
 log/
 config/
-STM32_code/
-STM32_code/rosmaster/output
-yolo_model/
+STM32_code/rosmaster/output/

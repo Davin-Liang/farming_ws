@@ -1,5 +1,5 @@
 import rclpy
-from farming_visioner import Game_Controller
+from arm_vision_control import Game_Controller
 import time
 
 A_switch                   = True
@@ -21,71 +21,7 @@ def main():
         node.one_action             = False      # 机械臂到相应的点位，开启视觉，只授粉一朵花
         node.vision_for_voice       = False      # 机械臂到相应的点位，开始视觉，不授粉，只播报
 
-        # node.set_distance(-0.5)
-        # node.car_action_in_lidar(patrol_speed, 0.4)
-        # node.set_distance(0.55)
-        # node.set_angle(-90.0)
-        # node.car_action_in_lidar(-patrol_speed, 0.4)
-
-
         node.buzzer_tips(times=2.0)
-
-        # node.car_action_in_lidar(-patrol_speed+0.025, 0.4, distance_threshold=0.15)
-
-        # node.car_action_in_lidar(-patrol_speed+0.01, 0.6, distance_threshold=0.13)
-        # node.car_action_in_lidar(-patrol_speed+0.02, 0.6, distance_threshold=0.05)
-        # time.sleep(1.0)
-        # node.set_distance(-0.305) #TODO:
-
-        # node.choose_arm_goal("a_left")
-
-        # node.add_joint2_pre_slide                    = 8
-        # node.add_joint3_pre_slide                    = -8
-        # node.add_joint4_pre_slide                    = -11
-        # node.add_joint4_slide                        = 9
-
-        # node.auto_pollinate("A", "a_left", 22000, 1.5, 35000) # Finished test
-        # node.auto_pollinate("A", "a_right", 22000, 1.5, 35000)
-
-        # node.add_joint4_pre_slide                    = 4 # -5
-        # node.add_joint3_pre_slide                    = 0 # -4
-        # node.add_joint2_pre_slide                    = 14
-        # node.add_joint4_slide                        = 0
-
-        # node.set_angle(-90.0, times=5.0)
-        # node.car_action_in_lidar(-patrol_speed+0.02, 0.6, distance_threshold=0.13)
-        # node.car_action_in_lidar(-patrol_speed+0.025, 0.6, distance_threshold=0.03)
-        # time.sleep(1.0)
-        # node.set_distance(-0.335) #TODO: 
-        # time.sleep(2.0)
-        # node.set_angle(0.0, times=5.0)
-
-        # node.choose_arm_goal("moving")
-        # node.car_action_in_lidar(-patrol_speed+0.025, 0.4, distance_threshold=0.15)
-        # node.set_distance(0.28) #TODO:
-
-        # node.auto_pollinate("B", "b_left_back", 150000, 0.3, 30000)
-        # node.auto_pollinate("B", "b_middle_back", 150000, 0.3, 30000)
-        # node.auto_pollinate("B", "b_right_back", 150000, 0.3, 30000)
-        
-        # node.auto_pollinate("B", "b_left_front", 150000, 0.3, 30000)
-        # node.auto_pollinate("B", "b_middle_front", 150000, 0.3, 30000)
-        # node.auto_pollinate("B", "b_right_front", 150000, 0.3, 30000)
-
-        # node.vision_for_voice       = True
-
-        # node.auto_pollinate("C", "c_left")
-        # node.auto_pollinate("C", "c_right")
-
-        # node.add_joint2_pre_slide                    = 10
-        # node.add_joint3_pre_slide                    = -4
-        # node.add_joint4_pre_slide                    = -5
-        # node.add_joint4_slide                        = 9
-
-        # node.threthold_of_y_error                    = 14.0
-
-        # node.auto_pollinate("C", "c_left", 22000, 1.0, 33000)
-        # node.auto_pollinate("C", "c_right", 10000, 0.7, 36000)
 
 # ---------------------------------------------------------------------------------------------------------------
 # ----------------AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA--------------------

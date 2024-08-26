@@ -16,7 +16,6 @@ $$
 
     It mainly focuses on the research field of smart agriculture, and carries out technical research on smart agriculture and agricultural robots. With the further development of economy and society, traditional agriculture, forestry, animal husbandry, fishery, and related majors of human life and health have integrated electronic information, computer control, robotics, big data, artificial intelligence and other knowledge, and the concept and connotation of intelligent agricultural robots have been continuously enriched, and new technologies, new applications and new developments across disciplines have been emerging. Application scenarios continue to expand and develop rapidly. This competition simulates the intelligent pollination operation process, which can exercise students' practical innovation ability and engineering ability, and inspire outstanding scholars and young people to devote themselves to the research of smart agriculture and agricultural robots, and cultivate the scientific research reserve force of smart agriculture.
 
-
 ## Open Source composition
 
 There are some folders and some files, as follow:
@@ -27,6 +26,7 @@ There are some folders and some files, as follow:
 * **race_rule/** —— Store race rule
 * **STM32_code/** —— Store the stm32 code of bottom plate
 * **py_install/** —— Store rosmaster python library
+* **py_files**/ —— Store important python files
 * **yolo_model/** —— Store yolo BIN file
 * **hardware_BOM.md** —— Bill of materials
 
@@ -115,13 +115,13 @@ ros2 launch fdilink_ahrs ahrs_driver.launch.py
 * servo board
 
 ```
-ros2 run yahboomcar_bringup servo
+ros2 run servo_control servo
 ```
 
 * voice
 
 ```
-ros2 run yahboomcar_bringup voice
+ros2 run voice_broadcast voice
 ```
 
 * Keyboard Control
@@ -218,18 +218,6 @@ sust_books
 
 ```
 vision
-```
-
-* Connect hotspot
-
-```
-wifi_phone
-```
-
-* Connect wifi
-
-```
-wifi_134
 ```
 
 * List wifi

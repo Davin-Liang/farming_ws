@@ -6,6 +6,9 @@ $$
 1 + 1 +1 > 3
 $$
 
+If you have any questions, please leave me **issues**.
+
+
 ## Team Member
 
 * Gengming Liang
@@ -27,10 +30,6 @@ There are some folders and some files, as follow:
 * **hardware_BOM.md** —— Bill of materials
 
 ## Important Items
-
-<div align="center">
-  <img src="image/README/17224985553241.png" alt="Alt text" width="500">
-</div>
 
 1. Don't make car body get any knock to prevent imparting IMU accuracy.
 2. When not starting IMU reading code, must remove IMU usb reading port.
@@ -56,7 +55,7 @@ sust_record
 sust_preplay
 ```
 
-2. start ***upupup.launch.py* ** that includes chassis nodes / ekf node / IMU node.
+2. start ***upupup.launch.py*** that includes chassis nodes / ekf node / IMU node.
 
 ```
 ros2 launch yahboomcar_bringup upupup.launch.py
